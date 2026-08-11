@@ -278,4 +278,16 @@ hide payer identity, network origin, application metadata, or recipients where d
 
 A durably preserved commitment or versioned hash can preserve attribution to the originally published object even after Ethereum’s custody obligation ends. Because Ethereum is separately moving toward bounded historical serving, the persistence of that compact anchor should be specified rather than assumed.
 
+### 13.1 Inclusion censorship is upstream of DAS
+
+“Censorship-resistant publication” contains at least three distinct failure modes:
+
+1. **Admission or inclusion censorship:** a transaction or blob is never selected for a canonical block. PBS builder concentration and proposer behavior sit here. Committee inclusion-list designs such as [FOCIL / EIP-7805](https://eips.ethereum.org/EIPS/eip-7805) address this layer by requiring proposers to respect independently assembled inclusion lists.
+2. **Publication-time availability censorship:** a commitment is selected, but enough underlying bytes are withheld that the block should not be treated as available. DAS, dispersal, sampling, and availability fork-choice rules sit here.
+3. **Post-inclusion service censorship:** some custodians refuse historical requests after availability was established. Redundant custody, peer selection, repair, and the required-serving window sit here.
+
+Variable retention changes the duration of the third guarantee. It does not solve the first, and DAS principally addresses the second. Likewise, distributed blob publication can remove the winning builder as the only synchronous DA uplink without removing the builder's political power over which transactions or blob commitments enter the block.
+
+The generalized data plane is therefore a censorship-resistant publishing substrate only to the extent that its admission and canonical-inclusion path is itself robust against concentrated builders and proposers. Inclusion lists and related PBS reforms are complementary dependencies, not features supplied by variable retention.
+
 ---

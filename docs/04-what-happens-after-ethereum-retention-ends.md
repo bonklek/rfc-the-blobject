@@ -27,6 +27,8 @@ A decentralized retention layer can monitor Ethereum DA, retrieve objects before
 
 EthStorage provides concrete adjacent evidence for this architecture: its documented storage providers download data associated with Ethereum DA and submit storage proofs to an L1 contract for rewards. Filecoin supplies a more general storage-market precedent in which deals have explicit durations and providers continuously prove storage over the deal lifetime. Neither system implements the base-protocol variable-retention mechanism proposed here, but both show that **timed persistence can be separated from initial publication**.
 
+Other systems expose different economic and service boundaries. Waku Store provides bounded temporary message retention without a general promise of durable availability. Swarm postage stamps prepay storage capacity whose economic lifetime depletes with time and can be extended by top-up, resembling prepaid retention value being consumed. Codex contracts specify storage duration, provider collateral, and randomized possession proofs. These are downstream precedents rather than Ethereum DA guarantees, but they help separate cache retention, prepaid storage value, and accountable byte-time service.
+
 An Ethereum-settled adapter could similarly purchase external storage for an Ethereum-committed object without requiring that the storage network itself become an Ethereum rollup.
 
 ### 14.2 Centralized retention and pinning

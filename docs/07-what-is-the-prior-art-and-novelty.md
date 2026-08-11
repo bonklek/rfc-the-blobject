@@ -22,15 +22,35 @@ Earlier [Ethereum state-rent and state-expiry research](https://ethereum.org/roa
 
 [EthStorage](https://docs.ethstorage.io/readme/how-ethstorage-works) is close precedent for the handoff architecture. Its storage providers obtain Ethereum-associated data, retain it, prove storage, and receive contract-mediated rewards. Ethereum publication can therefore serve as a common ingestion event for later persistence, although EthStorage does not implement variable base-protocol retention.
 
+Waku Store, Swarm, and Codex expose three other useful points on the retention spectrum. [Waku Store](https://docs.waku.org/run-node/config-options) supports bounded time-, capacity-, or size-based message retention, but Waku explicitly does not promise general long-term availability. [Swarm postage stamps](https://docs.ethswarm.org/docs/concepts/incentives/postage-stamps/) prepay a batch whose storage value depletes through time and can be extended by top-up; this is close economic precedent for prepaid retention value decaying as service is consumed. The pinned [Codex marketplace specification](https://github.com/logos-storage/logos-storage-spec/blob/f238dd660409ce628f14572991f6c1d8dd71c5d1/specs/marketplace.md) names a duration, requires provider collateral, and randomly requires storage proofs during the interval. None supplies Ethereum consensus DA, but together they distinguish temporary caching, prepaid network storage, and accountable duration contracts.
+
 ### 21.5 Future bandwidth reservation: Blob Streaming
 
 Draft [EIP-8256](https://eips.ethereum.org/EIPS/eip-8256) ([discussion](https://ethereum-magicians.org/t/eip-8256-blob-streaming/28586)) is the closest adjacent mechanism for **future ingress**. Its non-refundable AOT tickets reserve future propagation capacity, its `JIT_RESERVED` parameter preserves near-term capacity against AOT demand, and it separates ticket ownership from the BLS key used to authenticate propagation. It does not provide user-selected retention, transferable ticket markets, or mandatory inclusion.
+
+#### 21.5.1 Blockspace and blobspace futures
+
+There is a recognizable market lineage adjacent to AOT tickets. Julian Ma's [On In-Protocol Gas Futures](https://ethresear.ch/t/on-in-protocol-gas-futures/23698), motivated by Vitalik Buterin's gas-futures framing, develops protocol-issued access to future blockspace and emphasizes physical rather than merely cash settlement. Tamara Tran's [blobspace derivatives](https://paragraph.com/@tamaratran/introducing-ethereum-blobspace-derivatives) start from cash-settled exposure to the blob base fee while identifying physical delivery as a further research direction. Luban/Taiyi's [blob futures](https://paragraph.com/@luban-2/luban-unveils-blob-futures-pre-settle-blobs-on-ethereum) move toward proposer- or underwriter-backed commitments to include blobs in future slots.
+
+The progression is therefore:
+
+```text
+cash-settled price exposure
+    -> proposer-backed physical delivery
+    -> protocol-native future DA rights.
+```
+
+These categories should not be collapsed. A cash-settled derivative hedges price but cannot force publication. A proposer-backed promise adds counterparty and proposer-performance risk. A protocol-native right could reserve ingress capacity, but still requires explicit settlement, expiry, reassignment, and inclusion semantics. The future-resource construction in this RFC combines reserved ingress with a retention maturity; it does not claim invention of blockspace futures.
 
 ### 21.6 FullDAS, two-dimensional coding, and cell-level transport
 
 [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) and [FullDASv2](https://ethresear.ch/t/accelerating-blob-scaling-with-fulldasv2-with-getblobs-mempool-encoding-and-possibly-rlc/22477) research is directly relevant to the compatibility problem. Current proposals describe a **two-dimensional erasure-code** DAS construct with cell-level messaging, blobs as rows, cross-cutting columns, and in-network row/column repair or availability amplification. Separate [cell-level dissemination work](https://ethresear.ch/t/gossipsubs-partial-messages-extension-and-cell-level-dissemination/23017) likewise explores making independently verifiable cells the propagation unit rather than whole `DataColumnSidecar`s.
 
 Draft [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) makes this direction concrete for current PeerDAS by allowing peers to exchange missing cells instead of complete columns. It is a backwards-compatible dissemination optimization, not a historical-retention design. The [1D-versus-2D analysis](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) further shows that 1D PeerDAS with cell-level messaging can support partial row reconstruction, keeping 1D as a viable simpler branch.
+
+Several distributed-publication proposals strengthen the provenance of the AOT-plus-FullDAS synthesis in §17.9. [Is Data Available in the EL Mempool?](https://ethresear.ch/t/is-data-available-in-the-el-mempool/22329) uses `getBlobs` and a multi-source execution-layer mempool so a builder need not transmit every selected blob by itself. [A New Design for DAS and Sharded Blob Mempools](https://ethresear.ch/t/a-new-design-for-das-and-sharded-blob-mempools/22537) combines partial column dissemination with sharded blob acquisition and distributed block building. Draft [EIP-8070: Sparse Blobpool](https://eips.ethereum.org/EIPS/eip-8070) aligns sparse storage and sampling with custody while retaining `getBlobs` retrieval. [Blob Notaries](https://ethresear.ch/t/blob-notaries-a-distributed-blob-publishing-design-to-scale-da/22709) separates initial validation and distributed blob publication through a notary layer.
+
+The shared question is how to avoid making one proposer or builder the synchronous source of the entire DA payload. These designs make that direction plausible; they do not by themselves establish the representation transition, retention accounting, or security of §17.9.
 
 These mechanisms strengthen the plausibility of sparse serving for the PeerDAS packaging problem while making the deeper 2D issue explicit: second-dimensional coding can couple multiple blob rows into shared redundancy. The hot-2D/cold-1D lifecycle in §17 is **not** established FullDAS behavior; it is this paper's conditional compatibility hypothesis.
 

@@ -4,6 +4,8 @@
 
 Ethereum currently bundles immediate blob ingress with one protocol serving horizon. This RFC separates them. With ingress held fixed and `T_max` no greater than today's minimum serving horizon, variable retention can only reduce **logical protocol-required retained-capacity consumption**. The current service remains available at `T=T_max`; shorter-lived objects consume less required byte-time. `T_max` limits the obligation a purchaser may impose, but it neither requires pruning at expiry nor prevents voluntary service afterward.
 
+The proposal changes time, not audience. Global availability, designated custody, and recipient delivery are different guarantees. The Blobject retains Ethereum's permissionless DAS reconstruction semantics, uses distributed custody to support them through `T`, and leaves recipient acknowledgements or committee-only packet delivery to separate application services.
+
 A spot-start lease consumes retained capacity as soon as it is accepted. Deterministic active-stock accounting can therefore bound contracted obligations without a maturity-dependent forward hard-cap curve. Admission still has to respect the full `K_safe_vector`, not storage alone. An `H_min` reserve can stop long leases from pre-consuming a short-duration lane, although it cannot stop an attacker from flooding that lane directly. Pricing allocates byte-time only after those safety bounds have been enforced.
 
 The main risk is physical rather than logical. Expiring an obligation in protocol state does not necessarily release storage or repair capacity in the DAS representation. Current PeerDAS has a column-packaging problem. A cross-row 2D FullDAS design would add a deeper problem because shared parity may depend on blobs with different expirations.

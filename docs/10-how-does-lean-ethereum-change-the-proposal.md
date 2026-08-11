@@ -204,6 +204,23 @@ where `R` is the admitted data rate. This can separate near-term DA throughput f
 
 Block-in-Blobs adds a payer question. User DA has an obvious transaction payer; protocol-mandated payload data may need an execution-fee allocation or another protocol accounting channel. The mechanism must avoid double charging and cross-resource subsidies.
 
+If Ethereum procures the physical service directly, the corresponding operator rates can remain explicit without pretending to prepay infinity:
+
+```text
+hot write market
+    q_write * B
+
+bounded full-retention market
+    q_retention * B * T_full
+
+sparse-history market, settled each service interval Δt
+    q_history * (f_tail * B) * Δt
+```
+
+`q_history` is a distinct service class because long-run sampling, repair, replacement, discovery, and retrieval differ from both hot writes and a bounded full-strength lease. A permanent tail is therefore a recurring archive obligation subject to continuing qualification and renewal, not an infinite byte-time asset sold up front.
+
+Canonical L1 history also exposes a payer problem. Protocol-generated payload data has no natural blob purchaser, so its recurring history service may require an execution-fee allocation, protocol budget, or another explicit funding rule. Redirecting a user blob payment by assumption would hide the cross-subsidy rather than solve it.
+
 ---
 
 ## 7. How do the research directions map to this RFC?

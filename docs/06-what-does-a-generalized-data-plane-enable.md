@@ -36,6 +36,8 @@ This does not solve builder centralization. [BuilderNet](https://buildernet.org/
 
 The limited conclusion is that variable retention and high-throughput DAS do not **inherently** require centralized block production. The publication protocol must simply avoid making the winning builder the only viable DA uplink.
 
+That is a bandwidth claim, not an inclusion-censorship claim. Distributed upload does not force a concentrated PBS builder to select a transaction or blob commitment. The [admission/inclusion analysis in §13.1](03-how-do-future-resource-markets-work.md#131-inclusion-censorship-is-upstream-of-das) separates inclusion censorship, publication-time withholding, and post-inclusion service refusal; a generalized data plane inherits the first problem unless inclusion lists or another robust admission path address it.
+
 ---
 
 ## 19. Application space
@@ -125,6 +127,41 @@ At the level of architecture, this resembles Lightning's relationship to Bitcoin
 In this architecture, Ethereum serves as a **permissionless economic control plane and availability substrate**. A user purchases a scarce network resource, authenticated bytes enter a globally shared data plane, and DAS establishes publication-time availability. Assigned custodians then serve enough authenticated data for reconstruction for the chosen period. Specialized systems take over afterward, handling routing, privacy, discovery, or persistence.
 
 Ethereum's rollup-oriented DA roadmap may already contain much of the infrastructure needed for a more general economically secured network substrate, even though that was not its original design objective.
+
+### 20.1 A historical rhyme with the early Web3 stack
+
+This endpoint has an Ethereum lineage. The 2014 decentralized-Web framing described a three-part family: Ethereum contracts for logic, Swarm for decentralized storage, and Whisper for decentralized messaging. The 2016 Swarm introduction likewise described separate `eth`, `bzz`, and `shh` protocols intended to compose into a broader Web3 stack.
+
+That integrated stack did not become today's Ethereum architecture. [Whisper is deprecated](https://ethereum.org/developers/docs/networking-layer/#whisper), while [Swarm continues as a separate storage and distribution system](https://ethereum.org/developers/docs/storage/#swarm). The Blobject does not propose restoring either protocol or putting messaging and permanent storage into consensus.
+
+The historical rhyme is functional rather than institutional:
+
+```text
+early composition                 emerging composition
+
+Ethereum contracts               Ethereum settlement and commitments
+Whisper messaging        ->       privacy/messaging overlays and relays
+Swarm storage                     competing downstream persistence systems
+                                  PeerDAS/FullDAS bounded availability
+```
+
+The newer composition begins with a narrower base-layer promise: economically scarce admission, authenticated publication, and bounded reconstructability. Routing, privacy, delivery, and permanent storage remain plural overlay services. It may recover some ambitions of the early decentralized-Internet stack through explicit markets and interfaces rather than one bundled Ethereum software suite.
+
+### 20.2 A broader resource-strength principle
+
+Variable-retention DA is one instance of a wider design pattern:
+
+| Resource | Stronger form | Specialized or weaker form |
+|---|---|---|
+| State | permanent synchronously accessible state | temporary, UTXO-like, or separately recoverable state classes |
+| Data | one full universal serving horizon | short leases, longer leases, or reduced sparse tails |
+| Execution | universal direct re-execution | validity-proved execution under an explicit witness-availability model |
+
+The general principle is:
+
+> **Price and require guarantees according to the semantic strength applications need, rather than silently granting every object the strongest available guarantee.**
+
+This is a research heuristic, not a claim that the rows are interchangeable. Active state must support synchronous execution reads. A validity proof can establish a computation without supplying its witness. DA must provide a permissionless reconstruction path under its sampling and custody assumptions. Specialization is useful only while those semantic boundaries remain explicit.
 
 Variable retention matters because it removes a temporal assumption inherited from the rollup use case.
 
