@@ -60,10 +60,11 @@ The proposal lets a purchaser choose how long Ethereum must serve an object, up 
 1. With ingress held fixed, allowing shorter serving windows can only reduce the logical retained-data obligation. Nothing in the proposal requires nodes to prune afterward.
 2. PeerDAS currently provides **protocol-required retrievability under custody assumptions**. It does not repeatedly prove that every historical object remained available.
 3. A lease that starts immediately can be accounted for as active stock. A forward capacity curve is needed only for commitments that start in the future, and physical admission must account for more than storage alone.
-4. Whether logical expiry saves physical resources depends on the representation. The first prototype path is 1D cell-level custody; hot-2D/cold-1D is a conditional branch, not an assumed roadmap.
-5. One expiry is the simplest lifecycle. Later designs may add reduced-strength tails, and downstream systems may continue persistence after Ethereum's required-serving window ends.
-6. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
-7. Retention does not relax network conservation. Global throughput, coding and replication overhead, operator count, and sustainable per-node bandwidth must fit one consistent architecture.
+4. The conservative EIP-4844 path remains blob-granular: applications buy an integer number of whole blobs, while retention duration is selected per blob commitment. The RFC's `B` is an accounting quantity, not an existing arbitrary-byte purchase interface.
+5. Whether logical expiry saves physical resources depends on the representation. The first prototype path is 1D cell-level custody; hot-2D/cold-1D is a conditional branch, not an assumed roadmap.
+6. One expiry is the simplest lifecycle. Later designs may add reduced-strength tails, and downstream systems may continue persistence after Ethereum's required-serving window ends.
+7. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
+8. Retention does not relax network conservation. Global throughput, coding and replication overhead, operator count, and sustainable per-node bandwidth must fit one consistent architecture.
 
 ## How to comment
 

@@ -6,7 +6,7 @@ For a lease that begins on admission, the first-order accounting quantities are 
 
 Let `R_t` denote new data entering Ethereum DA around time `t`. This is the **flow** resource: propagation, coding, sampling, and real-time processing.
 
-Let `S_t` denote the total logical data currently under an unexpired protocol serving obligation. This is the **active retained stock**.
+Let `S_t` denote the total protocol-accounted data currently under an unexpired serving obligation. This is the **active retained stock**. `B` below is a mathematical accounting quantity, not necessarily a user-selectable byte length. For the EIP-4844-compatible path, each admitted commitment contributes the fixed constant `B_blob`, so stock could equivalently be counted in live blob units.
 
 If an object of size `B` is admitted at time `t` with duration `T`, it immediately increases active stock by `B` and remains in `S` until `t+T`. The protocol has to bound two scarce resources independently:
 
@@ -43,7 +43,7 @@ Long leases can still crowd out later users, but the capacity they consume is vi
 
 ### 4.1 Non-normative protocol-state sketch
 
-The following toy transition makes the accounting testable. It uses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. Those choices are illustrative rather than an EIP specification.
+The following toy transition makes the accounting testable. It uses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. It deliberately derives the accounting quantity from the fixed blob type rather than accepting a caller-supplied size. Those choices are illustrative rather than an EIP specification.
 
 ```text
 state:
@@ -56,7 +56,6 @@ Bucket:
 
 DataObjectMeta:
     commitment: Commitment
-    size: uint64
     expiry_epoch: Epoch
     enforcement_level: PROTOCOL_REQUIRED
 
@@ -66,10 +65,11 @@ on_epoch_transition(current_epoch):
         retained_bytes -= bucket.bytes
         bucket = Bucket(epoch=FAR_FUTURE_EPOCH, bytes=0)
 
-admit_blob(commitment, size, retention_epochs, current_epoch):
+admit_blob(commitment, retention_epochs, current_epoch):
     require retention_epochs in ALLOWED_RETENTION_EPOCHS
     require T_min <= retention_epochs <= T_max
 
+    size = BLOB_ACCOUNTING_BYTES
     expiry_epoch = current_epoch + retention_epochs
     require retained_bytes + size <= K_safe
 
@@ -82,13 +82,12 @@ admit_blob(commitment, size, retention_epochs, current_epoch):
 
     return DataObjectMeta(
         commitment,
-        size,
         expiry_epoch,
         PROTOCOL_REQUIRED,
     )
 ```
 
-The toy binds retention **per blob commitment**, not per transaction. A blob transaction carrying several blobs can supply one duration per commitment or apply one duration to all of them; the resulting `DataObjectMeta` list is committed in the block. The execution layer validates authorization and charges the admission fee, while the consensus layer receives the commitment, size, and absolute expiry through an Engine API payload field or an equivalent consensus-visible container. A consensus client therefore does not need arbitrary execution-state reads to determine its duties.
+The toy binds retention **per blob commitment**, not per transaction. A blob transaction carrying `n` blobs still purchases and pays the existing ingress fee for exactly `n` whole blobs: `blob_gas_used = n · GAS_PER_BLOB`, with the fee determined by the blob base fee. It can supply one duration per commitment or apply one duration to all of them; the resulting `DataObjectMeta` list is committed in the block. The execution layer validates authorization and charges any retention component, while the consensus layer receives each commitment and its absolute expiry through an Engine API payload field or an equivalent consensus-visible container. Size is implicit in the versioned blob type. A consensus client therefore does not need a user-supplied size or arbitrary execution-state reads to determine its duties.
 
 Custody assignment remains deterministic under the relevant DAS design. A node derives whether it must serve a live object's cells from the canonical block, the object metadata, and its custody groups. The obligation holds while `current_epoch < expiry_epoch`.
 
@@ -98,7 +97,8 @@ The sketch leaves several protocol choices open:
 
 - the exact EL/CL container and commitment for `DataObjectMeta`;
 - whether continuous epoch values or a small allowed maturity set are exposed;
-- how logical bytes map into each physical resource counter;
+- which byte-equivalent accounting constant represents one current blob, and how that fixed logical unit expands into storage, serving, repair, and I/O counters;
+- whether a future transport should introduce other discrete object sizes, and, if so, its framing and fee rules;
 - whether level-2 or level-3 enforcement metadata is ever added;
 - how cold custody assignments and repair handoffs are represented.
 
@@ -107,6 +107,8 @@ The sketch leaves several protocol choices open:
 ---
 
 ## 5. Pricing protocol-required byte-time
+
+The equations in this section price an accounting quantity. They do not change EIP-4844 ingress granularity. In the conservative path, substitute `B=B_blob` for each commitment and sum over the transaction's integer number of blobs. An application that uses only part of a blob still incurs the full blob ingress charge and the full-blob retention quantity.
 
 The fee has two parts:
 
