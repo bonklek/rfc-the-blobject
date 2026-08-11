@@ -65,7 +65,7 @@ But this is not an automatic stability theorem.
 Several countervailing behaviors require simulation:
 
 - users may front-load long prepaid leases when prices are temporarily low;
-- correlated applications may all seek the maximum guaranteed retention during the same crisis;
+- correlated applications may all seek the maximum protocol-required retention during the same crisis;
 - a wealthy attacker may intentionally occupy the general-retention pool;
 - quantized classes may fragment otherwise usable capacity;
 - renewal mechanisms may create synchronized expiry cliffs;
@@ -74,7 +74,7 @@ Several countervailing behaviors require simulation:
 The key separation after adversarial review is:
 
 - **hard active-stock bounds** protect physical safety;
-- **reserved headroom** protects a chosen minimum-liveness lane;
+- **reserved headroom** prevents long leases from pre-consuming a short-duration lane, but does not prevent that lane itself from being flooded;
 - **fees** allocate the remaining byte-time economically;
 - **application security minima** determine how much demand can actually respond to price.
 

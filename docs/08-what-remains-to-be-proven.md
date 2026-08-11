@@ -6,11 +6,11 @@ The next work should be falsification-oriented rather than additive.
 
 ### 22.1 Physical capacity and pricing
 
-- How should `K_safe` be derived from custody groups, erasure coding, local storage budgets, serving bandwidth, and repair overhead?
+- Which component of `K_safe_vector=(K_storage,K_serve,K_repair,K_IO)` binds under each workload?
 - What node-resource percentile should define the protocol envelope?
-- How large must `H_min` be to preserve a meaningful minimum ingress lane under bursts rather than steady state?
+- How large must `H_min` be to preserve a meaningful short-duration lane under bursts, and how can ingress policy prevent that lane itself from being flooded?
 - Does a simple active-stock base fee plus byte-time charge allocate capacity adequately, or does it systematically underprice long leases purchased during quiet periods?
-- Should guaranteed long leases pay a duration risk premium even without future-starting reservations?
+- Should long required-serving leases pay a duration risk premium even without future-starting reservations?
 - Can an attacker cheaply cycle short leases to manipulate the retention base fee?
 
 ### 22.2 Simpler-design challenge
@@ -22,7 +22,13 @@ The next work should be falsification-oriented rather than additive.
 
 ### 22.3 Heterogeneous expiry under PeerDAS/FullDAS
 
-The highest-priority implementation questions are now the hot/cold kill questions:
+The highest-priority implementation questions split by representation. For 1D PeerDAS:
+
+- Can EIP-8136-style cell transport be adapted to sparse historical requests without reconstructing complete sidecars?
+- What row-topic or discovery mechanism lets independent nodes contribute to partial reconstruction?
+- How are per-cell expiry, custody assignment, and repair indexes represented?
+
+For a future 2D design, the hot/cold kill questions are:
 
 - Does a concrete FullDAS design require its second-dimensional coded representation to persist through the entire historical serving window, or only through fresh dispersal/sampling/availability amplification?
 - Can the independently committed horizontal blob row remain a sufficient authenticated reconstruction object after cross-row redundancy is dropped?
@@ -30,7 +36,7 @@ The highest-priority implementation questions are now the hot/cold kill question
 
 Secondary questions include:
 
-- What exact event ends the mandatory hot phase `T_hot`?
+- Which `T_hot` candidate—local acceptance plus delay, a network availability signal, or finality—satisfies the fresh-DA security model?
 - Can the hot representation be dropped before ordinary finality?
 - What minimum common hot interval is needed?
 - Can current PeerDAS cells be served sparsely after neighboring blob cells expire without reconstructing a dense `DataColumnSidecar`?
@@ -60,8 +66,10 @@ Secondary questions include:
 
 ### 22.6 Availability semantics and post-expiry proof
 
-- Is the base service a point-in-time availability event plus a timed serving obligation, or should continued service itself be attestable?
-- What enforcement makes heterogeneous serving duties credible?
+- Is level-1 protocol-required serving sufficient for the base experiment, or must continued service be probabilistically monitored?
+- What evidence would justify level-3 cryptoeconomic penalties without creating mass-slashing or false-positive risk?
+- Can a client deterministically compute its live duties from canonical `DataObjectMeta` without arbitrary EL-state access?
+- What are the exact reorg semantics for the expiry ring and active resource counters?
 - What minimal integrity anchor should remain after payload expiry?
 - Can a later observer prove historical availability, or only authenticate a copy that survived elsewhere?
 

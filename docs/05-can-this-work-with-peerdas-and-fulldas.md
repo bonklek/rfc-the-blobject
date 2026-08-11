@@ -12,7 +12,22 @@ then the effective retained-stock envelope `K_safe` can increase. Conversely, in
 
 This complementarity is straightforward. The physical compatibility question is not.
 
-The important adversarial finding is that **heterogeneous expiry creates two distinct problems**, one already visible in PeerDAS and a deeper one introduced by proposed two-dimensional FullDAS designs.
+The important adversarial finding is that **heterogeneous expiry creates representation-dependent problems**. Variable retention does not depend on two-dimensional FullDAS becoming Ethereum's chosen path.
+
+```text
+Current 1D PeerDAS
+    |
+    +-- 1D + cell-level transport
+    |      -> sparse per-row/cell historical custody
+    |      -> no cross-row parity to preserve
+    |
+    +-- possible future 2D DAS
+           -> cross-row parity coupling
+           -> hot-2D / cold-1D transition hypothesis
+           -> OR maturity-aligned coding domains
+```
+
+The 1D branch is the first implementation target. The 2D branch is a compatibility investigation, not the assumed Ethereum roadmap.
 
 ### 17.1 Problem A: PeerDAS column packaging
 
@@ -39,6 +54,10 @@ column j:
 ```
 
 The present whole-column serving abstraction is awkward for this sparse state. Retaining the original complete sidecar until the longest constituent expiry gives short-lived objects the physical lifetime of their longest-lived neighbor. Sparse or cell-level historical serving can plausibly remove this **packaging** coupling.
+
+Draft [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is important evidence for this branch. It lets PeerDAS peers exchange missing cells rather than retransmitting complete columns and is designed as a backwards-compatible networking optimization. It does **not** specify sparse historical storage or heterogeneous expiry, but it establishes that independently transmissible cells are already an active protocol direction.
+
+The current [1D-versus-2D DAS analysis](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) also shows that 1D PeerDAS can support partial row reconstruction when paired with cell-level messaging and row-oriented reconstruction flows. That design has practical and security tradeoffs, but it keeps 1D with smaller cells as a viable path rather than a temporary stop on an inevitable move to 2D.
 
 This problem is serious for an implementation built directly on current sidecars, but it does not by itself require changing the blob's row-local encoding.
 
@@ -73,9 +92,9 @@ The critical question is:
 
 If yes, fine-grained physical expiry becomes difficult. If no, there is a cleaner design family.
 
-### 17.3 Leading compatibility hypothesis: hot dense DAS → cold sparse row-local custody
+### 17.3 The 2D compatibility branch: hot dense DAS → cold sparse row-local custody
 
-The current preferred research direction is a two-phase lifecycle.
+If Ethereum adopts a cross-row 2D code, one candidate is a two-phase lifecycle. This section is deliberately conditional on that representation.
 
 #### Phase 1 — row-local preparation
 
@@ -96,6 +115,18 @@ Many rows are assembled into the richer DAS object. The protocol adds whatever s
 All objects participate normally during this phase regardless of their eventual retention duration. No object may expire before the common hot phase ends.
 
 Let the end of this phase be `T_hot_end`, or its duration be summarized as `T_hot`.
+
+#### Candidate transition events
+
+`T_hot` is a kill parameter, not a placeholder to be resolved later. At least three transition designs should be prototyped:
+
+| Candidate | Transition condition | Benefit | Primary risk |
+|---|---|---|---|
+| A. Local acceptance plus fixed delay | A node completes its ordinary DA checks, then waits a protocol-fixed safety interval | Earliest transition; preserves very short-lived applications | Different nodes may transition with incomplete common knowledge; unsafe if late repair still depends on 2D redundancy |
+| B. Network availability signal | A committee, aggregate, or protocol-recognized signal confirms the hot phase is complete | Shared transition point without necessarily waiting for finality | Introduces new signaling, withholding, and fork-choice interactions |
+| C. Finality | The containing block finalizes | Simple, globally recognizable boundary | Makes `T_hot` long enough to weaken minute-scale use cases and increases hot working storage |
+
+Candidate A is useful only if local transition disagreement cannot weaken fresh DA. Candidate B must define who signals and what the signal proves. Candidate C is the conservative fallback, not an assumption. The models therefore accept `T_hot` as an explicit input rather than hiding it inside total retention.
 
 #### Phase 3 — hot-to-cold transition
 
@@ -159,7 +190,7 @@ A client retrieving C later requests enough independently verifiable cells from 
 
 This is the intended graceful-expiry property.
 
-### 17.4 Cold repair is a different security problem
+### 17.4 Cold custody is a formal security problem
 
 Dropping second-dimensional redundancy gives up some of the machinery that makes fresh FullDAS attractive.
 
@@ -186,12 +217,49 @@ for safe block/payload acceptance?
 
 COLD QUESTION:
 Has this particular still-live object remained reconstructable
-through its promised serving horizon?
+through its protocol-required serving horizon?
 ```
 
-The cold layer therefore needs its own survivability policy. Candidate ingredients include replication, multi-custodian assignment, randomized custody or service challenges, health estimation, reconstruct-and-repair, custody reassignment, overlap during handoff, and repair thresholds that depend on remaining lease time.
+The cold layer therefore needs its own survivability requirement. Let:
 
-None is specified here as the final mechanism.
+- `m` be the number of horizontal cells in the cold row;
+- `k` be the number required for reconstruction;
+- `n` be the eligible custodian population;
+- `c` be the independent replicas assigned per cell;
+- `q` be the per-custodian offline or adversarial probability within one repair interval;
+- `Δ_repair` be the repair cadence;
+- `T` be the remaining required-serving duration;
+- `p_max` be the maximum tolerated lease-failure probability.
+
+The protocol target is:
+
+```text
+P[row remains reconstructable at every checkpoint through T]
+>=
+1 - p_max.
+```
+
+Under a deliberately simple independent-failure model, one cell is lost within an interval with probability `q^c`. The probability that at least `k` of `m` cells survive that interval is:
+
+```text
+P_row
+=
+Σ[j=k..m] choose(m,j) · (1-q^c)^j · (q^c)^(m-j).
+```
+
+With repair restoring the target multiplicity every `Δ_repair`, a conservative checkpoint approximation over `N=ceil(T/Δ_repair)` intervals is:
+
+```text
+P_lease ≈ P_row^N.
+```
+
+In this null model, `n` constrains assignment feasibility only through `c≤n`; independence makes the remaining expression insensitive to the size of the unused population. That simplification is itself a warning. A real design must derive assignment overlap and adversarial concentration from `n` rather than treating replicas as automatically independent.
+
+This is a null model, not a security proof. Real failures are correlated; an adaptive adversary may target custody assignments; repair itself can fail or leak assignments; and “online” is not identical to “will serve.” A deployable model must replace `q` with explicit honest, offline, adversarial, and network-partition processes and must account for handoff overlap.
+
+Candidate mechanisms include replication, multi-custodian assignment, randomized service challenges, health estimation, reconstruct-and-repair, custody reassignment, and overlap during handoff. Level-2 monitoring or level-3 penalties from §2.2 can strengthen compliance but do not replace the reconstruction calculation.
+
+[The cold-custody model](../models/cold_custody.py) evaluates this null model and reports whether a parameter set meets `p_max`.
 
 ### 17.5 Physical and hardware consequences
 
@@ -243,13 +311,13 @@ At realistic churn and failure rates, reconstruction and repair from surviving r
 
 The networking and proof interfaces must permit still-live cells to be requested and verified after neighboring logical objects expire without recreating obsolete dense sidecars.
 
-These reduce to three principal kill questions:
+These reduce to three principal kill questions, tracked as repository issues:
 
-> **A. Does FullDAS require the second-dimensional coded representation for the entire serving horizon, or mainly for fresh dispersal, sampling, and availability amplification?**
+> **[A](https://github.com/bonklek/rfc-the-blobject/issues/2). Does FullDAS require the second-dimensional coded representation for the entire serving horizon, or mainly for fresh dispersal, sampling, and availability amplification?**
 
-> **B. Can the independently committed horizontal row remain a sufficient authenticated reconstruction object after that second dimension is discarded?**
+> **[B](https://github.com/bonklek/rfc-the-blobject/issues/3). Can the independently committed horizontal row remain a sufficient authenticated reconstruction object after that second dimension is discarded?**
 
-> **C. Is row-local cold repair cheap and robust enough to maintain long leases without keeping the richer 2D code alive?**
+> **[C](https://github.com/bonklek/rfc-the-blobject/issues/4). Is row-local cold repair cheap and robust enough to maintain long leases without keeping the richer 2D code alive?**
 
 A negative answer to A or B would severely weaken this design family. A negative answer to C may still permit short or medium retention but undermine long cold leases.
 
@@ -280,10 +348,10 @@ The weak-dominance result in §3 remains necessary but insufficient. Let `G` be 
 The revised deployment order is therefore:
 
 1. preserve a general duration-oriented **service abstraction**;
-2. prototype sparse historical serving against present PeerDAS cells to isolate the packaging problem;
-3. prototype the hot-to-cold transition against a concrete two-dimensional FullDAS code;
-4. measure row-local cold repair under realistic custody churn;
-5. if any kill question fails, fall back to maturity-aligned coding domains;
+2. prototype 1D cell-level historical serving against present PeerDAS to isolate the packaging problem;
+3. measure row-local cold repair under realistic custody churn;
+4. only if a concrete 2D design is pursued, prototype each `T_hot` transition candidate and the hot-2D/cold-1D transition;
+5. if any representation-specific kill question fails, fall back to maturity-aligned coding domains;
 6. only then decide whether continuous expiry or a small number of physical maturities is justified.
 
 The implementation dependency is now explicit:

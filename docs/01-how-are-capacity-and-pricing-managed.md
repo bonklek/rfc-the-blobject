@@ -2,7 +2,7 @@
 
 ## 4. Flow and active retained stock
 
-For the narrow spot-start mechanism, two quantities are initially sufficient.
+For the narrow spot-start mechanism, flow and active retained stock are the first-order accounting quantities.
 
 Let `R_t` denote new data entering Ethereum DA around time `t`. This is the **flow** resource: propagation, coding, sampling, and real-time processing.
 
@@ -20,7 +20,7 @@ and
 S_t ≤ K_safe,
 ```
 
-where `K_safe` is the largest logical retained-data obligation the custody architecture is provisioned to serve safely.
+where scalar `K_safe` is a first-order projection of the custody architecture's physical service envelope. §6 expands it into a resource vector.
 
 This is the first major simplification produced by adversarial review. For leases that begin at admission, a separate forward hard-cap curve is not required for storage safety.
 
@@ -41,9 +41,72 @@ then the already-contracted retained stock cannot exceed `K_safe` at any later h
 
 Long leases can still crowd out later users, but they do so by occupying capacity **now**, not by secretly reserving a future stock that is invisible to the current cap. That is an allocation and liveness problem, not a hidden physical-safety problem.
 
+### 4.1 Non-normative protocol-state sketch
+
+The following toy transition makes the accounting mechanically testable. It chooses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. These are candidate choices, not an EIP.
+
+```text
+state:
+    retained_bytes: uint64
+    expiry_queue[MAX_RETENTION_EPOCHS + 1]: Bucket
+
+Bucket:
+    epoch: Epoch
+    bytes: uint64
+
+DataObjectMeta:
+    commitment: Commitment
+    size: uint64
+    expiry_epoch: Epoch
+    enforcement_level: PROTOCOL_REQUIRED
+
+on_epoch_transition(current_epoch):
+    bucket = expiry_queue[current_epoch % len(expiry_queue)]
+    if bucket.epoch == current_epoch:
+        retained_bytes -= bucket.bytes
+        bucket = Bucket(epoch=FAR_FUTURE_EPOCH, bytes=0)
+
+admit_blob(commitment, size, retention_epochs, current_epoch):
+    require retention_epochs in ALLOWED_RETENTION_EPOCHS
+    require T_min <= retention_epochs <= T_max
+
+    expiry_epoch = current_epoch + retention_epochs
+    require retained_bytes + size <= K_safe
+
+    bucket = expiry_queue[expiry_epoch % len(expiry_queue)]
+    require bucket.epoch in {expiry_epoch, FAR_FUTURE_EPOCH}
+
+    retained_bytes += size
+    bucket.epoch = expiry_epoch
+    bucket.bytes += size
+
+    return DataObjectMeta(
+        commitment,
+        size,
+        expiry_epoch,
+        PROTOCOL_REQUIRED,
+    )
+```
+
+The toy binds retention **per blob commitment**, not per transaction. A blob transaction carrying several blobs can supply one duration per commitment or apply one duration to all of them; the resulting `DataObjectMeta` list is committed in the block. The execution layer validates authorization and charges the admission fee, while the consensus layer receives the commitment, size, and absolute expiry through an Engine API payload field or an equivalent consensus-visible container. A consensus client therefore does not need arbitrary execution-state reads to determine its duties.
+
+Custody assignment remains deterministic under the relevant DAS design. A node derives whether it must serve a live object's cells from the canonical block, the object metadata, and its custody groups. The obligation holds while `current_epoch < expiry_epoch`.
+
+The counters and ring buffer are part of fork state. A reorganization restores the parent state's `retained_bytes`, expiry buckets, and admitted metadata before applying the competing branch, just as any other consensus state transition would. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state.
+
+The unresolved protocol choices are now explicit:
+
+- the exact EL/CL container and commitment for `DataObjectMeta`;
+- whether continuous epoch values or a small allowed maturity set are exposed;
+- how logical bytes map into each physical resource counter;
+- whether level-2 or level-3 enforcement metadata is ever added;
+- how cold custody assignments and repair handoffs are represented.
+
+[The executable stock model](../models/stock.py) implements this transition and reorg snapshots.
+
 ---
 
-## 5. Pricing guaranteed byte-time
+## 5. Pricing protocol-required byte-time
 
 The fee decomposition remains:
 
@@ -55,9 +118,9 @@ F_ingress(B;R_t)
 F_ret(B,T;S_t).
 ```
 
-Ingress prices the immediate flow burden. Retention prices a guaranteed amount of **byte-time**.
+Ingress prices the immediate flow burden. Retention accounts for a protocol-required amount of **byte-time**.
 
-The simplest spot-start benchmark is:
+The null accounting benchmark is:
 
 ```text
 F_ret(B,T;S_t)
@@ -67,7 +130,17 @@ B · T · p_ret(u_t),
 u_t = S_t / K_target,
 ```
 
-with a marginal byte-time price that rises as active retained stock approaches its sustainable target. A deployable fee mechanism may need a duration premium, discrete maturity classes, or a more sophisticated base-fee update rule; the equation is a benchmark, not a final mechanism.
+with a marginal byte-time price that rises as active retained stock approaches its sustainable target. This is not a proposed price mechanism. It deliberately ignores the option value of long leases purchased before future scarcity becomes visible.
+
+A mechanism-design comparison should treat the following as competing hypotheses:
+
+- plain `B · T · p(S_t)` as the null model;
+- convex duration premiums;
+- separate base-fee curves for quantized maturities;
+- auctioned long-duration capacity;
+- admission charges based on expected future scarcity.
+
+The resource-allocation claim does not depend on which pricing hypothesis survives. [The pricing model](../models/pricing.py) exposes these alternatives behind one interface for adversarial comparison.
 
 A hot/cold physical implementation refines this decomposition without changing the logical API. Every object incurs the common cost of fresh dispersal, coding, sampling, and whatever mandatory hot redundancy the DAS design requires. Only the post-transition obligation scales with the purchaser's longer retention choice. Schematically, for total service horizon `T≥ T_hot`,
 
@@ -93,7 +166,7 @@ where the coefficients summarize physically different workloads rather than prop
 
 This is intentionally less ambitious than pricing every point on a forward curve. The hard cap supplies safety. The fee market supplies economic allocation below that cap.
 
-A prepaid fixed-duration lease has one important security property: once accepted, its serving horizon is not contingent on later fee increases. A “rent that must continuously be topped up” is simpler in some respects but changes the service semantics. Under future congestion or censorship, a rollup could lose retention before its promised security horizon. Continuous rent is therefore better understood as an application-layer or best-effort service unless the entire maximum obligation is prepaid or otherwise guaranteed at admission.
+A prepaid fixed-duration lease has one important security property: once accepted, its serving horizon is not contingent on later fee increases. A “rent that must continuously be topped up” is simpler in some respects but changes the service semantics. Under future congestion or censorship, a rollup could lose required retention before its declared security horizon. Continuous rent is therefore better understood as an application-layer or best-effort service unless the entire maximum obligation is admitted up front.
 
 The retention fee should initially be understood as a **scarcity/admission charge on protocol byte-time**, not automatically as compensation to individual custodians. Ethereum can burn the fee while separately enforcing custody duties, just as blob fees need not be direct provider payments. A provider-reward system is a different mechanism.
 
@@ -115,7 +188,23 @@ The active-stock cap solves the second. A separately derived reserve can address
 
 The protocol should not begin with an arbitrary `C(τ)`. It should begin with a physical resource envelope.
 
-Let `K_safe` denote the maximum logical retained stock compatible with the chosen node-resource target under the actual custody topology. In a concrete DAS design, deriving `K_safe` requires at least:
+Let the physical safety envelope be a vector:
+
+```text
+K_safe_vector
+=
+(K_storage, K_serve, K_repair, K_IO).
+```
+
+The corresponding live usage vector includes resident bytes, historical request bandwidth, repair bandwidth, and write/expiry churn. Admission must remain inside **every** component:
+
+```text
+usage_vector + obligation(blob, T) <= K_safe_vector.
+```
+
+Scalar `K_safe` elsewhere in the RFC is a first-order projection onto whichever component is assumed to bind. It is useful for proving the active-stock simplification, but a deployable service cannot assume storage is always the binding resource.
+
+In a concrete DAS design, deriving the vector requires at least:
 
 - erasure-coding expansion;
 - the fraction of columns, rows, or cells each node class must custody;
@@ -152,7 +241,7 @@ K_safe ≲ (M_budget - M_hot - M_repair - M_metadata) / γ_cold.
 
 This is not yet a parameter proposal. It is a more useful research target than an abstract capacity percentage because every term can eventually be measured against a concrete custody and coding design. It also exposes a hardware asymmetry: the hot tier is dominated by write bandwidth, networking, coding, verification, and rapid repair, while the cold tier is dominated by capacity, historical serving, expiry bookkeeping, and slower reconstruct-and-repair.
 
-A second quantity is then needed if Ethereum wants to guarantee that long leases cannot consume every byte of capacity required by urgent short-lived traffic.
+A second quantity is then useful if Ethereum wants to prevent long leases from consuming the stock capacity reserved for short-duration traffic.
 
 Suppose the protocol wants to preserve the ability to admit at least `r_reserve` bytes per unit time of minimum-retention traffic, where every such byte must remain served for at least `T_min`. A first-order steady-state reserve is:
 
@@ -170,9 +259,9 @@ K_safe - H_min,
 
 while the reserved region remains available to the protocol-defined spot/JIT lane.
 
-This is not offered as a finished parameterization. Bursts, repair slack, node churn, and changing ingress limits require additional margins. Its value is conceptual: **headroom can be tied to an explicit liveness objective instead of percentages chosen by maturity.**
+This is not offered as a finished parameterization. Bursts, repair slack, node churn, and changing ingress limits require additional margins. More importantly, `H_min` protects only a **short-duration resource lane**. An attacker can submit minimum-duration objects too. The reserve prevents long leases from pre-consuming the short lane; it does not preserve honest-user admission against an attacker flooding that lane. Ingress limits, pricing, and any inclusion mechanism still decide that fight.
 
-There is already an adjacent Ethereum design pattern. The draft Blob Streaming EIP separates AOT from JIT capacity and includes `JIT_RESERVED`, a minimum capacity that AOT reservations cannot consume. A retention reserve would apply the same principle to stock rather than flow.
+There is an adjacent but structurally cleaner Ethereum design pattern. Draft EIP-8256 separates AOT from JIT flow capacity and includes `JIT_RESERVED`, which AOT reservations cannot consume. A retention reserve borrows that lane-separation idea for stock, but should not inherit stronger anti-censorship or honest-user-liveness claims from it.
 
 ---
 
@@ -201,17 +290,17 @@ Its cost is fragmentation. Capacity can be idle in one maturity class while anot
 
 Ethereum could sell only a short base horizon and permit extensions before expiry.
 
-This avoids long guaranteed commitments and makes current stock easy to price. But it does **not** reproduce a prepaid long guarantee. A rollup that must renew under future congestion is exposed precisely when it most values continuity. If renewal capacity is guaranteed in advance, the design has recreated a future retention commitment under another name.
+This avoids long prepaid commitments and makes current stock easy to price. But it does **not** reproduce a prepaid long required-serving term. A rollup that must renew under future congestion is exposed precisely when it most values continuity. If renewal capacity is reserved in advance, the design has recreated a future retention commitment under another name.
 
-Renewal is therefore attractive for elastic applications, not a full substitute for guaranteed maturity.
+Renewal is therefore attractive for elastic applications, not a full substitute for an admitted fixed maturity.
 
 ### 7.3 Continuously metered rent
 
-A prepaid balance could decay with byte-time until the payer tops it up or a maximum expiry is reached. This is elegant for downstream storage services and receipt-terminated retention, but weakens the base protocol guarantee if the service can terminate merely because future prices rise.
+A prepaid balance could decay with byte-time until the payer tops it up or a maximum expiry is reached. This is elegant for downstream storage services and receipt-terminated retention, but weakens the base protocol requirement if the service can terminate merely because future prices rise.
 
-### 7.4 Hot availability representation → cold independently expiring custody
+### 7.4 Representation-dependent paths
 
-The more ambitious implementation is to let the **physical representation change after fresh availability has been established**.
+The physical path depends on which DAS representation Ethereum uses. Current 1D PeerDAS with cell-level transport may permit sparse row/cell historical custody without a second coding transition. A future 2D construction introduces cross-row parity coupling and may require a **physical representation change after fresh availability has been established**.
 
 The logical object remains the same committed blob and the application still chooses its serving horizon. Under the hood, however, the network first uses the dense redundancy and repair structure optimized for fast DAS. Once a protocol-recognizable hot phase ends, it discards representation components needed only for fresh availability amplification and keeps an independently reconstructable, independently expiring representation for historical serving.
 
@@ -233,6 +322,6 @@ Arbitrary `T` still maximizes allocative expressiveness and keeps the logical AP
 
 > **Can Ethereum preserve one highly redundant representation only as long as it is needed for fresh availability, then move still-live objects into an independently expirable serving representation without changing their commitments?**
 
-The paper therefore treats **continuous variable retention as the semantic target, hot/cold representation transition as the leading compatibility hypothesis, and maturity-aligned classes as the conservative fallback**.
+The paper therefore treats **continuous variable retention as the semantic target, 1D cell-level custody as the first prototype path, hot-2D/cold-1D as one future compatibility branch, and maturity-aligned classes as the conservative fallback**.
 
 ---

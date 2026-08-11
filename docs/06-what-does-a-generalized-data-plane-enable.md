@@ -81,7 +81,7 @@ The common primitive is not “a rollup blob.”
 
 It is:
 
-> **market-priced, consensus-secured availability over committed bytes.**
+> **market-priced, protocol-required retrievability over committed bytes under explicit custody assumptions.**
 
 ---
 
@@ -117,7 +117,7 @@ A user purchases a scarce network resource.
 
 Authenticated bytes enter a globally shared data plane.
 
-Ethereum’s DAS guarantees reconstructability for a chosen period.
+Ethereum's DAS establishes publication-time availability, after which the protocol requires assigned custodians to serve enough authenticated data for reconstruction for a chosen period.
 
 Other systems take over whatever happens afterward.
 

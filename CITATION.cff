@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this RFC or its models, please cite this repository."
+title: "RFC: The Blobject"
+type: software
+authors:
+  - name: bonklek
+repository-code: "https://github.com/bonklek/rfc-the-blobject"
+url: "https://github.com/bonklek/rfc-the-blobject"
+abstract: "A research RFC and executable null models for variable-retention data availability on Ethereum."
+keywords:
+  - Ethereum
+  - data availability
+  - PeerDAS
+  - variable retention
+  - distributed storage
+date-released: "2026-08-11"
