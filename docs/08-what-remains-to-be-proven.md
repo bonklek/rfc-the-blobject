@@ -2,7 +2,7 @@
 
 ## 22. Open questions
 
-The next round of work should try to disprove the proposal rather than add more features. Five questions take priority:
+The next round of work should try to disprove the proposal rather than add more features. The tests below have three scopes: a **proposal kill** rejects continuous variable retention as the base design, a **branch kill** rejects one physical architecture while leaving fallbacks available, and a **deployment gate** must be satisfied before an implementation can safely ship.
 
 1. Can logical expiry release physical resources under current 1D PeerDAS?
 2. If Ethereum adopts cross-row 2D coding, can hot redundancy be dropped without weakening fresh DA?
@@ -11,6 +11,16 @@ The next round of work should try to disprove the proposal rather than add more 
 5. Do a few maturity classes capture most of the benefit of continuous durations?
 
 The detailed questions below unpack those blockers and the secondary design choices around them.
+
+### 22.0 Proposal-level kill criteria
+
+Continuous variable retention should be abandoned or narrowed if any of these conditions holds:
+
+1. **1D physical-value kill.** Under representative expiry, request, churn, and repair workloads, sparse historical serving on current or near-current PeerDAS does not release enough physical resources to justify its metadata, request, repair, and reclamation costs.
+2. **Demand kill.** Realistic applications cannot safely use materially shorter horizons than the current fixed window, so variable duration creates no meaningful allocation advantage beyond its logical accounting result.
+3. **Simpler-design dominance.** Two or three fixed maturity classes capture nearly all measured value at substantially lower implementation and security complexity.
+
+The FullDAS parity-lifetime and cold-row survivability questions in §22.3 are branch kills: failure rejects the hot-2D/cold-1D design, not the entire proposal. Upgrade, repair, handoff, observability, and recovery requirements are deployment gates unless the proposal relies on one of them for a claimed security property.
 
 ### 22.1 Physical capacity and pricing
 
@@ -47,6 +57,8 @@ The highest-priority implementation questions split by representation. For 1D Pe
 - Can EIP-8136-style cell transport be adapted to sparse historical requests without reconstructing complete sidecars?
 - What row-topic or discovery mechanism lets independent nodes contribute to partial reconstruction?
 - How are per-cell expiry, custody assignment, and repair indexes represented?
+- Can the request path meet a versioned service profile's deadlines, rate limits, retry rules, and reconstruction-fanout assumptions under adversarial load?
+- How large can reclamation lag and scheduled expiry bursts become before physical capacity credit must stop?
 
 For a future 2D design, the hot/cold kill questions are:
 
@@ -90,7 +102,9 @@ Secondary questions include:
 - What evidence would justify level-3 cryptoeconomic penalties without creating mass-slashing or false-positive risk?
 - Can a Sybil-resistant, economically accountable custody mechanism demonstrate continued possession and service across heterogeneous lease durations, repair, reassignment, and handoff?
 - Can a client deterministically compute its live duties from canonical `DataObjectMeta` without arbitrary EL-state access?
-- What are the exact reorg semantics for the expiry ring and active resource counters?
+- Can a live lease retain its admitted `service_profile_id` semantics across client and protocol upgrades?
+- What are the recovery semantics for canonical lease identity, slot-based expiry, and active resource counters under reorgs or extraordinary rollback?
+- Can custody reassignment preserve a live obligation until the replacement has accepted and demonstrated custody?
 - What minimal integrity anchor should remain after payload expiry?
 - Can a later observer prove historical availability, or only authenticate a copy that survived elsewhere?
 

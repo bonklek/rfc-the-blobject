@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Proposal Argument"
+  short_description: "Audit proposal logic, evidence, and flow"
+  default_prompt: "Use $audit-proposal-argument to audit this proposal and prioritize the revisions that most strengthen its argument."

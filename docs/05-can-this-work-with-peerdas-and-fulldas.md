@@ -356,7 +356,14 @@ The tradeoff is direct:
 
 ### 17.8 The operational-dominance test and deployment order
 
-The weak-dominance result in §3 remains necessary but insufficient. Let `G` be the logical byte-time saved by shorter leases and `O` the physical overhead introduced by sparse serving, metadata, proof handling, repair, and transition machinery. Variable retention is operationally beneficial only when realized physical savings exceed `O`.
+The weak-dominance result in §3 remains necessary but insufficient. Logical byte-time and physical overhead do not share a scalar unit. Compare a fixed-retention design and a variable-retention design as resource vectors instead:
+
+```text
+R_fixed = (storage, serving, repair, I/O, latency, metadata)
+R_var   = (storage, serving, repair, I/O, latency, metadata).
+```
+
+Variable retention strictly dominates only if `R_var` is no worse in every binding dimension and better in at least one. A design may instead save storage while worsening metadata, request amplification, or repair. Choosing among such incomparable vectors requires an explicit hardware target or cost function; the logical stock theorem alone cannot settle that choice.
 
 A cautious deployment order is:
 
