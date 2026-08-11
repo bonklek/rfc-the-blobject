@@ -43,66 +43,83 @@ Long leases can still crowd out later users, but the capacity they consume is vi
 
 ### 4.1 Non-normative protocol-state sketch
 
-The following toy transition makes the accounting testable. It uses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. It deliberately derives the accounting quantity from the fixed blob type rather than accepting a caller-supplied size. Those choices are illustrative rather than an EIP specification.
+The following toy transition makes the accounting testable. Purchasers select an integer number of epochs, but expiry is computed from the canonical inclusion slot so the lease receives the full elapsed duration. The sketch also separates the end of service from conservative capacity reclamation. It deliberately derives the accounting quantity from the fixed blob type rather than accepting a caller-supplied size. These choices are illustrative rather than an EIP specification.
 
 ```text
 state:
-    retained_bytes: uint64
-    expiry_queue[MAX_RETENTION_EPOCHS + 1]: Bucket
-
-Bucket:
-    epoch: Epoch
-    bytes: uint64
+    obligated_bytes: uint64
+    accounted_bytes: uint64
+    service_expiry_queue: Queue
+    reclaim_queue: Queue
 
 DataObjectMeta:
+    object_id: ObjectID
     commitment: Commitment
-    expiry_epoch: Epoch
+    inclusion_slot: Slot
+    expiry_slot: Slot
+    reclaim_after_slot: Slot
+    service_profile_id: ServiceProfileID
     enforcement_level: PROTOCOL_REQUIRED
 
-on_epoch_transition(current_epoch):
-    bucket = expiry_queue[current_epoch % len(expiry_queue)]
-    if bucket.epoch == current_epoch:
-        retained_bytes -= bucket.bytes
-        bucket = Bucket(epoch=FAR_FUTURE_EPOCH, bytes=0)
+on_slot_transition(current_slot):
+    for item in service_expiry_queue.pop_through(current_slot):
+        obligated_bytes -= item.bytes
 
-admit_blob(commitment, retention_epochs, current_epoch):
+    for item in reclaim_queue.pop_through(current_slot):
+        accounted_bytes -= item.bytes
+
+admit_blob(commitment, blob_index, retention_epochs, canonical_inclusion,
+           service_profile_id):
     require retention_epochs in ALLOWED_RETENTION_EPOCHS
-    require T_min <= retention_epochs <= T_max
+    require T_protocol_min <= retention_epochs <= T_max
 
     size = BLOB_ACCOUNTING_BYTES
-    expiry_epoch = current_epoch + retention_epochs
-    require retained_bytes + size <= K_safe
+    inclusion_slot = canonical_inclusion.slot
+    object_id = derive_object_id(canonical_inclusion, blob_index, commitment)
+    expiry_slot = inclusion_slot + retention_epochs * SLOTS_PER_EPOCH
+    reclaim_after_slot = expiry_slot + RECLAMATION_GRACE_SLOTS
+    require accounted_bytes + size <= K_safe
 
-    bucket = expiry_queue[expiry_epoch % len(expiry_queue)]
-    require bucket.epoch in {expiry_epoch, FAR_FUTURE_EPOCH}
-
-    retained_bytes += size
-    bucket.epoch = expiry_epoch
-    bucket.bytes += size
+    obligated_bytes += size
+    accounted_bytes += size
+    service_expiry_queue.push(expiry_slot, object_id, size)
+    reclaim_queue.push(reclaim_after_slot, object_id, size)
 
     return DataObjectMeta(
+        object_id,
         commitment,
-        expiry_epoch,
+        inclusion_slot,
+        expiry_slot,
+        reclaim_after_slot,
+        service_profile_id,
         PROTOCOL_REQUIRED,
     )
 ```
 
-The toy binds retention **per blob commitment**, not per transaction. A blob transaction carrying `n` blobs still purchases and pays the existing ingress fee for exactly `n` whole blobs: `blob_gas_used = n · GAS_PER_BLOB`, with the fee determined by the blob base fee. It can supply one duration per commitment or apply one duration to all of them; the resulting `DataObjectMeta` list is committed in the block. The execution layer validates authorization and charges any retention component, while the consensus layer receives each commitment and its absolute expiry through an Engine API payload field or an equivalent consensus-visible container. Size is implicit in the versioned blob type. A consensus client therefore does not need a user-supplied size or arbitrary execution-state reads to determine its duties.
+The toy binds retention **per published blob**, not per transaction and not per unique content commitment. A blob transaction carrying `n` blobs still purchases and pays the existing ingress fee for exactly `n` whole blobs: `blob_gas_used = n · GAS_PER_BLOB`, with the fee determined by the blob base fee. It can supply one duration per blob or apply one duration to all of them; the resulting `DataObjectMeta` list is committed in the block. The execution layer validates authorization and charges any retention component, while the consensus layer receives each commitment and its absolute expiry through an Engine API payload field or an equivalent consensus-visible container. Size is implicit in the versioned blob type. A consensus client therefore does not need a user-supplied size or arbitrary execution-state reads to determine its duties.
 
-Custody assignment remains deterministic under the relevant DAS design. A node derives whether it must serve a live object's cells from the canonical block, the object metadata, and its custody groups. The obligation holds while `current_epoch < expiry_epoch`.
+`commitment` authenticates the bytes; `object_id` identifies this canonical publication and its lease. Publishing identical bytes twice may therefore produce one content commitment but two independently accounted obligations. The exact identifier construction belongs in an EIP and should avoid circular dependence on a block root; the invariant is only that it is deterministic from canonical inclusion, blob position, and commitment.
+
+Custody assignment remains deterministic under the relevant DAS design. A node derives whether it must serve a live object's cells from the canonical block, the object metadata, and its custody groups. The obligation holds while `current_slot < expiry_slot` under the lease's versioned `service_profile_id`.
+
+That profile defines the bounded service envelope: eligible request interface and requester semantics, authenticated response unit, response deadline, request budget or rate limit, retry and alternate-peer behavior, reconstruction fanout assumptions, and enforcement level. A live lease remains governed by the profile under which it was admitted; an upgrade may introduce a new profile for new leases but must not silently weaken an existing one.
+
+Service ending at `expiry_slot` does not imply that storage, indexes, repair state, or allocator capacity become reusable in the same transition. `reclaim_after_slot` is the earliest point at which admission accounting may credit the capacity back. A real design must derive the grace period and react to reclamation backlog rather than assuming deletion is atomic.
 
 The counters and ring buffer are part of fork state. A reorganization restores the parent state's `retained_bytes`, expiry buckets, and admitted metadata before applying the competing branch, just as any other consensus state transition would. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state.
 
 The sketch leaves several protocol choices open:
 
-- the exact EL/CL container and commitment for `DataObjectMeta`;
+- the exact EL/CL container and commitment for `DataObjectMeta` and the canonical `object_id` derivation;
 - whether continuous epoch values or a small allowed maturity set are exposed;
 - which byte-equivalent accounting constant represents one current blob, and how that fixed logical unit expands into storage, serving, repair, and I/O counters;
 - whether a future transport should introduce other discrete object sizes, and, if so, its framing and fee rules;
 - whether level-2 or level-3 enforcement metadata is ever added;
-- how cold custody assignments and repair handoffs are represented.
+- how service profiles are versioned across upgrades;
+- how cold custody assignments and repair handoffs are represented;
+- how reclamation grace and backlog affect physical admission.
 
-[The executable stock model](../models/stock.py) implements this transition and reorg snapshots.
+[The executable stock model](../models/stock.py) implements the slot-derived lease identity and expiry semantics, conservative reclamation grace, and reorg snapshots.
 
 ---
 
@@ -171,6 +188,10 @@ The hard cap supplies safety, while the fee market allocates capacity below it. 
 A prepaid fixed-duration lease has one important security property: once accepted, its serving horizon is not contingent on later fee increases. A “rent that must continuously be topped up” is simpler in some respects but changes the service semantics. Under future congestion or censorship, a rollup could lose required retention before its declared security horizon. Continuous rent is therefore better understood as an application-layer or best-effort service unless the entire maximum obligation is admitted up front.
 
 The retention fee should initially be understood as a **scarcity/admission charge on protocol byte-time**, not automatically as compensation to individual custodians. Ethereum can burn the fee while separately enforcing custody duties, just as blob fees need not be direct provider payments. A provider-reward system is a different mechanism. [The hardware and operator-market chapter](11-how-do-hardware-and-da-operator-markets-scale.md) develops one possible `scarcity burn + service procurement` extension without making it part of the base proposal.
+
+![A line chart of the total one-time fee for one protocol-sized blob against selected retention T, with a vertical ingress jump at T=0 and a smooth convex-duration curve, shading the region below the shortest maturity exposed without a T_hot condition.](assets/figures/figure-02-term-structure.svg)
+
+*Figure 2 — Term structure of the total one-time fee.* `F_total(T) = F_ingress + F_ret(T)` for one blob, plotted against `T` on a log2 axis over the §3 duration vocabulary. `F_ingress` is a one-time admission charge with no proposed functional form in this repo; it is shown as a step, not a point on the curve. `F_ret(T)` uses `convex_duration()` from [models/pricing.py](../models/pricing.py), a benchmark rather than a proposed price. The shaded region below 256 epochs is not unpaid — the byte-time integral still accrues through it — it is the shortest maturity class §7.1 exposes without a `T_hot` condition; the RFC does not settle `T_min` at any specific value.
 
 ### 5.1 What pricing cannot solve
 
@@ -280,6 +301,8 @@ There are two qualitatively different ways to make heterogeneous expiry tractabl
 ### 7.1 Maturity-aligned physical classes
 
 The conservative implementation is to round requested durations into power-of-two epoch maturities—for example, `256, 512, 1,024, 2,048, 4,096` epochs (approximately 1.14, 2.28, 4.55, 9.10, and 18.20 days)—and pack only similar maturities into the same persistent coding domain. Shorter classes such as 1, 8, or 64 epochs can be exposed only if `T_hot` permits them.
+
+For the current EIP-4844 path, one blob is the minimum lifecycle unit. All logical application payloads multiplexed into that blob inherit one retention maturity. Applications that need different maturities must pack those payloads into different blobs; segment metadata does not create independent physical expiry inside a blob.
 
 This has substantial advantages:
 

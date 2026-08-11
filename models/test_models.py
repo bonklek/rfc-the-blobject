@@ -41,7 +41,48 @@ class StockModelTests(unittest.TestCase):
         state.admit_blob(commitment="orphan", size=300, retention_epochs=2)
         state.restore(parent)
         self.assertEqual(state.retained_bytes, 200)
-        self.assertNotIn("orphan", state.objects)
+        self.assertFalse(any(meta.commitment == "orphan" for meta in state.objects.values()))
+
+    def test_slot_based_expiry_delivers_full_duration(self) -> None:
+        state = ProtocolState(
+            capacity_bytes=1_000,
+            min_retention_epochs=1,
+            max_retention_epochs=8,
+        )
+        state.advance_to_slot(31)
+        meta = state.admit_blob(commitment="late", size=100, retention_epochs=1)
+        self.assertEqual(meta.expiry_slot, 63)
+        state.advance_to_slot(62)
+        self.assertEqual(state.retained_bytes, 100)
+        state.advance_to_slot(63)
+        self.assertEqual(state.retained_bytes, 0)
+
+    def test_identical_commitments_create_distinct_leases(self) -> None:
+        state = ProtocolState(
+            capacity_bytes=1_000,
+            min_retention_epochs=1,
+            max_retention_epochs=8,
+        )
+        first = state.admit_blob(commitment="same", size=100, retention_epochs=1)
+        second = state.admit_blob(commitment="same", size=100, retention_epochs=2)
+        self.assertNotEqual(first.object_id, second.object_id)
+        self.assertEqual(state.accounted_bytes, 200)
+
+    def test_reclamation_grace_delays_capacity_credit(self) -> None:
+        state = ProtocolState(
+            capacity_bytes=100,
+            min_retention_epochs=1,
+            max_retention_epochs=8,
+            reclamation_grace_slots=4,
+        )
+        state.admit_blob(commitment="grace", size=100, retention_epochs=1)
+        state.advance_to_slot(32)
+        self.assertEqual(state.retained_bytes, 0)
+        self.assertEqual(state.accounted_bytes, 100)
+        with self.assertRaises(ValueError):
+            state.admit_blob(commitment="too-soon", size=1, retention_epochs=1)
+        state.advance_to_slot(36)
+        self.assertEqual(state.accounted_bytes, 0)
 
     def test_frontier_geometry(self) -> None:
         self.assertAlmostEqual(frontier(384, 1), 1)

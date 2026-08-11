@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+<title id="title">Figure 2 — Term structure of the total one-time fee</title>
+<desc id="desc">One protocol-sized blob: total upfront fee versus selected retention T, on the null and convex-duration benchmarks.</desc>
+<style>
+text{font-family:Inter,system-ui,sans-serif;fill:#172033}
+.title{font-size:22px;font-weight:600}.subtitle{font-size:13px}
+.label{font-size:13px}.small{font-size:12px}.tiny{font-size:11px}
+.muted{fill:#667085}.axis{stroke:#172033;stroke-width:1}
+.grid{stroke:#d8dee9;stroke-width:1}.frame{fill:#fff;stroke:#d8dee9}
+</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text class="title" x="32" y="34">Figure 2 — Term structure of the total one-time fee</text>
+<text class="subtitle muted" x="32" y="56">One protocol-sized blob: total upfront fee versus selected retention T, on the null and convex-duration benchmarks.</text>
+<rect class="frame" x="96" y="118" width="1056" height="300"/>
+<rect x="96" y="118" width="704.0" height="300" fill="#ffedd5" fill-opacity="0.55"/>
+<line x1="800.0" y1="118" x2="800.0" y2="418" stroke="#d97706" stroke-width="2" stroke-dasharray="7 5"/>
+<text class="tiny" x="808.0" y="134">shortest maturity exposed without a T_hot condition (§7.1)</text>
+<text class="tiny muted" x="102" y="152">below here: not independently selectable</text>
+<text class="tiny muted" x="102" y="168">(the byte-time integral still accrues)</text>
+<line class="grid" x1="96" y1="418.0" x2="1152" y2="418.0"/>
+<text class="tiny" x="87" y="422.0" text-anchor="end">0</text>
+<line class="grid" x1="96" y1="346.8" x2="1152" y2="346.8"/>
+<text class="tiny" x="87" y="350.8" text-anchor="end">5,000</text>
+<line class="grid" x1="96" y1="275.7" x2="1152" y2="275.7"/>
+<text class="tiny" x="87" y="279.7" text-anchor="end">10,000</text>
+<line class="grid" x1="96" y1="204.5" x2="1152" y2="204.5"/>
+<text class="tiny" x="87" y="208.5" text-anchor="end">15,000</text>
+<line class="grid" x1="96" y1="133.4" x2="1152" y2="133.4"/>
+<text class="tiny" x="87" y="137.4" text-anchor="end">20,000</text>
+<line class="axis" x1="96.0" y1="418" x2="96.0" y2="423"/>
+<text class="tiny" x="96.0" y="438" text-anchor="middle">1</text>
+<line class="axis" x1="360.0" y1="418" x2="360.0" y2="423"/>
+<text class="tiny" x="360.0" y="438" text-anchor="middle">8</text>
+<line class="axis" x1="624.0" y1="418" x2="624.0" y2="423"/>
+<text class="tiny" x="624.0" y="438" text-anchor="middle">64</text>
+<line class="axis" x1="800.0" y1="418" x2="800.0" y2="423"/>
+<text class="tiny" x="800.0" y="438" text-anchor="middle">256</text>
+<line class="axis" x1="888.0" y1="418" x2="888.0" y2="423"/>
+<text class="tiny" x="888.0" y="438" text-anchor="middle">512</text>
+<line class="axis" x1="976.0" y1="418" x2="976.0" y2="423"/>
+<text class="tiny" x="976.0" y="438" text-anchor="middle">1024</text>
+<line class="axis" x1="1064.0" y1="418" x2="1064.0" y2="423"/>
+<text class="tiny" x="1064.0" y="438" text-anchor="middle">2048</text>
+<line class="axis" x1="1152.0" y1="418" x2="1152.0" y2="423"/>
+<text class="tiny" x="1152.0" y="438" text-anchor="middle">4096</text>
+<line x1="96" y1="418.0" x2="96" y2="409.5" stroke="#d97706" stroke-width="4"/>
+<text class="small" x="106" y="401.5">F_ingress (one-time, admission-only)</text>
+<polyline points="96.0,409.4 102.6,409.4 109.2,409.4 115.8,409.4 122.4,409.4 129.0,409.4 135.6,409.4 142.2,409.4 148.8,409.4 155.4,409.4 162.0,409.4 168.6,409.4 175.2,409.4 181.8,409.4 188.4,409.4 195.0,409.4 201.6,409.4 208.2,409.4 214.8,409.4 221.4,409.4 228.0,409.4 234.6,409.4 241.2,409.3 247.8,409.3 254.4,409.3 261.0,409.3 267.6,409.3 274.2,409.3 280.8,409.3 287.4,409.3 294.0,409.3 300.6,409.3 307.2,409.3 313.8,409.3 320.4,409.3 327.0,409.2 333.6,409.2 340.2,409.2 346.8,409.2 353.4,409.2 360.0,409.2 366.6,409.2 373.2,409.1 379.8,409.1 386.4,409.1 393.0,409.1 399.6,409.1 406.2,409.1 412.8,409.0 419.4,409.0 426.0,409.0 432.6,409.0 439.2,408.9 445.8,408.9 452.4,408.9 459.0,408.8 465.6,408.8 472.2,408.8 478.8,408.7 485.4,408.7 492.0,408.7 498.6,408.6 505.2,408.6 511.8,408.5 518.4,408.5 525.0,408.4 531.6,408.4 538.2,408.3 544.8,408.2 551.4,408.2 558.0,408.1 564.6,408.0 571.2,408.0 577.8,407.9 584.4,407.8 591.0,407.7 597.6,407.6 604.2,407.5 610.8,407.4 617.4,407.3 624.0,407.2 630.6,407.1 637.2,406.9 643.8,406.8 650.4,406.7 657.0,406.5 663.6,406.4 670.2,406.2 676.8,406.0 683.4,405.8 690.0,405.6 696.6,405.4 703.2,405.2 709.8,405.0 716.4,404.7 723.0,404.5 729.6,404.2 736.2,404.0 742.8,403.7 749.4,403.3 756.0,403.0 762.6,402.7 769.2,402.3 775.8,401.9 782.4,401.5 789.0,401.1 795.6,400.7 802.2,400.2 808.8,399.7 815.4,399.2 822.0,398.6 828.6,398.1 835.2,397.4 841.8,396.8 848.4,396.1 855.0,395.4 861.6,394.7 868.2,393.9 874.8,393.0 881.4,392.2 888.0,391.2 894.6,390.3 901.2,389.2 907.8,388.2 914.4,387.0 921.0,385.8 927.6,384.6 934.2,383.2 940.8,381.9 947.4,380.4 954.0,378.8 960.6,377.2 967.2,375.5 973.8,373.7 980.4,371.1 987.0,368.0 993.6,364.6 1000.2,361.0 1006.8,357.0 1013.4,352.8 1020.0,348.2 1026.6,343.2 1033.2,337.8 1039.8,332.0 1046.4,325.8 1053.0,319.0 1059.6,311.6 1066.2,303.7 1072.8,295.1 1079.4,285.9 1086.0,275.8 1092.6,265.0 1099.2,253.3 1105.8,240.6 1112.4,226.9 1119.0,212.1 1125.6,196.1 1132.2,178.8 1138.8,160.1 1145.4,139.9 1152.0,118.0" fill="none" stroke="#2563eb" stroke-width="3"/>
+<line x1="96" y1="409.5" x2="96.0" y2="409.4" stroke="#2563eb" stroke-width="3" stroke-dasharray="4 4"/>
+<text class="small" x="1142.0" y="108.0" text-anchor="end">F_total(T) = F_ingress + F_ret(T)</text>
+<text class="small" x="624.0" y="460" text-anchor="middle">Selected retention T (epochs, log2 spacing)</text>
+<text class="small" transform="translate(34 268.0) rotate(-90)" text-anchor="middle">Total one-time fee (illustrative units)</text>
+<text class="small muted" x="32" y="486">Curve uses convex_duration() from models/pricing.py (u=0.6, reference_duration=1024 epochs, exponent=1.5) — a benchmark, not a proposed price.</text>
+<text class="small muted" x="32" y="504">F_ingress has no proposed functional form in this repo (docs/01 §5); T_min is not settled and is not asserted here.</text>
+</svg>

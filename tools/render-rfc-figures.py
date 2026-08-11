@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import html
 import math
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "assets" / "figures"
+
+sys.path.insert(0, str(ROOT / "models"))
+from pricing import convex_duration  # noqa: E402
 
 INK = "#172033"
 MUTED = "#667085"
@@ -141,6 +145,99 @@ def render_frontier() -> None:
 
     parts.append(f'<text class="small muted" x="32" y="500">The one-hour frontier is 18.2 GiB/s and is intentionally outside both panels.</text>')
     finish_svg(parts, OUTPUT / "figure-01-throughput-retention-frontier.svg")
+
+
+def render_term_structure() -> None:
+    width, height = 1200, 520
+    parts = start_svg(
+        "Figure 2 — Term structure of the total one-time fee",
+        "One protocol-sized blob: total upfront fee versus selected retention T, on the null and convex-duration benchmarks.",
+        width,
+        height,
+    )
+
+    # Illustrative arbitrary units only (models/README.md); not a proposed price.
+    size = 1.0
+    base_price = 1.0
+    utilization = 0.6
+    reference_duration = 1_024.0  # chosen independently of T; compare()'s duration/4 default cannot produce a curve.
+    f_ingress = 600.0  # no proposed functional form exists for F_ingress; illustrative only, see docs/01 §5.
+
+    # Vocabulary from docs/00 §3: 1, 8, 64, 256, 512, 1024, 2048, 4096 epochs.
+    # T_min is not settled by the repo; docs/01 §7.1 exposes 1/8/64 "only if T_hot permits."
+    vocabulary = (1, 8, 64, 256, 512, 1024, 2048, 4096)
+    t_floor, t_max = 1.0, 4096.0
+    conservative_floor = 256.0  # docs/01 §7.1's shortest maturity class exposed without a T_hot condition.
+
+    left, right, top, plot_h = 96, 48, 118, 300
+    plot_w = width - left - right
+    bottom = top + plot_h
+
+    def x_pos(epochs: float) -> float:
+        return left + (math.log2(epochs) - math.log2(t_floor)) / (math.log2(t_max) - math.log2(t_floor)) * plot_w
+
+    def f_ret(epochs: float) -> float:
+        return convex_duration(
+            size=size,
+            duration=epochs,
+            utilization=utilization,
+            base_price=base_price,
+            reference_duration=reference_duration,
+        )
+
+    y_max = f_ingress + f_ret(t_max)
+    y_ticks = (0, 5_000, 10_000, 15_000, 20_000)
+
+    def y_pos(value: float) -> float:
+        return bottom - value / y_max * plot_h
+
+    parts.append(f'<rect class="frame" x="{left}" y="{top}" width="{plot_w}" height="{plot_h}"/>')
+
+    # Region below the conservative maturity floor: "not independently selectable," not unpaid.
+    band_x = x_pos(conservative_floor)
+    parts.append(f'<rect x="{left}" y="{top}" width="{band_x - left:.1f}" height="{plot_h}" fill="{PALE_ORANGE}" fill-opacity="0.55"/>')
+    parts.append(f'<line x1="{band_x:.1f}" y1="{top}" x2="{band_x:.1f}" y2="{bottom}" stroke="{ORANGE}" stroke-width="2" stroke-dasharray="7 5"/>')
+    parts.append(f'<text class="tiny" x="{band_x + 8:.1f}" y="{top + 16}">shortest maturity exposed without a T_hot condition (§7.1)</text>')
+    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 34}">below here: not independently selectable</text>')
+    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 50}">(the byte-time integral still accrues)</text>')
+
+    for tick in y_ticks:
+        y = y_pos(tick)
+        parts.append(f'<line class="grid" x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}"/>')
+        parts.append(f'<text class="tiny" x="{left - 9}" y="{y + 4:.1f}" text-anchor="end">{tick:,}</text>')
+
+    for epochs in vocabulary:
+        x = x_pos(epochs)
+        parts.append(f'<line class="axis" x1="{x:.1f}" y1="{bottom}" x2="{x:.1f}" y2="{bottom + 5}"/>')
+        parts.append(f'<text class="tiny" x="{x:.1f}" y="{bottom + 20}" text-anchor="middle">{epochs}</text>')
+
+    # F_total(T) = F_ingress + F_ret(T); ingress is a one-time admission jump at T=0, drawn as a step
+    # onto the left edge of the plot area (the curve itself starts at t_floor, not literally T=0).
+    step_y = y_pos(f_ingress)
+    parts.append(f'<line x1="{left}" y1="{y_pos(0):.1f}" x2="{left}" y2="{step_y:.1f}" stroke="{ORANGE}" stroke-width="4"/>')
+    parts.append(f'<text class="small" x="{left + 10}" y="{step_y - 8:.1f}">F_ingress (one-time, admission-only)</text>')
+
+    curve = []
+    samples = 160
+    for index in range(samples + 1):
+        log_t = math.log2(t_floor) + (math.log2(t_max) - math.log2(t_floor)) * index / samples
+        epochs = 2 ** log_t
+        total = f_ingress + f_ret(epochs)
+        curve.append((x_pos(epochs), y_pos(total)))
+    parts.append(f'<polyline points="{polyline(curve)}" fill="none" stroke="{BLUE}" stroke-width="3"/>')
+    parts.append(f'<line x1="{left}" y1="{step_y:.1f}" x2="{curve[0][0]:.1f}" y2="{curve[0][1]:.1f}" stroke="{BLUE}" stroke-width="3" stroke-dasharray="4 4"/>')
+    parts.append(f'<text class="small" x="{curve[-1][0] - 10:.1f}" y="{curve[-1][1] - 10:.1f}" text-anchor="end">F_total(T) = F_ingress + F_ret(T)</text>')
+
+    parts.append(f'<text class="small" x="{left + plot_w / 2}" y="{bottom + 42}" text-anchor="middle">Selected retention T (epochs, log2 spacing)</text>')
+    parts.append(f'<text class="small" transform="translate({left - 62} {top + plot_h / 2}) rotate(-90)" text-anchor="middle">Total one-time fee (illustrative units)</text>')
+    parts.append(
+        f'<text class="small muted" x="32" y="{height - 34}">Curve uses convex_duration() from models/pricing.py '
+        f'(u={utilization}, reference_duration={reference_duration:.0f} epochs, exponent=1.5) — a benchmark, not a proposed price.</text>'
+    )
+    parts.append(
+        f'<text class="small muted" x="32" y="{height - 16}">F_ingress has no proposed functional form in this repo (docs/01 §5); T_min is not settled and is not asserted here.</text>'
+    )
+    finish_svg(parts, OUTPUT / "figure-02-term-structure.svg")
 
 
 def render_fixed_tail() -> None:
@@ -291,6 +388,7 @@ def render_storage_model() -> None:
 def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
     render_frontier()
+    render_term_structure()
     render_fixed_tail()
     render_application_lifecycle()
     render_storage_model()

@@ -6,7 +6,7 @@ Ethereum has spent years increasing **how much data can be made available at onc
 
 The conceptual ancestor is Vitalik Buterin's [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). Its deeper move is not simply to expire state, but to stop granting every object the same strongest persistence and access semantics. The Blobject applies that resource-specialization move to DA: stop granting every byte the same temporal serving guarantee. State and DA remain different services; the shared principle is to require and price the semantic strength an application actually needs.
 
-This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving horizon even when one application needs only a short replication window and the other needs the full current horizon. Under the proposal, a purchaser chooses a duration `T`, bounded by `T_max`. Setting `T_max` no higher than the current minimum serving horizon preserves today's service as `T=T_max` and can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
+This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving horizon even when one application needs only a short replication window and the other needs the full current horizon. Under the proposal, a purchaser chooses a duration `T`, bounded by `T_max`. The conservative deployment sets `T_max` equal to the current minimum serving horizon, keeping that duration selectable while the design preserves the other relevant DA guarantees. With every choice bounded by that current horizon, shorter choices can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
 
 If Ethereum uses the resulting storage savings to admit more data, retained stock becomes scarce in its own right. A lease that starts on admission occupies storage immediately, so a ceiling on active retained stock is enough to bound contracted storage. The harder problems are physical: deriving that ceiling from the custody architecture, reserving headroom for short-duration traffic, charging for required byte-time, and making logical expiry release real resources under DAS coding.
 
@@ -18,7 +18,7 @@ The central question is:
 
 > **Why should every byte entering Ethereum DA purchase the same amount of future serving?**
 
-The following sections define the mechanism, test its implementation and security assumptions, and then examine the larger data-plane consequences.
+The core argument first defines the mechanism, then tests its implementation and security assumptions. Separate extension chapters examine larger market and data-plane consequences without making them prerequisites for the base design.
 
 ---
 
@@ -56,7 +56,7 @@ Application semantics, by contrast, should remain outside the DA layer. Ethereum
 
 ## 2. Logical service abstraction
 
-The notation below describes a service quantity; it does not imply that current Ethereum sells arbitrary byte lengths. Under EIP-4844, the purchasable unit remains one whole blob of 4,096 field elements: a transaction carries an integer number of blobs and pays `GAS_PER_BLOB` for each one, even when the application leaves part of a blob unused. In the conservative EIP-4844-compatible version of this proposal, every blob commitment therefore has the same protocol-derived accounting size `B_blob`. The purchaser chooses `T`, not `B`.
+The notation below describes a service quantity; it does not imply that current Ethereum sells arbitrary byte lengths. Under EIP-4844, the purchasable unit remains one whole blob of 4,096 field elements: a transaction carries an integer number of blobs and pays `GAS_PER_BLOB` for each one, even when the application leaves part of a blob unused. In the conservative EIP-4844-compatible version of this proposal, every published blob therefore has the same protocol-derived accounting size `B_blob`. The purchaser chooses `T`, not `B`.
 
 It is still useful to write the transport-neutral service as:
 
@@ -68,17 +68,18 @@ meaning:
 
 > Make the protocol-accounted quantity `B` corresponding to commitment `C` available under Ethereum's publication-time DAS rules, and require the assigned custody population to retain and serve enough authenticated data for reconstruction through expiration `T`, under the specified custody assumptions.
 
-For a current blob, `B=B_blob` is derived from the blob type and need not be supplied by the application. A transaction with `n` blobs creates `n` commitment-level obligations, each with fixed quantity `B_blob`; it does not purchase one arbitrary-sized object of quantity `n·B_blob` or pay only for useful bytes. A submission would minimally specify:
+For a current blob, `B=B_blob` is derived from the blob type and need not be supplied by the application. A transaction with `n` blobs creates `n` publication-level obligations, each with fixed quantity `B_blob`; it does not purchase one arbitrary-sized object of quantity `n·B_blob` or pay only for useful bytes. The commitment authenticates the content, while a deterministic identifier derived from canonical inclusion identifies the individual lease. A submission would minimally specify:
 
 - a commitment to the data;
 - the requested retention duration or expiration;
+- the applicable versioned service profile;
 - and authorization to consume the required DA capacity.
 
 A future versioned data-object or streaming transport could define other allowed accounting units and carry an explicit size. That would require its own framing, commitment, fee, and physical-accounting rules. It is not supplied by EIP-4844 and is not required for blob-granular variable retention.
 
 Publication timing may eventually become another explicit dimension, particularly under Blob Streaming or future DA markets, but it is not necessary for the core variable-retention mechanism.
 
-The underlying PeerDAS or future FullDAS machinery would establish publication-time availability in the ordinary way. Once availability has been established, the required-serving interval begins. Until expiration, the assigned custody participants remain obligated by the protocol to retain and serve their portions of the data.
+The underlying PeerDAS or future FullDAS machinery would establish publication-time availability in the ordinary way. The lease clock starts at canonical inclusion, not at a later transition chosen by the implementation. `T` is the total required-serving duration from that inclusion point and includes any mandatory hot phase. Until expiration, the assigned custody participants remain obligated by the protocol to retain and serve their portions of the data.
 
 After expiration:
 
@@ -152,6 +153,8 @@ Historical “bomb” proofs primarily make it costly to skip acquisition or pro
 
 Current PeerDAS-style semantics most directly support level 1. EIP-7594 assigns deterministic custody, and the Fulu networking specification requires clients to serve recent data-column sidecars over a minimum range. The proposal changes how long that service is required. It does not add a historical proof-of-custody system.
 
+The conservative level-1 experiment also inherits current PeerDAS compliance economics: custody and serving are protocol and client duties bundled into validator or node operation. A retention scarcity fee does not by itself prove service or compensate an individual custodian.
+
 Levels 2 and 3 are compatible extensions, not prerequisites. If either is adopted, the service claim and fee can explicitly name the stronger enforcement level. Older Ethereum proof-of-custody research is relevant prior art for level 3, but is not current PeerDAS behavior and is not yet a design for continuous retention and service.
 
 ---
@@ -191,7 +194,7 @@ This RFC therefore varies the temporal scope of Ethereum's DA guarantee, not its
 Variable retention should initially be bounded:
 
 ```text
-T_min ≤ T ≤ T_max.
+T_protocol-min ≤ T_selected ≤ T_max.
 ```
 
 This RFC expresses protocol retention in epochs. At the current 32 slots per epoch and 12 seconds per slot, one epoch is 384 seconds. Power-of-two maturities give implementations and users a compact common vocabulary:
@@ -209,7 +212,7 @@ This RFC expresses protocol retention in epochs. At the current 32 slots per epo
 
 This table is a duration vocabulary, not a proposed allowed set. A concrete protocol can omit any maturity below `T_hot`, expose only a subset such as `256, 512, 1,024, 2,048, 4,096`, or permit every epoch value within the bounds.
 
-A minimum is necessary because “zero-retention” DA cannot literally disappear at publication. The network requires time to disperse data, sample it, establish availability, and allow interested parties a meaningful opportunity to retrieve it.
+A minimum is necessary because “zero-retention” DA cannot literally disappear at publication. The network requires time to disperse data, sample it, establish availability, recover from ordinary interruption, and allow interested parties a meaningful opportunity to retrieve it.
 
 Highly ephemeral DA therefore means:
 
@@ -217,17 +220,29 @@ Highly ephemeral DA therefore means:
 
 rather than instantaneous deletion.
 
-The precise minimum is a security parameter. If Ethereum claims that data was available, independent parties should have a meaningful opportunity to retrieve and replicate the object before protocol custody is permitted to end.
+The proposal therefore distinguishes three lower bounds:
+
+```text
+T_hot <= T_protocol-min <= T_application-min <= T_selected
+```
+
+`T_hot` is the common period required by the publication-time representation. `T_protocol-min` is Ethereum's own lower bound for dispersal, retrieval, restart, reconstruction, reassignment, and ordinary transient failure. `T_application-min`, when declared, is the application's recovery or security floor. `T_selected` is the total duration bought for the lease. If no application minimum is declared, the protocol can enforce only its own minimum; choosing a shorter duration than users' security model requires is then an application-level delegated-trust decision.
 
 A maximum protocol-required horizon is important for a different reason. Every accepted lease creates a specified resource obligation through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS minimum serving horizon. It then never lets a purchaser impose a protocol serving obligation for any individual object beyond the duration already required by the existing system. `T_max` is not a pruning deadline: protocol participants may retain and serve the object longer, just as a minimum serving horizon does not require deletion when it ends. Such later service is best-effort unless backed by a separate enforceable service.
 
-If the physical implementation uses the two-phase lifecycle developed in §17, there is also a concrete lower bound imposed by the DAS machinery itself. Let `T_hot` denote the common interval—or protocol-recognizable phase—during which every newly admitted object must remain in the rich availability-establishment representation. Then an independently expiring lease cannot end before that phase:
+If the physical implementation uses the two-phase lifecycle developed in §17, let `T_hot` denote the common interval—or protocol-recognizable phase—during which every newly admitted object must remain in the rich availability-establishment representation. Because `T` always measures total service time from canonical inclusion, an independently expiring lease cannot end before that phase:
 
 ```text
-T_min ≥ T_hot.
+T_protocol-min ≥ T_hot.
 ```
 
-The cleanest implementation may define the purchaser-selected duration as the required serving interval **after** the mandatory hot phase, or may expose one total expiry while enforcing `T≥ T_hot`. The paper does not assume that `T_hot` must extend to ordinary Ethereum finality; §17 compares concrete transition candidates.
+Epoch values are a purchaser-facing duration vocabulary, not the clock used to underdeliver that duration. A lease admitted in slot `inclusion_slot` has:
+
+```text
+expiry_slot = inclusion_slot + T_selected_epochs · SLOTS_PER_EPOCH.
+```
+
+An implementation may bucket nearby expirations for bookkeeping, but it must not end service before `expiry_slot`. The paper does not assume that `T_hot` must extend to ordinary Ethereum finality; §17 compares concrete transition candidates.
 
 ### 3.1 Two deployment regimes
 

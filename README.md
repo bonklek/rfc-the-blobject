@@ -23,9 +23,29 @@ DA price = ingress price + retention price
 - **Ingress** is the flow cost of propagating, encoding, sampling, and establishing availability.
 - **Retention** is the stock cost of keeping committed data reconstructable through time.
 
-The proposal lets a purchaser choose how long Ethereum must serve an object, up to today's minimum serving horizon. That upper bound limits the obligation a purchaser can impose. It is not a deletion deadline: nodes may keep and serve the data for as long as they choose. From that basic separation, the RFC also examines markets for future bandwidth, timed retrievability, and downstream persistence.
+The proposal lets a purchaser choose how long Ethereum must serve an object, with today's uniform minimum serving horizon retained as the selectable maximum. That upper bound limits the obligation a purchaser can impose. It is not a deletion deadline: nodes may keep and serve the data for as long as they choose. From that basic separation, the RFC also examines markets for future bandwidth, timed retrievability, and downstream persistence.
 
-## Read by question
+## Argument-first roadmap
+
+The minimal proposal does not depend on future bandwidth markets, new application classes, or a separate operator market. Read the core argument in dependency order:
+
+1. [Define the variable-retention service](docs/00-what-is-the-proposal.md): what changes, what remains fixed, and which guarantees apply through `T`.
+2. [Bound logical obligations and separate safety from pricing](docs/01-how-are-capacity-and-pricing-managed.md): active retained stock handles spot-start leases, while physical admission remains multidimensional.
+3. [Test physical realizability under PeerDAS and FullDAS](docs/05-can-this-work-with-peerdas-and-fulldas.md): expiry releases real resources only under a compatible representation; current 1D PeerDAS is the conservative prototype path.
+4. [Apply application-specific safety constraints](docs/02-is-variable-retention-safe-for-rollups.md): a shorter horizon is suitable only when recovery, proving, and handoff assumptions tolerate it.
+5. [Account for hardware and network constraints](docs/11-how-do-hardware-and-da-operator-markets-scale.md): write churn, placement, and assignment granularity constrain any implementation; fractional pools and separate operator procurement are optional designs.
+6. [Locate the contribution in prior art](docs/07-what-is-the-prior-art-and-novelty.md), then examine the [open questions and kill criteria](docs/08-what-remains-to-be-proven.md) before the [conclusion](docs/09-what-is-the-conclusion.md).
+
+The following chapters develop optional or future-facing branches rather than premises of the base mechanism:
+
+- [Future-starting resource markets](docs/03-how-do-future-resource-markets-work.md)
+- [Persistence after Ethereum's serving obligation ends](docs/04-what-happens-after-ethereum-retention-ends.md)
+- [A generalized Ethereum data plane and additional applications](docs/06-what-does-a-generalized-data-plane-enable.md)
+- [Compatibility with possible Lean Ethereum lifecycles](docs/10-how-does-lean-ethereum-change-the-proposal.md)
+
+### Stable document index
+
+The filenames and internal section numbers preserve the original paper's order for stable citation; that numerical order is not the recommended argumentative sequence.
 
 1. [What is the proposal?](docs/00-what-is-the-proposal.md)
 2. [How are capacity and pricing managed?](docs/01-how-are-capacity-and-pricing-managed.md)
@@ -52,7 +72,7 @@ The proposal lets a purchaser choose how long Ethereum must serve an object, up 
 ## Suggested reading paths
 
 - **Five-minute overview:** this README, then the [conclusion](docs/09-what-is-the-conclusion.md).
-- **Protocol design:** proposal → capacity and pricing → PeerDAS/FullDAS compatibility → hardware and operator markets → Lean Ethereum compatibility → open questions.
+- **Protocol design:** follow the argument-first roadmap above; treat Lean Ethereum and operator procurement as conditional branches.
 - **Applications and markets:** rollup safety → future markets → post-Ethereum retention → generalized data plane.
 - **Physical and proving limits:** hardware/operator markets → backbone-scale limits → ephemeral data and proofs → open questions.
 
@@ -61,7 +81,7 @@ The proposal lets a purchaser choose how long Ethereum must serve an object, up 
 1. With ingress held fixed, allowing shorter serving windows can only reduce the logical retained-data obligation. Nothing in the proposal requires nodes to prune afterward.
 2. PeerDAS currently provides **protocol-required retrievability under custody assumptions**. It does not repeatedly prove that every historical object remained available.
 3. A lease that starts immediately can be accounted for as active stock. A forward capacity curve is needed only for commitments that start in the future, and physical admission must account for more than storage alone.
-4. The conservative EIP-4844 path remains blob-granular: applications buy an integer number of whole blobs, while retention duration is selected per blob commitment. The RFC's `B` is an accounting quantity, not an existing arbitrary-byte purchase interface.
+4. The conservative EIP-4844 path remains blob-granular: applications buy an integer number of whole blobs, while each canonical blob publication receives its own lease. A commitment authenticates content but is not a unique lease identifier. The RFC's `B` is an accounting quantity, not an existing arbitrary-byte purchase interface.
 5. Whether logical expiry saves physical resources depends on the representation. The first prototype path is 1D cell-level custody; hot-2D/cold-1D is a conditional branch, not an assumed roadmap.
 6. One expiry is the simplest lifecycle. Later designs may add reduced-strength tails, and downstream systems may continue persistence after Ethereum's required-serving window ends.
 7. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
@@ -83,8 +103,6 @@ Open an issue with a concrete objection, missing prior art, counterexample, impl
 ├── REFERENCES.md  # Date- and commit-pinned research inputs
 └── tools/         # Repository validation
 ```
-
-The numbered sections inside each document retain the original paper's numbering so citations and discussion remain stable.
 
 ## Research artifacts
 

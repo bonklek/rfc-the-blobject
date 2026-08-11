@@ -1,8 +1,8 @@
-"""Deterministic active-stock and expiry-ring model.
+"""Deterministic active-stock model with slot-derived lease expiry.
 
-This is a non-normative executable companion to docs/01. It intentionally
-models logical bytes only; a production design must check every component of
-the physical resource vector.
+This is a non-normative executable companion to docs/01. It models logical
+bytes only. Service expiry and conservative capacity reclamation are separate;
+a production design must also check every physical resource-vector component.
 """
 
 from __future__ import annotations
@@ -13,31 +13,29 @@ from dataclasses import dataclass
 from typing import Iterable
 
 
-FAR_FUTURE_EPOCH = -1
 SECONDS_PER_SLOT = 12
 SLOTS_PER_EPOCH = 32
 SECONDS_PER_EPOCH = SECONDS_PER_SLOT * SLOTS_PER_EPOCH
 
 
-@dataclass
-class Bucket:
-    epoch: int = FAR_FUTURE_EPOCH
-    bytes: int = 0
-
-
 @dataclass(frozen=True)
 class DataObjectMeta:
+    object_id: str
     commitment: str
     size: int
-    expiry_epoch: int
+    inclusion_slot: int
+    expiry_slot: int
+    reclaim_after_slot: int
+    service_profile_id: str = "peerdas-level1-v1"
     enforcement_level: str = "PROTOCOL_REQUIRED"
 
 
 @dataclass(frozen=True)
 class Snapshot:
-    current_epoch: int
+    current_slot: int
     retained_bytes: int
-    expiry_queue: tuple[Bucket, ...]
+    accounted_bytes: int
+    next_object_ordinal: int
     objects: tuple[DataObjectMeta, ...]
 
 
@@ -49,11 +47,14 @@ class ProtocolState:
         min_retention_epochs: int,
         max_retention_epochs: int,
         allowed_retention_epochs: Iterable[int] | None = None,
+        reclamation_grace_slots: int = 0,
     ) -> None:
         if capacity_bytes <= 0:
             raise ValueError("capacity_bytes must be positive")
         if not 0 < min_retention_epochs <= max_retention_epochs:
             raise ValueError("invalid retention bounds")
+        if reclamation_grace_slots < 0:
+            raise ValueError("reclamation_grace_slots must be non-negative")
 
         self.capacity_bytes = capacity_bytes
         self.min_retention_epochs = min_retention_epochs
@@ -63,10 +64,16 @@ class ProtocolState:
             if allowed_retention_epochs is not None
             else None
         )
-        self.current_epoch = 0
+        self.reclamation_grace_slots = reclamation_grace_slots
+        self.current_slot = 0
         self.retained_bytes = 0
-        self.expiry_queue = [Bucket() for _ in range(max_retention_epochs + 1)]
+        self.accounted_bytes = 0
+        self._next_object_ordinal = 0
         self.objects: dict[str, DataObjectMeta] = {}
+
+    @property
+    def current_epoch(self) -> int:
+        return self.current_slot // SLOTS_PER_EPOCH
 
     def _validate_duration(self, retention_epochs: int) -> None:
         if not self.min_retention_epochs <= retention_epochs <= self.max_retention_epochs:
@@ -83,60 +90,84 @@ class ProtocolState:
         commitment: str,
         size: int,
         retention_epochs: int,
+        blob_index: int = 0,
+        service_profile_id: str = "peerdas-level1-v1",
     ) -> DataObjectMeta:
-        if not commitment or commitment in self.objects:
-            raise ValueError("commitment must be non-empty and unique on this branch")
+        if not commitment:
+            raise ValueError("commitment must be non-empty")
+        if blob_index < 0:
+            raise ValueError("blob_index must be non-negative")
         if size <= 0:
             raise ValueError("size must be positive")
+        if not service_profile_id:
+            raise ValueError("service_profile_id must be non-empty")
         self._validate_duration(retention_epochs)
-        if self.retained_bytes + size > self.capacity_bytes:
+        if self.accounted_bytes + size > self.capacity_bytes:
             raise ValueError("active retained-stock capacity exceeded")
 
-        expiry_epoch = self.current_epoch + retention_epochs
-        index = expiry_epoch % len(self.expiry_queue)
-        bucket = self.expiry_queue[index]
-        if bucket.epoch not in (FAR_FUTURE_EPOCH, expiry_epoch):
-            raise AssertionError("expiry ring collision")
+        inclusion_slot = self.current_slot
+        expiry_slot = inclusion_slot + retention_epochs * SLOTS_PER_EPOCH
+        reclaim_after_slot = expiry_slot + self.reclamation_grace_slots
+        object_id = (
+            f"slot:{inclusion_slot}:ordinal:{self._next_object_ordinal}:"
+            f"blob:{blob_index}:commitment:{commitment}"
+        )
+        self._next_object_ordinal += 1
 
-        bucket.epoch = expiry_epoch
-        bucket.bytes += size
+        meta = DataObjectMeta(
+            object_id=object_id,
+            commitment=commitment,
+            size=size,
+            inclusion_slot=inclusion_slot,
+            expiry_slot=expiry_slot,
+            reclaim_after_slot=reclaim_after_slot,
+            service_profile_id=service_profile_id,
+        )
         self.retained_bytes += size
-        meta = DataObjectMeta(commitment, size, expiry_epoch)
-        self.objects[commitment] = meta
+        self.accounted_bytes += size
+        self.objects[object_id] = meta
         return meta
 
-    def advance_to(self, epoch: int) -> None:
-        if epoch < self.current_epoch:
+    def advance_to_slot(self, slot: int) -> None:
+        if slot < self.current_slot:
             raise ValueError("use restore() for a reorganization")
 
-        for next_epoch in range(self.current_epoch + 1, epoch + 1):
-            index = next_epoch % len(self.expiry_queue)
-            bucket = self.expiry_queue[index]
-            if bucket.epoch == next_epoch:
-                self.retained_bytes -= bucket.bytes
-                expired = [
-                    commitment
-                    for commitment, meta in self.objects.items()
-                    if meta.expiry_epoch == next_epoch
-                ]
-                for commitment in expired:
-                    del self.objects[commitment]
-                self.expiry_queue[index] = Bucket()
-            self.current_epoch = next_epoch
+        self.current_slot = slot
+        self.retained_bytes = sum(
+            meta.size for meta in self.objects.values() if slot < meta.expiry_slot
+        )
+        self.accounted_bytes = sum(
+            meta.size
+            for meta in self.objects.values()
+            if slot < meta.reclaim_after_slot
+        )
+        self.objects = {
+            object_id: meta
+            for object_id, meta in self.objects.items()
+            if slot < meta.reclaim_after_slot
+        }
+
+    def advance_to(self, epoch: int) -> None:
+        """Advance to an epoch boundary; retained for the original model API."""
+        if epoch < self.current_epoch:
+            raise ValueError("use restore() for a reorganization")
+        self.advance_to_slot(epoch * SLOTS_PER_EPOCH)
 
     def snapshot(self) -> Snapshot:
         return Snapshot(
-            current_epoch=self.current_epoch,
+            current_slot=self.current_slot,
             retained_bytes=self.retained_bytes,
-            expiry_queue=tuple(copy.deepcopy(self.expiry_queue)),
-            objects=tuple(self.objects.values()),
+            accounted_bytes=self.accounted_bytes,
+            next_object_ordinal=self._next_object_ordinal,
+            objects=tuple(copy.deepcopy(tuple(self.objects.values()))),
         )
 
     def restore(self, snapshot: Snapshot) -> None:
-        self.current_epoch = snapshot.current_epoch
+        self.current_slot = snapshot.current_slot
         self.retained_bytes = snapshot.retained_bytes
-        self.expiry_queue = list(copy.deepcopy(snapshot.expiry_queue))
-        self.objects = {item.commitment: item for item in snapshot.objects}
+        self.accounted_bytes = snapshot.accounted_bytes
+        self._next_object_ordinal = snapshot.next_object_ordinal
+        self.objects = {item.object_id: item for item in copy.deepcopy(snapshot.objects)}
 
 
 def frontier(capacity_bytes: int, duration_epochs: float) -> float:
