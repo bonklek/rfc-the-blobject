@@ -4,6 +4,8 @@
 
 Ethereum has spent years increasing **how much data can be made available at once**. [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) separated blob data from execution gas. [PeerDAS (EIP-7594)](https://eips.ethereum.org/EIPS/eip-7594) distributes blob custody and sampling. The draft [Blob Streaming proposal (EIP-8256)](https://eips.ethereum.org/EIPS/eip-8256) explores reservable ahead-of-time propagation, while [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) points toward much larger distributed DA capacity. One parameter has stayed comparatively rigid: **how long every admitted byte must remain protocol-served**.
 
+The conceptual ancestor is Vitalik Buterin's [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). Its deeper move is not simply to expire state, but to stop granting every object the same strongest persistence and access semantics. The Blobject applies that resource-specialization move to DA: stop granting every byte the same temporal serving guarantee. State and DA remain different services; the shared principle is to require and price the semantic strength an application actually needs.
+
 This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving horizon even when one application needs only a short replication window and the other needs the full current horizon. Under the proposal, a purchaser chooses a duration `T`, bounded by `T_max`. Setting `T_max` no higher than the current minimum serving horizon preserves today's service as `T=T_max` and can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
 
 If Ethereum uses the resulting storage savings to admit more data, retained stock becomes scarce in its own right. A lease that starts on admission occupies storage immediately, so a ceiling on active retained stock is enough to bound contracted storage. The harder problems are physical: deriving that ceiling from the custody architecture, reserving headroom for short-duration traffic, charging for required byte-time, and making logical expiry release real resources under DAS coding.
@@ -109,6 +111,25 @@ This distinction matters again after expiry. A commitment can authenticate a sur
 
 Expiry can still leave several durable artifacts: canonical inclusion of the commitment, evidence recorded at publication, openings or copies kept elsewhere, and proofs of computations completed while the bytes were available. The [ephemeral-data proving appendix](../appendices/ephemeral-data-and-proofs.md) distinguishes those claims and works through the pattern `D -> prove f(D)=y -> retain C(D), y, pi`.
 
+#### Availability, custody, and delivery are different guarantees
+
+Three claims that are often grouped under “the data was available” should remain separate:
+
+| Guarantee | Question answered | Characteristic evidence or mechanism |
+|---|---|---|
+| **Availability** | Could an arbitrary network participant follow a permissionless path to enough authenticated pieces for reconstruction under the stated DAS assumptions? | publication-time sampling, dispersal, and a sufficiently broad serving population |
+| **Custody** | Did a designated participant or population possess and remain responsible for assigned data? | deterministic assignments, custody duties, challenges, repair, or penalties |
+| **Delivery** | Did a named recipient actually receive a particular object? | recipient acknowledgement, application receipt, or channel transcript |
+
+The implications do not run automatically in either direction:
+
+- one committee can custody data without making it permissionlessly reconstructable;
+- global availability does not prove that recipient `B` read or acknowledged the object;
+- delivery to `B` does not prove that anyone else could retrieve it;
+- a custody check at one moment does not prove continuous interval service.
+
+PeerDAS uses distributed custody as a mechanism supporting publication-time availability. The Blobject preserves that network-wide DAS product and changes how long the protocol requires enough custody data to remain served. Receipt-terminated storage and private acknowledgements belong to downstream application services because they answer the delivery question, not the base DA question.
+
 The distinction may also permit a **change of physical representation through the object lifecycle**. The representation best suited to proving fresh availability need not be identical to the representation best suited to hundreds or thousands of epochs of historical serving. Section 17 branches between current 1D PeerDAS with cell-level historical custody and a conditional future 2D path that may transition from hot cross-row redundancy to cold row-local custody.
 
 ---
@@ -161,7 +182,9 @@ global publication
     -> recipient-specific delivery
 ```
 
-That service might save more bandwidth, but it would give up the permissionless global-reconstruction semantics of Ethereum DAS. A recipient or favored committee could possess data that an arbitrary sampler or later independent retriever could not obtain. This RFC keeps PeerDAS/FullDAS-style publication semantics and varies only the post-publication serving duration. A weaker packet-delivery primitive may be useful elsewhere, but it is not `DAService(C,B,T)` as defined here.
+That service might save more bandwidth, but it would give up the permissionless global-reconstruction semantics of Ethereum DAS. A recipient or favored committee could possess data that an arbitrary sampler or later independent retriever could not obtain. Earlier “flash blob,” small-committee packet, and point-to-point branches fail this RFC's design test for the same reason: they reduce **who** receives the guarantee rather than **how long** the global guarantee lasts.
+
+This RFC therefore varies the temporal scope of Ethereum's DA guarantee, not its network scope. It keeps PeerDAS/FullDAS-style publication semantics and varies only the post-publication serving duration. A weaker packet-delivery primitive may be useful elsewhere, but it is not `DAService(C,B,T)` as defined here.
 
 ## 3. Minimum and maximum protocol-required retention
 

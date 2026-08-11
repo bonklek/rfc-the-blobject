@@ -65,6 +65,7 @@ The proposal lets a purchaser choose how long Ethereum must serve an object, up 
 6. One expiry is the simplest lifecycle. Later designs may add reduced-strength tails, and downstream systems may continue persistence after Ethereum's required-serving window ends.
 7. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
 8. Retention does not relax network conservation. Global throughput, coding and replication overhead, operator count, and sustainable per-node bandwidth must fit one consistent architecture.
+9. The proposal varies the **duration** of Ethereum's global DA service, not its network scope: custody by a designated population and delivery to one recipient are distinct, narrower claims unless they support permissionless reconstruction under the stated DAS assumptions.
 
 ## How to comment
 

@@ -122,6 +122,41 @@ In this architecture, Ethereum serves as a **permissionless economic control pla
 
 Ethereum's rollup-oriented DA roadmap may already contain much of the infrastructure needed for a more general economically secured network substrate, even though that was not its original design objective.
 
+### 20.1 A historical rhyme with the early Web3 stack
+
+This endpoint has an Ethereum lineage. The 2014 decentralized-Web framing described a three-part family: Ethereum contracts for logic, Swarm for decentralized storage, and Whisper for decentralized messaging. The 2016 Swarm introduction likewise described separate `eth`, `bzz`, and `shh` protocols intended to compose into a broader Web3 stack.
+
+That integrated stack did not become today's Ethereum architecture. [Whisper is deprecated](https://ethereum.org/developers/docs/networking-layer/#whisper), while [Swarm continues as a separate storage and distribution system](https://ethereum.org/developers/docs/storage/#swarm). The Blobject does not propose restoring either protocol or putting messaging and permanent storage into consensus.
+
+The historical rhyme is functional rather than institutional:
+
+```text
+early composition                 emerging composition
+
+Ethereum contracts               Ethereum settlement and commitments
+Whisper messaging        ->       privacy/messaging overlays and relays
+Swarm storage                     competing downstream persistence systems
+                                  PeerDAS/FullDAS bounded availability
+```
+
+The newer composition begins with a narrower base-layer promise: economically scarce admission, authenticated publication, and bounded reconstructability. Routing, privacy, delivery, and permanent storage remain plural overlay services. It may recover some ambitions of the early decentralized-Internet stack through explicit markets and interfaces rather than one bundled Ethereum software suite.
+
+### 20.2 A broader resource-strength principle
+
+Variable-retention DA is one instance of a wider design pattern:
+
+| Resource | Stronger form | Specialized or weaker form |
+|---|---|---|
+| State | permanent synchronously accessible state | temporary, UTXO-like, or separately recoverable state classes |
+| Data | one full universal serving horizon | short leases, longer leases, or reduced sparse tails |
+| Execution | universal direct re-execution | validity-proved execution under an explicit witness-availability model |
+
+The general principle is:
+
+> **Price and require guarantees according to the semantic strength applications need, rather than silently granting every object the strongest available guarantee.**
+
+This is a research heuristic, not a claim that the rows are interchangeable. Active state must support synchronous execution reads. A validity proof can establish a computation without supplying its witness. DA must provide a permissionless reconstruction path under its sampling and custody assumptions. Specialization is useful only while those semantic boundaries remain explicit.
+
 Variable retention matters because it removes a temporal assumption inherited from the rollup use case.
 
 Once every object no longer has to purchase the same 4,096-epoch retention package, the range of economically sensible applications expands substantially, especially for data with a short useful life.

@@ -32,6 +32,8 @@ These sources do not expose immutable revisions in the same way as Git commits. 
 - [Waku protocols](https://docs.waku.org/learn/concepts/protocols/) and [content-topic privacy guidance](https://docs.waku.org/learn/concepts/content-topics) — RLN anti-spam and the separation of gossip, request, retrieval, and network privacy.
 - [Lightning Network paper](https://lightning.network/lightning-network-paper.pdf) — base-layer settlement with high-frequency activity in a specialized network; used only as an architectural analogy.
 - [BuilderNet](https://buildernet.org/) and [multi-party block construction](https://ethresear.ch/t/building-towards-multi-party-block-construction/24975) — adjacent distributed and multi-contributor block-building architectures.
+- Ethereum Foundation, [Building the decentralized Web 3.0](https://blog.ethereum.org/2014/08/18/building-decentralized-web) and [Swarm alpha public pilot](https://blog.ethereum.org/2016/12/15/swarm-alpha-public-pilot-basics-swarm) — historical Ethereum/Whisper/Swarm composition and the separate `eth`, `shh`, and `bzz` protocol vision.
+- [Ethereum networking layer: Whisper](https://ethereum.org/developers/docs/networking-layer/#whisper) and [decentralized storage: Swarm](https://ethereum.org/developers/docs/storage/#swarm) — current documentation of Whisper's deprecation and Swarm as a separate storage system.
 
 ## Project provenance
 
