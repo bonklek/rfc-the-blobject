@@ -6,11 +6,11 @@ A future DA reservation is a right to use network bandwidth at a specified time.
 
 Its basic promise is:
 
-> The holder may inject `B` bytes into Ethereum DA around future time `T`.
+> The holder may inject an allowed protocol-accounted quantity `B` into Ethereum DA around future time `T`.
 
 This is not a cash-settled bet on future blob prices. It is a claim on **physical delivery of the network resource itself**.
 
-Blob Streaming provides a concrete adjacent design. The current draft EIP-8256 uses non-refundable tickets tied to future target slots to authorize bounded AOT propagation, while reserving separate JIT capacity. Transferable claims, variable lookahead, and a general secondary market remain extensions beyond that draft.
+`B` is constrained by the transport that issues the right. For an EIP-4844-compatible market it is an integer number of whole blob slots, not an arbitrary useful-payload length. Blob Streaming provides a concrete adjacent design. The current draft EIP-8256 uses non-refundable tickets tied to future target slots to authorize bounded AOT propagation, while reserving separate JIT capacity. Transferable claims, variable lookahead, arbitrary-sized objects, and a general secondary market remain extensions beyond that draft.
 
 Once future ingress exists, future retention becomes a genuine reservation problem too. A claim sold today for publication at `T` and retention `R` creates no active retained stock today, but it does create an obligation over the future interval:
 

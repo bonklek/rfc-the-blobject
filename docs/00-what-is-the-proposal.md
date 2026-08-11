@@ -54,7 +54,9 @@ Application semantics, by contrast, should remain outside the DA layer. Ethereum
 
 ## 2. Logical service abstraction
 
-Under this model, an application would request something approximately like:
+The notation below describes a service quantity; it does not imply that current Ethereum sells arbitrary byte lengths. Under EIP-4844, the purchasable unit remains one whole blob of 4,096 field elements: a transaction carries an integer number of blobs and pays `GAS_PER_BLOB` for each one, even when the application leaves part of a blob unused. In the conservative EIP-4844-compatible version of this proposal, every blob commitment therefore has the same protocol-derived accounting size `B_blob`. The purchaser chooses `T`, not `B`.
+
+It is still useful to write the transport-neutral service as:
 
 ```text
 DAService(C,B,T)
@@ -62,14 +64,15 @@ DAService(C,B,T)
 
 meaning:
 
-> Make `B` bytes corresponding to commitment `C` available under Ethereum's publication-time DAS rules, and require the assigned custody population to retain and serve enough authenticated data for reconstruction through expiration `T`, under the specified custody assumptions.
+> Make the protocol-accounted quantity `B` corresponding to commitment `C` available under Ethereum's publication-time DAS rules, and require the assigned custody population to retain and serve enough authenticated data for reconstruction through expiration `T`, under the specified custody assumptions.
 
-A submission would minimally specify:
+For a current blob, `B=B_blob` is derived from the blob type and need not be supplied by the application. A transaction with `n` blobs creates `n` commitment-level obligations, each with fixed quantity `B_blob`; it does not purchase one arbitrary-sized object of quantity `n·B_blob` or pay only for useful bytes. A submission would minimally specify:
 
 - a commitment to the data;
-- its size;
 - the requested retention duration or expiration;
 - and authorization to consume the required DA capacity.
+
+A future versioned data-object or streaming transport could define other allowed accounting units and carry an explicit size. That would require its own framing, commitment, fee, and physical-accounting rules. It is not supplied by EIP-4844 and is not required for blob-granular variable retention.
 
 Publication timing may eventually become another explicit dimension, particularly under Blob Streaming or future DA markets, but it is not necessary for the core variable-retention mechanism.
 
@@ -144,7 +147,7 @@ L = (T_full, f_tail, T_tail)
 
 where `T_full` is the full-strength serving window and an optional fraction `f_tail` remains under a reduced obligation for `T_tail`. Ordinary expiry remains the special case `L=(T,0,0)`. A permanent sparse-history tail is another possible profile; it is not equivalent to full retrievability forever.
 
-The protocol still need not understand application semantics. It needs only the commitment, size, applicable access class, and lifecycle obligation. Some profiles may be purchaser-selected; protocol-mandated data such as canonical L1 history would inherit a protocol-defined profile.
+The protocol still need not understand application semantics. It needs only the commitment, its type-derived accounting quantity, the applicable access class, and the lifecycle obligation. A future variable-size object type would also need an explicit size rule. Some profiles may be purchaser-selected; protocol-mandated data such as canonical L1 history would inherit a protocol-defined profile.
 
 [The Lean Ethereum compatibility note](10-how-does-lean-ethereum-change-the-proposal.md) develops this extension and its limits.
 
@@ -215,7 +218,7 @@ It is useful to distinguish a conservative deployment from a later capacity-unlo
 
 The conservative case permits a precise claim.
 
-Let the existing fixed serving horizon be `H`. For an admitted workload with objects `i`, sizes `B_i`, and publication times `t_i`, define:
+Let the existing fixed serving horizon be `H`. For an admitted workload with objects `i`, protocol-accounted quantities `B_i`, and publication times `t_i`, define:
 
 ```text
 S_fixed(t)
@@ -236,6 +239,8 @@ Then, for every `t`,
 ```text
 S_var(t) ≤ S_fixed(t).
 ```
+
+This inequality does not require continuous sizing. In the EIP-4844-compatible case, every `B_i` is the same fixed `B_blob`; the sum simply counts live blob commitments in byte-equivalent accounting units. The more general notation allows a future transport to define additional discrete object classes without assuming that such a transport already exists.
 
 Every workload admitted under fixed retention can be reproduced exactly by choosing `T_i=H` for every object. Any workload in which at least some objects choose shorter horizons can consume strictly less logical retained capacity during their fixed-only tail intervals.
 
