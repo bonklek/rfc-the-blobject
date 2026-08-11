@@ -100,6 +100,10 @@ Coding overhead, replication, repair, validator heterogeneity, custody topology,
 
 For purposes of the toy model, we collapse these factors into an effective logical capacity parameter `S`. A deployable implementation would need to derive `S` from the actual DAS architecture.
 
+![The same inverse throughput-retention frontier shown side by side with a logarithmic y-axis and a linear y-axis, including a two-thirds operating target below the hard frontier.](assets/figures/figure-01-throughput-retention-frontier.svg)
+
+*Figure 1 — Throughput–retention frontier.* Both panels show the same first-order `S/T` relationship for an illustrative 64 TiB logical capacity and the same linear duration axis. The logarithmic y-axis preserves relative separation across the range; the linear y-axis makes the two-thirds operating target visibly two-thirds of the hard ceiling. The target is illustrative headroom, not a proposed Ethereum parameter.
+
 The model isolates the basic tradeoff.
 
 At low throughput, nearly all data may afford the 4,096-epoch full horizon—about 18.20 days.

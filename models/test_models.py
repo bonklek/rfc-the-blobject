@@ -2,6 +2,7 @@ import unittest
 
 from cold_custody import lease_survival_probability, minimum_replicas
 from pricing import compare, convex_duration, null_byte_time
+from spot_simulation import Arrival, Mechanism, run_all, simulate
 from stock import ProtocolState, frontier
 
 
@@ -70,6 +71,47 @@ class PricingModelTests(unittest.TestCase):
                 "auction_reserve_proxy",
             },
         )
+
+    def test_comparison_uses_fixed_external_maturities(self) -> None:
+        result = compare(size=1, duration=300, utilization=0, base_price=1)
+        self.assertEqual(result["quantized_maturity"], 512)
+
+    def test_comparison_reference_is_not_derived_from_request(self) -> None:
+        short = compare(size=1, duration=256, utilization=0, base_price=1)
+        long = compare(size=1, duration=4096, utilization=0, base_price=1)
+        self.assertEqual(short["convex_duration"], 256)
+        self.assertGreater(long["convex_duration"] / 4096, 1)
+
+
+class SpotSimulationTests(unittest.TestCase):
+    def test_expiry_releases_capacity_for_later_arrival(self) -> None:
+        result, _ = simulate(
+            "expiry",
+            [Arrival(0, 100, 256), Arrival(256, 100, 256)],
+            Mechanism("shared", "byte_time", capacity=100),
+            horizon=513,
+        )
+        self.assertEqual(result.rejected_bytes, 0)
+
+    def test_lane_partition_can_strand_capacity(self) -> None:
+        result, _ = simulate(
+            "fragmentation",
+            [Arrival(0, 60, 256)],
+            Mechanism(
+                "lanes",
+                "maturity_lanes",
+                capacity=100,
+                maturities=(256, 4096),
+            ),
+            horizon=257,
+        )
+        self.assertEqual(result.rejected_bytes, 60)
+        self.assertGreater(result.stranded_capacity, 0)
+
+    def test_all_normalized_scenarios_run(self) -> None:
+        results, series = run_all()
+        self.assertEqual(len(results), 18)
+        self.assertTrue(series)
 
 
 class ColdCustodyModelTests(unittest.TestCase):

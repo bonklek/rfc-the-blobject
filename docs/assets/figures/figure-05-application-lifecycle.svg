@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="610" viewBox="0 0 1200 610" role="img" aria-labelledby="title desc">
+<title id="title">Figure 5 — Application examples across the data lifecycle</title>
+<desc id="desc">All objects pass through mandatory hot availability; selected cold custody and external continuation differ by use case.</desc>
+<style>
+text{font-family:Inter,system-ui,sans-serif;fill:#172033}
+.title{font-size:22px;font-weight:600}.subtitle{font-size:13px}
+.label{font-size:13px}.small{font-size:12px}.tiny{font-size:11px}
+.muted{fill:#667085}.axis{stroke:#172033;stroke-width:1}
+.grid{stroke:#d8dee9;stroke-width:1}.frame{fill:#fff;stroke:#d8dee9}
+</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text class="title" x="32" y="34">Figure 5 — Application examples across the data lifecycle</text>
+<text class="subtitle muted" x="32" y="56">All objects pass through mandatory hot availability; selected cold custody and external continuation differ by use case.</text>
+<rect x="300" y="130" width="120.7" height="415" fill="#dbeafe"/>
+<rect x="420.7" y="130" width="568.9" height="415" fill="#ffedd5"/>
+<rect x="791.3" y="130" width="370.7" height="415" fill="#ede9fe" fill-opacity="0.65"/>
+<rect class="frame" x="300" y="130" width="862" height="415" fill="none"/>
+<text class="label" x="360.3" y="105" text-anchor="middle" font-weight="600">hot DAS</text>
+<text class="label" x="705.1" y="105" text-anchor="middle" font-weight="600">Ethereum cold custody</text>
+<text class="label" x="976.7" y="84" text-anchor="middle" font-weight="600">external services may overlap</text>
+<text class="label" x="282" y="177" text-anchor="end">Live-stream segment</text>
+<text class="tiny muted" x="282" y="194" text-anchor="end">minimum replication opportunity</text>
+<rect x="300" y="168" width="120.7" height="34" fill="#dbeafe" stroke="#2563eb"/>
+<line x1="420.7" y1="163" x2="420.7" y2="207" stroke="#172033" stroke-width="2"/>
+<text class="label" x="282" y="253" text-anchor="end">Communication</text>
+<text class="tiny muted" x="282" y="270" text-anchor="end">recipient retrieval window</text>
+<rect x="300" y="244" width="120.7" height="34" fill="#dbeafe" stroke="#2563eb"/>
+<rect x="420.7" y="244" width="146.5" height="34" fill="#ffedd5" stroke="#d97706"/>
+<line x1="567.2" y1="239" x2="567.2" y2="283" stroke="#172033" stroke-width="2"/>
+<text class="label" x="282" y="329" text-anchor="end">Game or social event</text>
+<text class="tiny muted" x="282" y="346" text-anchor="end">recovery and synchronization</text>
+<rect x="300" y="320" width="120.7" height="34" fill="#dbeafe" stroke="#2563eb"/>
+<rect x="420.7" y="320" width="275.8" height="34" fill="#fce7f3" stroke="#db2777"/>
+<line x1="696.5" y1="315" x2="696.5" y2="359" stroke="#172033" stroke-width="2"/>
+<text class="label" x="282" y="405" text-anchor="end">Public artifact or dataset</text>
+<text class="tiny muted" x="282" y="422" text-anchor="end">window for mirrors to acquire</text>
+<rect x="300" y="396" width="120.7" height="34" fill="#dbeafe" stroke="#2563eb"/>
+<rect x="420.7" y="396" width="413.8" height="34" fill="#dcfce7" stroke="#059669"/>
+<line x1="834.4" y1="391" x2="834.4" y2="435" stroke="#172033" stroke-width="2"/>
+<line x1="804.3" y1="413.0" x2="1162.0" y2="413.0" stroke="#7c3aed" stroke-width="5" stroke-dasharray="9 7"/>
+<text class="tiny" x="1156.0" y="405" text-anchor="end">mirror or archive</text>
+<text class="label" x="282" y="481" text-anchor="end">Rollup or L2 data posting</text>
+<text class="tiny muted" x="282" y="498" text-anchor="end">full protocol serving horizon</text>
+<rect x="300" y="472" width="120.7" height="34" fill="#dbeafe" stroke="#2563eb"/>
+<rect x="420.7" y="472" width="568.9" height="34" fill="#ede9fe" stroke="#7c3aed"/>
+<line x1="989.6" y1="467" x2="989.6" y2="511" stroke="#172033" stroke-width="2"/>
+<line x1="959.4" y1="489.0" x2="1162.0" y2="489.0" stroke="#7c3aed" stroke-width="5" stroke-dasharray="9 7"/>
+<text class="tiny" x="1156.0" y="481" text-anchor="end">optional L2 archive</text>
+<line x1="420.7" y1="130" x2="420.7" y2="545" stroke="#2563eb" stroke-dasharray="6 5"/>
+<line x1="989.6" y1="130" x2="989.6" y2="545" stroke="#7c3aed" stroke-width="2"/>
+<text class="small" x="981.6" y="148" text-anchor="end">4096 epochs</text>
+<text class="small" x="731.0" y="587" text-anchor="middle">Conceptual lifecycle →</text>
+</svg>

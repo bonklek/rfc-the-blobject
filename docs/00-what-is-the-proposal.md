@@ -248,6 +248,10 @@ Thus:
 
 > **Holding ingress and the maximum protocol-required horizon fixed, variable retention weakly dominates fixed retention in logical retained-capacity consumption.**
 
+![A fixed-retention lease and a shorter variable-retention lease with identical initial publication burden; the shorter lease removes only the fixed-system serving tail.](assets/figures/figure-03-fixed-system-tail.svg)
+
+*Figure 3 — A shorter lease removes only the fixed-system tail.* Both policies incur the same fixed-blob ingress and availability-establishment burden. The variable policy ends its logical serving obligation at the selected `T`; the interval from `T` through the fixed horizon `H` is the retained byte-time it avoids. This is a logical resource comparison, not yet a claim about net physical savings after implementation overhead.
+
 This is deliberately a **resource-allocation** statement, not a claim of total protocol dominance. Heterogeneous expiry may impose metadata, packing, proof, repair, request, and storage-engine overheads. Those physical implementation costs must be compared against the logical savings before an implementation claim can be made.
 
 ---

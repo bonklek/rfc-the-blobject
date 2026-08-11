@@ -20,6 +20,37 @@ python models/pricing.py --size 131072 --duration-epochs 4096 --utilization 0.75
 
 The output is useful only for relative comparisons under shared arbitrary units.
 
+`pricing.py` uses fixed RFC example maturities by default. The reference
+duration, maturity set, and expected utilization at expiry are explicit CLI
+inputs rather than values derived from the quoted request.
+
+## Normalized spot-allocation scenarios
+
+`spot_simulation.py` combines immediate-start active-stock accounting with the
+RFC's pricing hypotheses. It uses synthetic capacity and fee units to compare
+steady demand, long-lease front-loading, correlated maximum-duration demand,
+adversarial occupation, maturity fragmentation, and an expiry cliff.
+
+```powershell
+python models/spot_simulation.py
+python models/spot_simulation.py --output-dir models/output
+python models/render_charts.py
+```
+
+The output reports admission, rejection, charge coverage against an ex-post
+scarcity benchmark, peak occupancy, stranded lane capacity, and peak expiry.
+It is a falsification aid, not a demand forecast or parameter recommendation.
+The chart command renders SVG comparisons of rejection rates, ex-post charge
+coverage, and active-stock paths without adding runtime dependencies.
+
+The scenario runner holds arrivals fixed. As a result, term-premium pricing
+changes charges but not admission; modeling a demand response would require an
+explicit willingness-to-pay hypothesis. The maturity-lane null model divides
+capacity equally and does not allow capacity to float between lanes, making it
+an intentionally severe fragmentation test. Charge coverage compares the
+upfront quote with a diagnostic ex-post utilization-price path, not with a
+measured social or operator cost.
+
 ## Cold-custody survivability
 
 `cold_custody.py` evaluates the independent-failure checkpoint model from §17.4.

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="590" viewBox="0 0 1200 590" role="img" aria-labelledby="title desc">
+<title id="title">Figure 6 — Storage-side derivation of a proposed retention limit</title>
+<desc id="desc">RFC research model; schematic and not to scale; these are not existing Ethereum protocol counters.</desc>
+<style>
+text{font-family:Inter,system-ui,sans-serif;fill:#172033}
+.title{font-size:22px;font-weight:600}.subtitle{font-size:13px}
+.label{font-size:13px}.small{font-size:12px}.tiny{font-size:11px}
+.muted{fill:#667085}.axis{stroke:#172033;stroke-width:1}
+.grid{stroke:#d8dee9;stroke-width:1}.frame{fill:#fff;stroke:#d8dee9}
+</style>
+<rect width="100%" height="100%" fill="#fff"/>
+<text class="title" x="32" y="34">Figure 6 — Storage-side derivation of a proposed retention limit</text>
+<text class="subtitle muted" x="32" y="56">RFC research model; schematic and not to scale; these are not existing Ethereum protocol counters.</text>
+<text class="label" x="52" y="99"><tspan font-weight="600">M<tspan baseline-shift="sub" font-size="10">budget</tspan></tspan> — chosen local storage envelope in physical bytes per node</text>
+<rect x="52.0" y="118" width="252.1" height="118" fill="#dbeafe" stroke="#2563eb"/>
+<text class="label" x="178.0" y="168" text-anchor="middle" font-weight="600">M<tspan baseline-shift="sub" font-size="10">hot</tspan></text>
+<text class="tiny muted" x="178.0" y="191" text-anchor="middle">hot working set</text>
+<rect x="304.1" y="118" width="175.4" height="118" fill="#ffedd5" stroke="#d97706"/>
+<text class="label" x="391.8" y="168" text-anchor="middle" font-weight="600">M<tspan baseline-shift="sub" font-size="10">repair</tspan></text>
+<text class="tiny muted" x="391.8" y="191" text-anchor="middle">repair storage slack</text>
+<rect x="479.4" y="118" width="153.4" height="118" fill="#dcfce7" stroke="#059669"/>
+<text class="label" x="556.2" y="168" text-anchor="middle" font-weight="600">M<tspan baseline-shift="sub" font-size="10">metadata</tspan></text>
+<text class="tiny muted" x="556.2" y="188" text-anchor="middle"><tspan x="556.2">commitments, proofs,</tspan><tspan x="556.2" dy="16">expiry records</tspan></text>
+<rect x="632.9" y="118" width="515.1" height="118" fill="#ede9fe" stroke="#7c3aed"/>
+<text class="label" x="890.4" y="168" text-anchor="middle" font-weight="600">remaining physical bytes</text>
+<text class="tiny muted" x="890.4" y="191" text-anchor="middle">available to cold retention</text>
+<text x="52" y="316" font-size="21" font-weight="600">K<tspan baseline-shift="sub" font-size="13">storage</tspan> ≲</text>
+<text class="label" x="360" y="303" text-anchor="middle">M<tspan baseline-shift="sub" font-size="10">budget</tspan> − M<tspan baseline-shift="sub" font-size="10">hot</tspan> − M<tspan baseline-shift="sub" font-size="10">repair</tspan> − M<tspan baseline-shift="sub" font-size="10">metadata</tspan></text>
+<line x1="190" y1="312" x2="530" y2="312" stroke="#172033"/>
+<text class="label" x="360" y="338" text-anchor="middle">γ<tspan baseline-shift="sub" font-size="10">cold</tspan></text>
+<text class="small muted" x="592" y="303">γ<tspan baseline-shift="sub" font-size="10">cold</tspan> maps one logical retained byte to its local physical</text>
+<text class="small muted" x="592" y="323">storage footprint under the chosen custody representation.</text>
+<line class="grid" x1="52" y1="367" x2="1148" y2="367"/>
+<text class="label" x="52" y="392" font-weight="600">Storage is only one admission constraint</text>
+<text class="label" x="124" y="427" text-anchor="middle" font-weight="600">K<tspan baseline-shift="sub" font-size="10">storage</tspan></text>
+<text class="tiny muted" x="124" y="448" text-anchor="middle">resident bytes</text>
+<line x1="52" y1="466" x2="196" y2="466" stroke="#2563eb" stroke-width="4"/>
+<text class="label" x="320" y="427" text-anchor="middle" font-weight="600">K<tspan baseline-shift="sub" font-size="10">serve</tspan></text>
+<text class="tiny muted" x="320" y="448" text-anchor="middle">historical serving bandwidth</text>
+<line x1="248" y1="466" x2="392" y2="466" stroke="#d97706" stroke-width="4"/>
+<text class="label" x="516" y="427" text-anchor="middle" font-weight="600">K<tspan baseline-shift="sub" font-size="10">repair</tspan></text>
+<text class="tiny muted" x="516" y="448" text-anchor="middle">repair bandwidth</text>
+<line x1="444" y1="466" x2="588" y2="466" stroke="#059669" stroke-width="4"/>
+<text class="label" x="712" y="427" text-anchor="middle" font-weight="600">K<tspan baseline-shift="sub" font-size="10">I/O</tspan></text>
+<text class="tiny muted" x="712" y="448" text-anchor="middle">write and expiry churn</text>
+<line x1="640" y1="466" x2="784" y2="466" stroke="#db2777" stroke-width="4"/>
+<text x="824" y="445" font-size="22">→</text>
+<text class="label" x="1000" y="427" text-anchor="middle" font-weight="600">admission decision</text>
+<text class="tiny muted" x="1000" y="448" text-anchor="middle">must remain inside every resource bound</text>
+<line x1="884" y1="466" x2="1116" y2="466" stroke="#172033" stroke-width="4"/>
+<text class="small muted" x="52" y="555">K<tspan baseline-shift="sub" font-size="10">storage</tspan> is the storage-derived component; the full safe envelope also includes serving, repair, and I/O limits.</text>
+</svg>
