@@ -168,6 +168,20 @@ Multi-epoch capacity commitments and delayed exits make procurement more predict
 
 ## 4. Separate scarcity from hardware service
 
+### Current Ethereum baseline
+
+Current PeerDAS specifies custody, sampling, and serving duties, but [EIP-7594](https://eips.ethereum.org/EIPS/eip-7594) does not define a distinct per-byte DA-service payment to the participant performing each duty. Validator economics compensate the validator role as a whole; non-validator nodes do not acquire a `q_write` or `q_retention` claim merely by serving data. [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844)'s blob base fee is deducted and burned rather than paid to DA custodians.
+
+| Current duty or payment | Separate DA-service reward? |
+|---|---:|
+| PeerDAS custody | No |
+| Sampling | No |
+| Serving assigned cells or columns | No |
+| Voluntary extra custody | No |
+| Blob base fee | Burned, not paid to providers |
+
+The operator payment below is therefore a new candidate mechanism, not a redirection already implicit in PeerDAS. Introducing it would require a positive case that specialized service procurement improves safety or credible supply enough to justify its expenditure, qualification, and capture risks.
+
 The base RFC treats ingress and retention fees primarily as admission charges. If Ethereum additionally procures operator hardware, one candidate decomposition is:
 
 ```text
@@ -270,6 +284,14 @@ The observed supply signal will be delayed and noisy. A deployable controller ne
 
 No specific controller is proposed here. Simulation should compare posted-price control with reverse auctions, fixed subsidies, and ordinary validator-funded duties under honest entry, correlated failures, supply withholding, Sybil pooling, and demand shocks.
 
+One non-normative controller is developed in the [illustrative operator-economics appendix](../appendices/illustrative-operator-economics.md):
+
+```text
+q_(k+1) = q_k * [1 + kappa * (C*_k - C_k) / C*_k],
+```
+
+with bounded multiplicative movement plus an absolute floor and ceiling. It exists to make convergence and withholding attacks simulatable, not to select an update rule. The appendix also compares posted prices with sealed-bid uniform-price and pay-as-bid reverse procurement. In a repeated uniform-price auction, a marginal accepted bid can set the payment for all accepted supply, so coordinated withholding and strategic bidding remain first-order concerns.
+
 ---
 
 ## 6. End-to-end operator architecture
@@ -288,7 +310,7 @@ application demand
 
 qualified operator supply
     -> multi-epoch commitment
-    -> posted q_write / q_retention
+    -> posted q_write / q_retention / q_history
     -> pseudorandom fractional assignments
     -> measured service and delayed settlement
 ```
@@ -301,9 +323,13 @@ This connects the logical retained-stock market to actual devices. It also shows
 - it cannot manufacture independent operators merely by paying more;
 - it cannot safely exceed the measured hardware envelope.
 
+The third rate applies only when a lifecycle includes a sparse history tail. Rather than charging `q_retention * B * infinity`, the protocol can settle `q_history * f_tail * B * Δt` for each recurring archive-service interval. Long-run custodians then remain replaceable and subject to continuing qualification, repair, and handoff. For protocol-generated L1 history, the protocol must identify a funding channel because there may be no user blob payer. The [Lean lifecycle chapter](10-how-does-lean-ethereum-change-the-proposal.md#6-how-does-lifecycle-pricing-change) develops this distinction.
+
 ### 6.1 Illustrative operator-market scenarios
 
 The following scenarios show scaling relationships rather than forecast costs.
+
+The [illustrative operator-economics appendix](../appendices/illustrative-operator-economics.md) also applies deliberately arbitrary dollar rates to a dated 14-blob target, 32 MiB/slot, and 1 GiB/s. It is a dimensional sanity check, not a price recommendation or forecast.
 
 **Fractional capacity.** Suppose 10,000 contributors each commit 256 GB. Gross pledged capacity is 2.56 PB. If the duty requires `rho=2` physical bytes per logical byte and the pool reserves 20% physical spare capacity, the maximum first-order logical obligation is:
 
@@ -374,6 +400,7 @@ The operator market should be judged against two baselines: ordinary validator c
 
 - Which observable supply measure is costly enough to fake but cheap enough for small operators to provide?
 - How quickly may `q_write` and `q_retention` adjust without oscillation or easy withholding attacks?
+- If canonical data receives a recurring `q_history` service, who funds it and what event may end or reassign that obligation?
 - What price ceiling and concentration limit should force a reduction in the DA target?
 - Can pool or hosting concentration be measured robustly in the presence of Sybil identities?
 

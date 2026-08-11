@@ -44,6 +44,7 @@ The proposal lets a purchaser choose how long Ethereum must serve an object, up 
 
 - [How could RetentionNotes work?](appendices/retention-notes.md)
 - [What do illustrative retention frontiers look like?](appendices/illustrative-numerics.md)
+- [What do illustrative operator payments and controllers look like?](appendices/illustrative-operator-economics.md)
 - [What are the backbone-scale limits?](appendices/backbone-scale-limits.md)
 - [What can be proven after ephemeral data expires?](appendices/ephemeral-data-and-proofs.md)
 - [How could private AOT authorization remain cheap to validate?](appendices/private-aot-authorization.md)
@@ -93,6 +94,8 @@ The numbered sections inside each document retain the original paper's numbering
 - [Backbone-scale arithmetic](appendices/backbone-scale-limits.md)
 - [Ephemeral proving semantics](appendices/ephemeral-data-and-proofs.md)
 - [Private AOT authorization sketch](appendices/private-aot-authorization.md)
+- [Illustrative operator economics and procurement controller](appendices/illustrative-operator-economics.md)
+- [Issue-ready operator-market kill questions](RESEARCH_TRACKING.md)
 - Kill questions: [2D parity lifetime](https://github.com/bonklek/rfc-the-blobject/issues/2), [row authentication](https://github.com/bonklek/rfc-the-blobject/issues/3), and [cold-custody survivability](https://github.com/bonklek/rfc-the-blobject/issues/4)
 
 Run the repository checks with:

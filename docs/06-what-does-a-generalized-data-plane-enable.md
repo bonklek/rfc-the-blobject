@@ -36,6 +36,8 @@ This does not solve builder centralization. [BuilderNet](https://buildernet.org/
 
 The limited conclusion is that variable retention and high-throughput DAS do not **inherently** require centralized block production. The publication protocol must simply avoid making the winning builder the only viable DA uplink.
 
+That is a bandwidth claim, not an inclusion-censorship claim. Distributed upload does not force a concentrated PBS builder to select a transaction or blob commitment. The [admission/inclusion analysis in §13.1](03-how-do-future-resource-markets-work.md#131-inclusion-censorship-is-upstream-of-das) separates inclusion censorship, publication-time withholding, and post-inclusion service refusal; a generalized data plane inherits the first problem unless inclusion lists or another robust admission path address it.
+
 ---
 
 ## 19. Application space
