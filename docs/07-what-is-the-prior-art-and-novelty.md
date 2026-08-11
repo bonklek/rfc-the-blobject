@@ -30,15 +30,29 @@ Draft [EIP-8256](https://eips.ethereum.org/EIPS/eip-8256) ([discussion](https://
 
 [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) and [FullDASv2](https://ethresear.ch/t/accelerating-blob-scaling-with-fulldasv2-with-getblobs-mempool-encoding-and-possibly-rlc/22477) research is directly relevant to the compatibility problem. Current proposals describe a **two-dimensional erasure-code** DAS construct with cell-level messaging, blobs as rows, cross-cutting columns, and in-network row/column repair or availability amplification. Separate [cell-level dissemination work](https://ethresear.ch/t/gossipsubs-partial-messages-extension-and-cell-level-dissemination/23017) likewise explores making independently verifiable cells the propagation unit rather than whole `DataColumnSidecar`s.
 
-This strengthens the plausibility of sparse serving for the PeerDAS packaging problem while making the deeper FullDAS issue explicit: second-dimensional coding can couple multiple blob rows into shared redundancy. The hot-dense/cold-sparse lifecycle in §17 is **not** established FullDAS behavior; it is this paper's proposed compatibility hypothesis for separating the lifetime of availability-amplification redundancy from the lifetime of row-local serving obligations.
+Draft [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) makes this direction concrete for current PeerDAS by allowing peers to exchange missing cells instead of complete columns. It is a backwards-compatible dissemination optimization, not a historical-retention design. The [1D-versus-2D analysis](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) further shows that 1D PeerDAS with cell-level messaging can support partial row reconstruction, keeping 1D as a viable simpler branch.
 
-### 21.7 Narrow novelty claim
+These mechanisms strengthen the plausibility of sparse serving for the PeerDAS packaging problem while making the deeper 2D issue explicit: second-dimensional coding can couple multiple blob rows into shared redundancy. The hot-2D/cold-1D lifecycle in §17 is **not** established FullDAS behavior; it is this paper's conditional compatibility hypothesis.
+
+### 21.7 Proofs of custody and retention enforcement
+
+Current PeerDAS assigns deterministic custody and specifies a minimum historical serving range, but it does not create a recurring consensus proof that each old object remained retrievable throughout that range.
+
+Earlier Ethereum research on [one-bit and 0.001-bit proofs of custody](https://ethresear.ch/t/a-0-001-bit-proof-of-custody/7409) explored a stronger model: validators commit to data-dependent custody computations and can become slashable when a later reveal shows that they attested without holding the data. Those designs targeted earlier sharding architectures and are not directly portable to PeerDAS. They remain important prior art for distinguishing:
+
+- protocol-required serving;
+- probabilistically monitored serving;
+- cryptoeconomically enforced retention.
+
+The narrow proposal initially adopts the first level. Any move to challenges, custody bonds, or mass-slashable unavailability faults would be a separate enforcement extension with its own false-positive, correlation, and recovery risks.
+
+### 21.8 Narrow novelty claim
 
 The defensible novelty claim is therefore not “nobody has priced storage duration” or “nobody has separated availability from persistence.” Both have extensive precedent.
 
 The narrower contribution is the composition:
 
-> **treat Ethereum consensus DA as a service with separately priced ingress and bounded purchaser-selected serving duration; use active retained stock as an independent resource constraint when throughput rises; and extend the same resource decomposition to physically settled future ingress and retention markets.**
+> **treat Ethereum DA as a service with separately accounted ingress and bounded purchaser-selected protocol serving duration; make that duration a deterministic state transition over active retained stock; and extend the same resource decomposition to representation-aware custody and future resource markets.**
 
 That claim should be updated if closer prior art emerges.
 

@@ -4,7 +4,7 @@
 
 Variable retention does not imply that Ethereum itself must provide every useful retention horizon. Exposing time as an explicit resource creates a clean boundary around which downstream providers can compete.
 
-The base protocol provides the common guarantee:
+The base protocol provides the common required-serving window:
 
 > A committed object was reconstructably available under Ethereum’s DA security assumptions, and the relevant protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until expiration.
 
@@ -114,32 +114,8 @@ It may be the expected market allocation.
 
 ## 16. Illustrative active-stock model
 
-Suppose, purely illustratively, that a future DAS network can support:
+The argumentative core uses only the relationship `R≈S/T`. It does not assume a numerical value for `S`, which must ultimately be derived from a concrete custody topology and the resource-vector treatment in §6.
 
-```text
-64 TiB
-```
-
-of effective logical active retention.
-
-If every byte receives the same horizon `T`, the corresponding hard steady-state throughput frontier is simply `S/T`. Without imposing an arbitrary maturity haircut, the rough hard frontiers are:
-
-- **18.2 GiB/s** for one-hour retention;
-- **777 MiB/s** for one-day retention;
-- **111 MiB/s** for seven-day retention;
-- **55.5 MiB/s** for fourteen-day retention.
-
-If an operating target were set at two-thirds of the physical envelope, the corresponding target frontiers would be approximately:
-
-- **12.1 GiB/s** for one-hour retention;
-- **518 MiB/s** for one-day retention;
-- **74.0 MiB/s** for seven-day retention;
-- **37.0 MiB/s** for fourteen-day retention.
-
-These are not proposed Ethereum parameters or predictions. The point is the geometry:
-
-> **the same retained-stock envelope supports radically different ingress rates depending on how much byte-time applications purchase.**
-
-A liveness reserve would reduce the general-purpose pool by an explicitly chosen amount such as `H_min`; future-starting reservations would additionally be bounded by the forward envelope introduced in §10. Neither adjustment should be hidden inside illustrative percentages.
+The former 64 TiB example is retained in [Illustrative numerics](../appendices/illustrative-numerics.md) as a reproducible geometry check, not as evidence for an Ethereum parameter.
 
 ---

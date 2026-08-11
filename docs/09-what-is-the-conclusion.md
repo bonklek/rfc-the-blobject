@@ -4,13 +4,13 @@
 
 The adversarial pass leaves the core hypothesis intact but simplifies its mechanism.
 
-Fixed blob retention bundles immediate ingress with one protocol serving horizon. Under fixed ingress and `T_max` no greater than that minimum serving horizon, variable retention weakly dominates fixed retention in **logical guaranteed retained-capacity consumption**: the fixed guaranteed service remains available as a special case, while shorter-lived objects consume less guaranteed byte-time. `T_max` limits the obligation a purchaser may impose; it neither requires pruning at expiry nor prevents voluntary service afterward.
+Fixed blob retention bundles immediate ingress with one protocol serving horizon. Under fixed ingress and `T_max` no greater than that minimum serving horizon, variable retention weakly dominates fixed retention in **logical protocol-required retained-capacity consumption**: the current fixed-duration requirement remains available as a special case, while shorter-lived objects consume less required byte-time. `T_max` limits the obligation a purchaser may impose; it neither requires pruning at expiry nor prevents voluntary service afterward.
 
-The narrow spot-start system does not require a maturity-dependent forward hard-cap curve. Every lease begins consuming retained capacity immediately, so a physically derived active-stock ceiling `K_safe` is sufficient to bound already-contracted storage obligations. A separate reserve `H_min` can preserve a chosen minimum-liveness lane against long-lease crowd-out. Prices then allocate guaranteed byte-time below those safety bounds.
+The narrow spot-start system does not require a maturity-dependent forward hard-cap curve. Every lease begins consuming retained capacity immediately, so deterministic active-stock accounting can bound already-contracted obligations. Physical admission must respect `K_safe_vector`, not storage alone. A separate `H_min` can keep long leases from pre-consuming a short-duration lane, but cannot stop an attacker from flooding that lane. Pricing then allocates required byte-time below those safety bounds.
 
 This simplification also clarifies the real implementation risk. Logical savings do not automatically become physical savings under DAS. Current PeerDAS creates a column-packaging problem; proposed two-dimensional FullDAS designs can create a deeper cross-row coding problem because shared parity may depend on blobs with different expirations.
 
-The leading compatibility hypothesis is therefore a two-phase representation lifecycle: preserve the rich DAS code only through the hot fresh-availability phase, then discard hot-only shared redundancy and retain independently committed row-local cells under sparse duration-specific custody. If that transition is compatible with FullDAS security, continuous logical retention can survive without maturity-homogeneous hot frames. If it is not, a small number of maturity-aligned coding domains becomes the conservative fallback.
+The physical implementation is representation-dependent. Current 1D PeerDAS with cell-level transport is the first prototype path because it has no cross-row parity to preserve. If Ethereum adopts a 2D code, one compatibility hypothesis is to preserve that rich code only through a hot phase and then retain independently committed row-local cells. If that transition fails, a small number of maturity-aligned coding domains becomes the conservative fallback.
 
 The L2 resilience claim also survives only conditionally. Applications gain graceful degradation to the extent that proving, recovery, watcher, and archival architectures permit a shorter Ethereum serving horizon without introducing unacceptable trust assumptions.
 
@@ -22,7 +22,7 @@ The broader thesis consequently becomes more, not less, coherent:
 bandwidth × availability through time.
 ```
 
-Short base guarantees can hand committed objects to competing persistence networks. Transferable future rights raise settlement and privacy questions. Specialized systems can provide routing, indexing, privacy, and long-term storage while Ethereum supplies scarce admission, integrity, and bounded protocol-secured retrievability.
+Short base required-serving windows can hand committed objects to competing persistence networks. Transferable future rights raise settlement and privacy questions. Specialized systems can provide routing, indexing, privacy, and long-term storage while Ethereum supplies scarce admission, integrity, and bounded protocol-required retrievability under explicit custody assumptions.
 
 The scope remains intentionally expansive. The adversarial result is that the expansion no longer needs to be carried by an unnecessarily elaborate narrow mechanism.
 

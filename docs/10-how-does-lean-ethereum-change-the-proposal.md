@@ -28,7 +28,7 @@ These proposals are at different maturity levels. Lean Ethereum is a long-run pe
 
 The useful abstraction is therefore not “an EIP-4844 blob with a timer.” It is:
 
-> a lifecycle and availability guarantee over a committed Ethereum data object, independent of its current encoding.
+> a lifecycle and enforceable serving requirement over a committed Ethereum data object, independent of its current encoding.
 
 That object might be transported as:
 
@@ -124,7 +124,7 @@ The correct implication is:
 ```text
 same transport substrate
         does not imply
-same access or lifecycle guarantee
+same access or lifecycle requirement
 ```
 
 Temporary and UTXO-like state are sibling ideas because they separate large historical objects from small permanent markers. They still require execution semantics and should not be smuggled into the ordinary DA lease model.
@@ -173,7 +173,7 @@ The lifecycle may be:
 
 ## 6. How does lifecycle pricing change?
 
-The base paper separates ingress from guaranteed byte-time. A multi-phase lifecycle adds a third physical obligation:
+The base paper separates ingress from protocol-required byte-time. A multi-phase lifecycle adds a third physical obligation:
 
 ```text
 F_data
@@ -211,7 +211,7 @@ Block-in-Blobs adds a payer question. User DA has an obvious transaction payer; 
 | Lean Data / “blobs 2.0” | Granular, post-quantum data objects | Strengthens transport neutrality |
 | Block-in-Blobs | L1 payload data enters DAS | Adds protocol-defined data classes and payer questions |
 | Integrated distributed history | Random long-lived samples | Generalizes expiry into lifecycle profiles |
-| Mandatory zkEVM verification | Payload validity no longer implies payload download | Makes an explicit availability guarantee more important |
+| Mandatory zkEVM verification | Payload validity no longer implies payload download | Makes an explicit availability and serving requirement more important |
 | Temporary or UTXO-like state | New execution-aware persistence classes | Conceptually adjacent but outside ordinary DA leases |
 | Extremely Lean Chain | More responsibility and proofs move to participants | Reinforces minimization, but is not itself a DA mechanism |
 | Specialized state/history serving | Fewer universal storage duties | Raises resilience, incentives, and retrieval-privacy questions |
@@ -252,7 +252,7 @@ These revisions strengthen the paper without making the narrow spot-start mechan
 - Is permanent sampling appropriate for canonical L1 history only, or for other classes?
 - What node count, overlap, churn, and repair policy keeps reconstruction credible?
 - How is historical serving discovered and incentivized?
-- How does the protocol distinguish a statistical history tail from a full guarantee?
+- How does the protocol distinguish a statistical history tail from a full required-serving service?
 
 ### State and retrieval
 

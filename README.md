@@ -21,7 +21,7 @@ DA price = ingress price + retention price
 - **Ingress** is the flow cost of propagating, encoding, sampling, and establishing availability.
 - **Retention** is the stock cost of keeping committed data reconstructable through time.
 
-The conservative proposal lets a purchaser choose a bounded guaranteed duration no longer than today's minimum serving horizon. That bound limits the obligation a purchaser can impose; it does not require nodes to delete or stop serving data afterward. The broader thesis combines timed bandwidth, timed retrievability, and downstream persistence into a generalized Ethereum data plane.
+The conservative proposal lets a purchaser choose a bounded protocol-required duration no longer than today's minimum serving horizon. That bound limits the obligation a purchaser can impose; it does not require nodes to delete or stop serving data afterward. The broader thesis combines timed bandwidth, timed retrievability, and downstream persistence into a generalized Ethereum data plane.
 
 ## Read by question
 
@@ -40,6 +40,7 @@ The conservative proposal lets a purchaser choose a bounded guaranteed duration 
 ### Appendix
 
 - [How could RetentionNotes work?](appendices/retention-notes.md)
+- [What do illustrative retention frontiers look like?](appendices/illustrative-numerics.md)
 
 ## Suggested reading paths
 
@@ -49,12 +50,11 @@ The conservative proposal lets a purchaser choose a bounded guaranteed duration 
 
 ## Central claims
 
-1. Under fixed ingress and a maximum guaranteed horizon no longer than today's minimum serving horizon, variable retention weakly reduces the logical retained-data obligation. This maximum limits the obligation a purchaser may impose; it does not require pruning or prevent voluntary service afterward.
-2. Immediate-start leases can be bounded by an active retained-stock ceiling; a forward capacity curve becomes necessary only for future-starting commitments.
-3. Logical expiry creates physical savings only if the DAS representation permits independently expiring custody.
-4. The leading compatibility hypothesis is a hot dense DAS phase followed by cold sparse row-local custody.
-5. Ethereum can provide bounded availability and integrity while competing downstream systems provide longer persistence and application-specific services.
-6. A single duration is the conservative special case of a broader lifecycle profile that may include a reduced sparse-history tail.
+1. Under fixed ingress and a maximum protocol-required horizon no longer than today's minimum serving horizon, variable retention weakly reduces the logical retained-data obligation without requiring pruning afterward.
+2. Current PeerDAS-style semantics are **protocol-required retrievability under custody assumptions**, not a recurring proof that every historical object remained available.
+3. Immediate-start leases can use deterministic active-stock accounting; a forward capacity curve becomes necessary only for future-starting commitments, while physical admission must respect a resource vector.
+4. Physical expiry is representation-dependent: 1D cell-level custody is the first prototype path, while hot-2D/cold-1D is one conditional branch rather than the assumed roadmap.
+5. A single duration is the conservative special case of a broader lifecycle profile, and downstream systems may extend persistence after Ethereum's required-serving window ends.
 
 ## How to comment
 
@@ -67,7 +67,26 @@ Open an issue with a concrete objection, missing prior art, counterexample, impl
 ├── README.md
 ├── docs/          # The RFC, split into question-focused sections
 ├── appendices/    # Worked constructions outside the base proposal
-└── tools/         # Reproducible gist-to-repository import tooling
+├── models/        # Executable stock, pricing, and cold-custody null models
+├── REFERENCES.md  # Date- and commit-pinned research inputs
+└── tools/         # Repository validation
 ```
 
 The numbered sections inside each document retain the original paper's numbering so citations and discussion remain stable.
+
+## Research artifacts
+
+- [Toy protocol state and capacity model](docs/01-how-are-capacity-and-pricing-managed.md#41-non-normative-protocol-state-sketch)
+- [Executable models](models/README.md)
+- [Pinned references](REFERENCES.md)
+- Kill questions: [2D parity lifetime](https://github.com/bonklek/rfc-the-blobject/issues/2), [row authentication](https://github.com/bonklek/rfc-the-blobject/issues/3), and [cold-custody survivability](https://github.com/bonklek/rfc-the-blobject/issues/4)
+
+Run the repository checks with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-rfc.ps1
+```
+
+## Citation and license
+
+Citation metadata is provided in [`CITATION.cff`](CITATION.cff). This work is released under the [Viral Public License](LICENSE).

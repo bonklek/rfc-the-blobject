@@ -53,7 +53,7 @@ H_uncertainty(τ).
 Here:
 
 - `K_safe` is the retained-stock envelope implied by the custody architecture and hardware target;
-- `H_min` preserves the chosen minimum-liveness reserve;
+- `H_min` keeps long leases from pre-consuming the chosen short-duration reserve, without claiming honest-user liveness inside that lane;
 - `H_uncertainty(τ)` is an optional additional reserve against forecast error, future parameter changes, correlated demand, or long-horizon uncertainty.
 
 The protocol then requires:
@@ -205,7 +205,7 @@ The DA layer need not interpret any of these semantics. It only needs to enforce
 
 Variable retention also creates a useful primitive for censorship-resistant dissemination **after the data has actually been admitted and made available**.
 
-Some applications care intensely about a strong publication path and a guaranteed replication opportunity but do not need Ethereum itself to retain the data indefinitely. Variable retention strengthens the second property; it does not, by itself, solve transaction inclusion censorship. This distinction is especially important for Blob Streaming: the current EIP-8256 draft explicitly leaves mandatory inclusion of AOT blob transactions to future work.
+Some applications care intensely about a strong publication path and a protocol-required replication opportunity but do not need Ethereum itself to retain the data indefinitely. Variable retention strengthens the second property; it does not, by itself, solve transaction inclusion censorship. This distinction is especially important for Blob Streaming: the current EIP-8256 draft explicitly leaves mandatory inclusion of AOT blob transactions to future work.
 
 Consider a document, dataset, software artifact, media stream, or other object whose primary security objective is to become widely replicable once released.
 
@@ -214,10 +214,10 @@ The publisher can purchase:
 ```text
 strong Ethereum ingress
 +
-short guaranteed retention.
+short protocol-required retention.
 ```
 
-Once Ethereum establishes availability, a guaranteed replication window begins.
+Once Ethereum establishes publication-time availability, a protocol-required replication window begins.
 
 During that interval, arbitrary parties can retrieve the exact committed bytes and hand them off to:
 
@@ -233,7 +233,7 @@ During that interval, arbitrary parties can retrieve the exact committed bytes a
 
 Ethereum therefore need not become a permanent-storage network to provide a powerful censorship-resistance property once inclusion and availability establishment have occurred.
 
-It can provide the protocol serving guarantee:
+It can provide the protocol serving requirement:
 
 > **For the next `R`, these exact committed bytes are reconstructably available under Ethereum’s DA security assumptions.**
 
@@ -243,7 +243,7 @@ This produces a clean division of labor:
 
 **Ethereum DA**
 
-provides economically secured availability after inclusion and a guaranteed replication opportunity; censorship resistance of the admission path depends on the surrounding inclusion mechanism.
+provides publication-time DAS plus a required replication opportunity under the custody assumptions; censorship resistance of the admission path depends on the surrounding inclusion mechanism.
 
 **Persistent storage systems**
 
