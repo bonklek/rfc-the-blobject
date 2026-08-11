@@ -32,9 +32,9 @@ Second, once availability has been established, the network must continue to cus
 
 These costs should not necessarily be bundled.
 
-A 100 MB object that needs to remain available for five minutes imposes approximately the same initial ingress burden as a 100 MB object that needs to remain available for two weeks. Their subsequent custody obligations, however, differ by roughly four orders of magnitude.
+A 100 MB object that needs one epoch of required serving—about 6.4 minutes at current timing—imposes approximately the same initial ingress burden as a 100 MB object that receives the current full 4,096-epoch serving window—about 18.2 days. Their subsequent custody obligations differ by exactly a factor of 4,096.
 
-Conversely, shortening retention cannot eliminate the initial bandwidth requirement. A one-minute object must still be propagated and made available.
+Conversely, shortening retention cannot eliminate the initial bandwidth requirement. A one-epoch object must still be propagated and made available.
 
 The natural first-order decomposition is therefore:
 
@@ -106,7 +106,7 @@ Accordingly, the narrow mechanism makes the following level-1 claim through `T`:
 
 This distinction matters again after expiry. A commitment can authenticate a surviving copy, but a commitment by itself does not prove that the network honored the serving obligation at every moment before expiry. If historical proof of service is desired, it must be designed separately.
 
-The distinction may also permit a **change of physical representation through the object lifecycle**. The representation best suited to proving fresh availability need not be identical to the representation best suited to days of historical serving. Section 17 develops the leading hypothesis: use dense DAS redundancy during the hot availability-establishment phase, then retain still-live objects through sparse row-local custody that can expire independently.
+The distinction may also permit a **change of physical representation through the object lifecycle**. The representation best suited to proving fresh availability need not be identical to the representation best suited to hundreds or thousands of epochs of historical serving. Section 17 branches between current 1D PeerDAS with cell-level historical custody and a conditional future 2D path that may transition from hot cross-row redundancy to cold row-local custody.
 
 ---
 
@@ -147,6 +147,21 @@ Variable retention should initially be bounded:
 ```text
 T_min ≤ T ≤ T_max.
 ```
+
+This RFC expresses protocol retention in epochs. At the current 32 slots per epoch and 12 seconds per slot, one epoch is 384 seconds. Power-of-two maturities give implementations and users a compact common vocabulary:
+
+| Epochs | Approximate wall-clock time |
+|---:|---:|
+| 1 | 6.4 minutes |
+| 8 | 51.2 minutes |
+| 64 | 6.83 hours |
+| 256 | 1.14 days |
+| 512 | 2.28 days |
+| 1,024 | 4.55 days |
+| 2,048 | 9.10 days |
+| 4,096 | 18.20 days |
+
+This table is a duration vocabulary, not a proposed allowed set. A concrete protocol can omit any maturity below `T_hot`, expose only a subset such as `256, 512, 1,024, 2,048, 4,096`, or permit every epoch value within the bounds.
 
 A minimum is necessary because “zero-retention” DA cannot literally disappear at publication. The network requires time to disperse data, sample it, establish availability, and allow interested parties a meaningful opportunity to retrieve it.
 

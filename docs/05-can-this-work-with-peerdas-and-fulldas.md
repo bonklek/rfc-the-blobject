@@ -43,7 +43,7 @@ Blob C             C_j
 Blob D             D_j
 ```
 
-Suppose A requests one hour while B and D request fourteen days. After A expires, the desired historical state is effectively:
+Suppose A requests 8 epochs—about 51.2 minutes—while B and D request the full 4,096-epoch horizon—about 18.2 days. After A expires, the desired historical state is effectively:
 
 ```text
 column j:
@@ -124,7 +124,7 @@ Let the end of this phase be `T_hot_end`, or its duration be summarized as `T_ho
 |---|---|---|---|
 | A. Local acceptance plus fixed delay | A node completes its ordinary DA checks, then waits a protocol-fixed safety interval | Earliest transition; preserves very short-lived applications | Different nodes may transition with incomplete common knowledge; unsafe if late repair still depends on 2D redundancy |
 | B. Network availability signal | A committee, aggregate, or protocol-recognized signal confirms the hot phase is complete | Shared transition point without necessarily waiting for finality | Introduces new signaling, withholding, and fork-choice interactions |
-| C. Finality | The containing block finalizes | Simple, globally recognizable boundary | Makes `T_hot` long enough to weaken minute-scale use cases and increases hot working storage |
+| C. Finality | The containing block finalizes | Simple, globally recognizable boundary | Makes `T_hot` long enough to weaken 1–8-epoch use cases (~6.4–51.2 minutes) and increases hot working storage |
 
 Candidate A is useful only if local transition disagreement cannot weaken fresh DA. Candidate B must define who signals and what the signal proves. Candidate C is the conservative fallback, not an assumption. The models therefore accept `T_hot` as an explicit input rather than hiding it inside total retention.
 
@@ -206,7 +206,7 @@ That can be slower and more bandwidth-intensive.
 
 The proposal relies on a latency asymmetry:
 
-> **fresh availability must be established in seconds; historical repair for an object with hours or days remaining may tolerate seconds or minutes.**
+> **fresh availability must be established in seconds; historical repair for an object with tens to thousands of epochs remaining may tolerate multiple slots or even an epoch.**
 
 This turns retention into a security problem distinct from initial DAS.
 
@@ -227,8 +227,8 @@ The cold layer therefore needs its own survivability requirement. Let:
 - `n` be the eligible custodian population;
 - `c` be the independent replicas assigned per cell;
 - `q` be the per-custodian offline or adversarial probability within one repair interval;
-- `Δ_repair` be the repair cadence;
-- `T` be the remaining required-serving duration;
+- `Δ_repair` be the repair cadence in epochs;
+- `T` be the remaining required-serving duration in epochs;
 - `p_max` be the maximum tolerated lease-failure probability.
 
 The protocol target is:
@@ -328,10 +328,10 @@ If the hot-to-cold transition fails, the strongest fallback is to avoid mixing r
 Objects can be grouped into separate coding domains:
 
 ```text
-frame A -> minutes
-frame B -> hours
-frame C -> days
-frame D -> full horizon
+frame A -> 1–8 epochs (~6.4–51.2 minutes)
+frame B -> 16–64 epochs (~1.71–6.83 hours)
+frame C -> 256–2,048 epochs (~1.14–9.10 days)
+frame D -> 4,096 epochs (~18.20 days; full horizon)
 ```
 
 This lets an entire physical codeword expire coherently. It also reintroduces discrete classes, packing fragmentation, and lane-allocation problems.

@@ -14,6 +14,9 @@ from typing import Iterable
 
 
 FAR_FUTURE_EPOCH = -1
+SECONDS_PER_SLOT = 12
+SLOTS_PER_EPOCH = 32
+SECONDS_PER_EPOCH = SECONDS_PER_SLOT * SLOTS_PER_EPOCH
 
 
 @dataclass
@@ -136,11 +139,11 @@ class ProtocolState:
         self.objects = {item.commitment: item for item in snapshot.objects}
 
 
-def frontier(capacity_bytes: int, duration_hours: float) -> float:
-    """Return steady-state bytes per second for capacity/duration."""
-    if capacity_bytes <= 0 or duration_hours <= 0:
+def frontier(capacity_bytes: int, duration_epochs: float) -> float:
+    """Return steady-state bytes per second for capacity/epoch duration."""
+    if capacity_bytes <= 0 or duration_epochs <= 0:
         raise ValueError("capacity and duration must be positive")
-    return capacity_bytes / (duration_hours * 3600)
+    return capacity_bytes / (duration_epochs * SECONDS_PER_EPOCH)
 
 
 def _format_rate(bytes_per_second: float) -> str:
@@ -156,15 +159,17 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
     frontier_parser = subparsers.add_parser("frontier")
     frontier_parser.add_argument("--capacity-tib", type=float, required=True)
-    frontier_parser.add_argument(
-        "--durations-hours", type=float, nargs="+", required=True
-    )
+    frontier_parser.add_argument("--durations-epochs", type=int, nargs="+", required=True)
     args = parser.parse_args()
 
     if args.command == "frontier":
         capacity_bytes = int(args.capacity_tib * 2**40)
-        for duration in args.durations_hours:
-            print(f"{duration:g} hours\t{_format_rate(frontier(capacity_bytes, duration))}")
+        for duration in args.durations_epochs:
+            days = duration * SECONDS_PER_EPOCH / 86_400
+            print(
+                f"{duration:,} epochs (~{days:.3g} days)\t"
+                f"{_format_rate(frontier(capacity_bytes, duration))}"
+            )
 
 
 if __name__ == "__main__":

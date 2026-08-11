@@ -20,3 +20,5 @@ State the affected document and section, the claim being challenged, the evidenc
 Keep the existing section numbering stable where possible. Prefer narrow pull requests with links to primary sources. Mark speculative claims clearly, and do not describe a draft EIP or research proposal as deployed behavior.
 
 When a claim depends on a changing Ethereum specification, add or update its commit pin in `REFERENCES.md`. Models should use only the Python standard library unless a dependency materially improves falsifiability, and should include tests under `models/test_models.py`.
+
+Express Ethereum protocol and retention durations in epochs first, with wall-clock time as a parenthetical approximation based on the current 32-slot, 12-second-slot timing. Prefer power-of-two example maturities such as `256, 512, 1,024, 2,048, 4,096`. Preserve native wall-clock units for external protocols, but include their Ethereum-epoch equivalent when making a comparison.

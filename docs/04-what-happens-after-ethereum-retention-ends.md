@@ -12,8 +12,8 @@ Any third party can retrieve the object during that window and offer an addition
 
 Possible products include:
 
-- an additional six hours of availability;
-- seven days of low-latency retrieval;
+- an additional 64 epochs of availability—about 6.83 hours;
+- 1,024 epochs of low-latency retrieval—about 4.55 days;
 - long-term archival storage;
 - geographically or jurisdictionally diversified replication;
 - retention until a designated event or acknowledgement;
@@ -33,7 +33,7 @@ An Ethereum-settled adapter could similarly purchase external storage for an Eth
 
 A centralized provider can offer the same interface with a different trust model:
 
-> I will retain any qualifying Ethereum-published object for `x` per byte-hour for up to `R`.
+> I will retain any qualifying Ethereum-published object for `x` per byte-epoch for up to `R` epochs.
 
 Ethereum supplies the integrity anchor and initial retrieval opportunity. The provider is trusted only for extending availability. Multiple providers can ingest the same object independently.
 
@@ -41,7 +41,7 @@ Ethereum supplies the integrity anchor and initial retrieval opportunity. The pr
 
 A more application-specific consequence is that downstream retention need not terminate at a fixed clock time. A provider could retain ciphertext until a recipient or other condition proves that persistence is no longer needed, subject to a prepaid maximum duration or spend.
 
-This **RetentionNote** construction is useful because it demonstrates the expressiveness of a timed-availability market: the downstream guarantee can be state-contingent rather than merely “seven more days.” It is **not a required component of variable-retention Ethereum DA**, and the messaging-specific acknowledgement and mailbox mechanics are moved to Appendix A so that the base paper does not silently become an application-design proposal.
+This **RetentionNote** construction is useful because it demonstrates the expressiveness of a timed-availability market: the downstream guarantee can be state-contingent rather than merely “1,024 more epochs” (about 4.55 days). It is **not a required component of variable-retention Ethereum DA**, and the messaging-specific acknowledgement and mailbox mechanics are moved to Appendix A so that the base paper does not silently become an application-design proposal.
 
 ### 14.4 Composable chains of guarantees
 
@@ -51,10 +51,10 @@ An object can move through a chain such as:
 Ethereum: short protocol serving window
       |
       v
-specialized cache: hours / until acknowledgement
+specialized cache: 8–64 epochs (~51 minutes–6.83 hours) / until acknowledgement
       |
       v
-decentralized retention market: weeks
+decentralized retention market: 2,048–4,096 epochs (~9.10–18.20 days)
       |
       v
 Filecoin / archive / swarm: long-term persistence
@@ -102,7 +102,7 @@ For purposes of the toy model, we collapse these factors into an effective logic
 
 The purpose of the model is to expose the basic tradeoff.
 
-At low throughput, nearly all data may afford multi-week retention.
+At low throughput, nearly all data may afford the 4,096-epoch full horizon—about 18.20 days.
 
 As throughput rises by one or two orders of magnitude, long retention becomes scarce while shorter retention can remain abundant.
 

@@ -131,7 +131,7 @@ def compare(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--size", type=float, required=True)
-    parser.add_argument("--duration", type=float, required=True)
+    parser.add_argument("--duration-epochs", dest="duration", type=float, required=True)
     parser.add_argument("--utilization", type=float, required=True)
     parser.add_argument("--base-price", type=float, default=1.0)
     args = parser.parse_args()

@@ -43,7 +43,7 @@ class StockModelTests(unittest.TestCase):
         self.assertNotIn("orphan", state.objects)
 
     def test_frontier_geometry(self) -> None:
-        self.assertAlmostEqual(frontier(3_600, 1), 1)
+        self.assertAlmostEqual(frontier(384, 1), 1)
 
 
 class PricingModelTests(unittest.TestCase):
@@ -100,8 +100,8 @@ class ColdCustodyModelTests(unittest.TestCase):
             reconstruction_threshold=8,
             custodian_population=100,
             failure_probability=0.25,
-            duration=14,
-            repair_interval=1,
+            duration=4096,
+            repair_interval=8,
             p_max=1e-6,
         )
         self.assertIsNotNone(replicas)

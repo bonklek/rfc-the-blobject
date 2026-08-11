@@ -8,7 +8,7 @@ The dedicated prior-art search did not surface a current Ethereum proposal that 
 
 EIP-4444 bounds how long Ethereum execution clients are expected to serve historical block bodies and receipts. It establishes the general principle that consensus verification and indefinite P2P historical serving need not be the same obligation, but its horizon is protocol-wide rather than purchaser-selected or fee-priced.
 
-Celestia similarly distinguishes recent DA/retrievability from long-term history: its light-node sampling/pruning design uses a seven-day sampling window, with historical persistence delegated to archive infrastructure and rollup-specific mechanisms. This is strong prior art for the **DA-versus-persistence separation**, but not for a market in heterogeneous base-layer serving maturities.
+Celestia similarly distinguishes recent DA/retrievability from long-term history: its light-node sampling/pruning design uses a seven-day sampling window—about 1,575 Ethereum epochs at current timing—with historical persistence delegated to archive infrastructure and rollup-specific mechanisms. This is strong prior art for the **DA-versus-persistence separation**, but not for a market in heterogeneous base-layer serving maturities.
 
 ### 21.2 Ethereum state rent and TTL research
 

@@ -273,7 +273,7 @@ There are two qualitatively different ways to make heterogeneous expiry tractabl
 
 ### 7.1 Maturity-aligned physical classes
 
-The conservative implementation is to round requested durations into a small number of physical maturities—for example, minutes, hours, days, and the current full horizon—and pack only similar maturities into the same persistent coding domain.
+The conservative implementation is to round requested durations into power-of-two epoch maturities—for example, `256, 512, 1,024, 2,048, 4,096` epochs (approximately 1.14, 2.28, 4.55, 9.10, and 18.20 days)—and pack only similar maturities into the same persistent coding domain. Shorter classes such as 1, 8, or 64 epochs can be exposed only if `T_hot` permits them.
 
 This has substantial advantages:
 
