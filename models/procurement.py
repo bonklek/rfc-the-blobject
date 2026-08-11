@@ -27,6 +27,8 @@ class ControllerParameters:
             raise ValueError("max_step must be finite and between zero and one")
         if not isfinite(self.floor) or self.floor < 0:
             raise ValueError("floor must be finite and non-negative")
+        if self.ceiling != inf and not isfinite(self.ceiling):
+            raise ValueError("ceiling must be finite or positive infinity")
         if self.ceiling < self.floor:
             raise ValueError("ceiling must be at least floor")
 

@@ -20,6 +20,12 @@ python models/pricing.py --size 131072 --duration-epochs 4096 --utilization 0.75
 
 The output is useful only for relative comparisons under shared arbitrary units.
 
+## Operator-service procurement
+
+`procurement.py` implements the non-normative bounded posted-price controller from the operator-economics appendix. It raises or lowers an illustrative service price from the gap between target and qualified supply, subject to a per-update step bound and absolute floor and ceiling.
+
+The model does not determine whether announced capacity is real, independent, or strategically withheld. It exists to make those controller dynamics reproducible.
+
 ## Cold-custody survivability
 
 `cold_custody.py` evaluates the independent-failure checkpoint model from §17.4.

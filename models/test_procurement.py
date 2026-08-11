@@ -1,3 +1,4 @@
+from math import nan
 import unittest
 
 from procurement import ControllerParameters, update_posted_price
@@ -31,6 +32,8 @@ class ProcurementControllerTests(unittest.TestCase):
             update_posted_price(10, -1, 1, parameters)
         with self.assertRaises(ValueError):
             update_posted_price(10, 1, 1, ControllerParameters(-1, 0.1))
+        with self.assertRaises(ValueError):
+            update_posted_price(10, 1, 1, ControllerParameters(1, 0.1, ceiling=nan))
 
 
 if __name__ == "__main__":
