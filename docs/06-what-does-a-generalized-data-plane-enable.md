@@ -26,9 +26,9 @@ Variable retention is deliberately orthogonal to this transport evolution.
 
 Its purpose is to ensure that increases in real-time throughput do not automatically create proportionate increases in long-term mandatory storage.
 
-At one gigabyte per second, for example, a one-minute raw logical retention window corresponds to roughly 60 GB of currently live data.
+At one gigabyte per second, for example, a one-epoch raw logical retention window—384 seconds, or about 6.4 minutes—corresponds to roughly 384 GB of currently live data.
 
-An eighteen-day window corresponds to roughly 1.5 PB.
+A 4,096-epoch window—about 18.20 days—corresponds to roughly 1.57 PB.
 
 The bandwidth is identical.
 
@@ -69,13 +69,13 @@ B, T, R
 
 and any privacy or routing layers above Ethereum.
 
-A live-media segment may purchase minutes.
+A live-media segment may purchase 1–8 epochs—about 6.4–51.2 minutes.
 
 A message may purchase enough time for recipient relays to observe it.
 
 A storage bootstrap object may purchase enough time for a persistent P2P network to acquire it.
 
-A rollup may purchase days.
+A rollup may purchase 256–4,096 epochs—about 1.14–18.20 days—subject to its security minimum.
 
 The common primitive is not “a rollup blob.”
 
@@ -125,6 +125,6 @@ The provocative possibility is that Ethereum’s rollup-oriented DA roadmap may 
 
 Variable retention matters because it removes a temporal assumption inherited from the rollup use case.
 
-Once data need not automatically purchase the same multi-day retention package, the range of economically sensible applications expands dramatically.
+Once data need not automatically purchase the same 4,096-epoch retention package, the range of economically sensible applications expands dramatically.
 
 ---

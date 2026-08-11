@@ -92,8 +92,10 @@ def main() -> None:
     parser.add_argument("--custodians", type=int, required=True)
     parser.add_argument("--replicas", type=int, required=True)
     parser.add_argument("--failure-probability", type=float, required=True)
-    parser.add_argument("--duration", type=float, required=True)
-    parser.add_argument("--repair-interval", type=float, required=True)
+    parser.add_argument("--duration-epochs", dest="duration", type=float, required=True)
+    parser.add_argument(
+        "--repair-interval-epochs", dest="repair_interval", type=float, required=True
+    )
     parser.add_argument("--p-max", type=float, default=1e-6)
     args = parser.parse_args()
     survival = lease_survival_probability(

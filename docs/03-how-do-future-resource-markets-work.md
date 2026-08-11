@@ -174,9 +174,9 @@ What can be inferred merely from the selected network resource profile?
 
 Variable retention creates the last category explicitly.
 
-A two-minute object may resemble messaging, streaming, or real-time coordination.
+A one-epoch object—about 6.4 minutes—may resemble messaging, streaming, or real-time coordination.
 
-A fourteen-day object may resemble rollup or archival data.
+A full-horizon 4,096-epoch object—about 18.2 days under current timing—may resemble rollup or archival data.
 
 Even if the payload is encrypted, the payer is hidden, and network ingress is mixed, size, timing, and retention maturity can leak application information.
 
@@ -195,7 +195,7 @@ Encrypting payloads does not hide funding.
 
 Hiding funding does not hide IP origin.
 
-A mixnet does not hide that the user purchased an unusual fourteen-day, 40 MB lease.
+A mixnet does not hide that the user purchased an unusual full-horizon, 40 MB lease lasting 4,096 epochs—about 18.2 days.
 
 The DA layer need not interpret any of these semantics. It only needs to enforce scarce resource allocation and availability.
 
