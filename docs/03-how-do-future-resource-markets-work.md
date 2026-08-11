@@ -2,13 +2,13 @@
 
 ## 10. Future ingress and future-starting retention
 
-A right to consume DA bandwidth at a particular future time is a perishable network resource.
+A future DA reservation is a right to use network bandwidth at a specified time. The right expires if it is not used.
 
-The abstract claim is:
+Its basic promise is:
 
 > The holder may inject `B` bytes into Ethereum DA around future time `T`.
 
-This is distinct from a cash-settled derivative on future blob prices. The object contemplated here is **physical delivery of the network resource itself**.
+This is not a cash-settled bet on future blob prices. It is a claim on **physical delivery of the network resource itself**.
 
 Blob Streaming provides a concrete adjacent design. The current draft EIP-8256 uses non-refundable tickets tied to future target slots to authorize bounded AOT propagation, while reserving separate JIT capacity. Transferable claims, variable lookahead, and a general secondary market remain extensions beyond that draft.
 
@@ -18,7 +18,7 @@ Once future ingress exists, future retention becomes a genuine reservation probl
 [T,T+R].
 ```
 
-The complete service is therefore:
+Combining publication and retention gives:
 
 ```text
 DAService(C,B,T,R),
@@ -63,7 +63,7 @@ S_t(τ) ≤ C_t(τ)
      ∀ τ.
 ```
 
-This gives the earlier abstract `C(τ)` a concrete interpretation. A declining allocable envelope at distant maturities is **not a physical law**. It arises only if the protocol intentionally increases uncertainty/headroom reserves with lookahead.
+This defines the earlier abstract `C(τ)`. Nothing physically requires the allocable envelope to decline at distant maturities. It declines only if the protocol deliberately increases uncertainty or headroom reserves with lookahead.
 
 A future retention fee can then depend on the scarcity created along the purchased interval:
 
@@ -74,7 +74,7 @@ B · ∫_T^(T+R)
  p((S_t(τ)) / (C_t(τ))) dτ.
 ```
 
-This is where forward occupancy pricing is structurally justified: unlike a spot-start lease, a future-starting contract can consume capacity later without consuming it now.
+Forward occupancy pricing belongs here because a future-starting contract consumes capacity later without appearing in today's active stock.
 
 ### 10.2 Reservation attacks
 
@@ -88,13 +88,27 @@ A forward market introduces attacks absent from the narrow spot mechanism:
 
 Possible defenses include non-refundable reservations, bounded lookahead, increasing uncertainty reserves, position limits only where Sybil-resistant identity exists, auctions, and release of unused capacity near delivery. None is assumed solved here.
 
-The resulting market has two forward dimensions:
+The market prices two future resources:
 
 **Future ingress:** how scarce will admission bandwidth be around `T`?
 
 **Future retention:** how scarce will custody be over `[T,T+R]`?
 
 Blob Streaming supplies a potential **delivery date**. Variable retention supplies a **maturity**.
+
+### 10.3 AOT tickets as prepaid network capabilities
+
+AOT provides more than ordinary fee eligibility. In a conventional mempool, the network can spend bandwidth and validation work on candidate traffic that never lands. Blob Streaming puts payment and bounded authorization before the special propagation path:
+
+```text
+PAY FIRST
+    -> receive a scarce future propagation capability
+    -> bytes may enter AOT gossip
+```
+
+Draft EIP-8256 gives the network a bounded, globally agreed set of eligible senders and requires ticket ownership before the corresponding blob data is propagated. An attacker who reserves capacity to waste it pays the same ticket cost as an honest user. In that sense, a ticket is a **prepaid capability to consume one bounded unit of Ethereum DA-network bandwidth**, not merely a claim on a future fee.
+
+That ordering constrains private authorization. If every peer must verify a fresh zero-knowledge ownership proof before rejecting an unknown publisher, privacy recreates a verification-DoS surface. The [private AOT authorization note](../appendices/private-aot-authorization.md) sketches a two-stage alternative: prove private ownership once in canonical state, then use a public ephemeral key that peers can check against a cheap allowlist.
 
 ---
 
@@ -118,7 +132,7 @@ Binding a permanent publication credential when the capacity is first issued bec
 
 The current draft Blob Streaming design already exposes part of this distinction: each ticket record contains both an execution-layer `owner` address and a BLS public key used by the consensus layer to authenticate AOT propagation. But the BLS key is bound when the ticket is purchased, while the execution-layer mempool allowance remains anchored to the owner address. The draft does not itself provide transferable tickets or late-bound delivery credentials.
 
-A generalized market could therefore go one step further and separate:
+A generalized market could separate:
 
 ```text
 financial ownership
@@ -134,7 +148,7 @@ Economic ownership could trade through a primary or secondary market.
 
 Near physical settlement, the current holder could assign or authorize a publication credential valid for the relevant DA resource window.
 
-This supports:
+That separation permits:
 
 - delegation;
 - hot/cold key separation;
@@ -145,6 +159,8 @@ This supports:
 It may also simplify pooled capacity markets.
 
 The main technical question is how Ethereum’s execution-layer and consensus-layer admission mechanisms recognize the right after settlement while retaining cheap anti-DoS validation. Under the current EIP-8256 draft, EL mempool propagation is explicitly gated by `blob_allowance(sender)` derived from ticket ownership, while the CL validates AOT propagation using the registered BLS key. Transferability or late binding therefore requires a replacement or indirection for the owner-based allowance rule, or a cleaner separation between the availability event and the eventual application transaction.
+
+One privacy-oriented design uses **private ownership followed by canonical public activation**. The holder spends a shielded credit with an on-chain proof that registers a slot-specific publication key. Peers reject unknown keys with an O(1) lookup before doing expensive payload validation, and reorgs update the allowlist through ordinary canonical state. This still reveals activation timing, capacity class, and operational traffic. Pooling and common denominations would be needed for a useful anonymity set. The construction remains an appendix-level research direction rather than part of the base market.
 
 ---
 
@@ -172,6 +188,19 @@ Who is communicating, who is the recipient, and what do the bytes mean?
 
 What can be inferred merely from the selected network resource profile?
 
+Each dimension needs a different mechanism:
+
+```text
+payer -> publication       shielded or pooled settlement
+IP -> first peer           mix/onion ingress or a privacy relay
+sender -> recipient        application encryption and private retrieval
+object -> service profile  padding, common classes, and timing cover
+```
+
+[Waku](https://docs.waku.org/learn/concepts/protocols/) provides useful precedent for keeping these layers separate. RLN Relay combines zero-knowledge membership with rate limiting for economic anti-spam. Waku's content-topic guidance also warns that Filter, Store, and Light Push peers can link an IP address to a topic interest. Anonymous admission therefore does not hide network origin, recipient interest, or retrieval behavior by itself.
+
+Gossip has the same boundary. Encryption can hide the payload, and broad GossipSub topics can enlarge the recipient anonymity set, but a peer that receives a new object directly can still learn its first hop. A mixnet, onion route, or unlinkable relay can protect ingress without hiding a distinctive retention purchase or a later targeted fetch.
+
 Variable retention creates the last category explicitly.
 
 A one-epoch object—about 6.4 minutes—may resemble messaging, streaming, or real-time coordination.
@@ -189,13 +218,7 @@ Privacy-sensitive applications may therefore use:
 - mixed or delayed settlement;
 - common size classes.
 
-These privacy layers remain conceptually independent.
-
-Encrypting payloads does not hide funding.
-
-Hiding funding does not hide IP origin.
-
-A mixnet does not hide that the user purchased an unusual full-horizon, 40 MB lease lasting 4,096 epochs—about 18.2 days.
+These privacy layers are independent. Encrypting a payload does not hide its funding, and hiding the funding does not hide the originating IP address. A mixnet may hide network origin while still revealing that someone purchased an unusual full-horizon 40 MB lease lasting 4,096 epochs—about 18.2 days.
 
 The DA layer need not interpret any of these semantics. It only needs to enforce scarce resource allocation and availability.
 
@@ -231,7 +254,7 @@ During that interval, arbitrary parties can retrieve the exact committed bytes a
 - watchdog organizations;
 - or ordinary users.
 
-Ethereum therefore need not become a permanent-storage network to provide a powerful censorship-resistance property once inclusion and availability establishment have occurred.
+Ethereum can provide a useful censorship-resistance property after inclusion and availability establishment without becoming a permanent-storage network.
 
 It can provide the protocol serving requirement:
 
@@ -239,7 +262,7 @@ It can provide the protocol serving requirement:
 
 If `R` is long enough for independent replication, indefinite persistence can bootstrap elsewhere.
 
-This produces a clean division of labor:
+The responsibilities divide as follows:
 
 **Ethereum DA**
 

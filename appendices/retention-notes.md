@@ -23,7 +23,7 @@ If no acknowledgement arrives, the lease continues until either:
 - the prepaid balance is exhausted; or
 - a hard maximum expiration is reached.
 
-This turns downstream retention into a metered obligation rather than a fixed-duration purchase. It may be useful for private messaging, asynchronous agent communication, or any application where the sender values reliable retrieval but not persistence after receipt.
+Downstream retention is then metered rather than purchased for one fixed duration. This may suit private messaging, asynchronous agent communication, or any application whose sender values reliable retrieval but not persistence after receipt.
 
 The economic roles remain distinct:
 
@@ -54,13 +54,13 @@ and marks the note spent.
 
 The public system learns only that someone possessing the acknowledgement secret terminated the retention obligation. It need not learn the recipient’s long-term wallet, messaging identity, or account.
 
-This does not force honest acknowledgement. A recipient can retrieve the data and refuse to reveal `r`, so the sender still needs a maximum duration or spend. Timely-acknowledgement incentives are a separate mechanism.
+The construction cannot force an honest acknowledgement. A recipient may retrieve the data and refuse to reveal `r`, so the sender still needs a maximum duration or spend. Incentives for timely acknowledgement would require a separate mechanism.
 
 ## A.3 Spam and mailbox admission
 
 Sender-funded retention makes bulk storage spam costly but does not solve recipient attention costs or scanning overhead.
 
-A messaging system above the retention market can therefore expose separate mailbox-admission policies, including:
+A messaging system above the retention market can use separate mailbox-admission policies, including:
 
 - capabilities issued to known contacts;
 - anonymous group membership or RLN/Semaphore-style rate limits;

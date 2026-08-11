@@ -2,7 +2,7 @@
 
 ## 17. FullDAS, distributed-storage leverage, and heterogeneous expiry
 
-Future DAS improvements can move the throughput-retention frontier outward. If FullDAS or successors increase the ratio
+Future DAS improvements can move the throughput-retention frontier outward. If FullDAS or a successor increases the ratio
 
 ```text
 (logical protected data) / (local physical storage),
@@ -10,9 +10,9 @@ Future DAS improvements can move the throughput-retention frontier outward. If F
 
 then the effective retained-stock envelope `K_safe` can increase. Conversely, increasing ingress without increasing distributed-storage leverage shortens the retention horizon that can be supplied universally.
 
-This complementarity is straightforward. The physical compatibility question is not.
+The arithmetic is straightforward. Physical compatibility is not.
 
-The important adversarial finding is that **heterogeneous expiry creates representation-dependent problems**. Variable retention does not depend on two-dimensional FullDAS becoming Ethereum's chosen path.
+The central implementation problem is that **heterogeneous expiry interacts with the physical representation**. The proposal does not assume that Ethereum will adopt a two-dimensional FullDAS design.
 
 ```text
 Current 1D PeerDAS
@@ -59,7 +59,7 @@ Draft [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is important evidence 
 
 The current [1D-versus-2D DAS analysis](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) also shows that 1D PeerDAS can support partial row reconstruction when paired with cell-level messaging and row-oriented reconstruction flows. That design has practical and security tradeoffs, but it keeps 1D with smaller cells as a viable path rather than a temporary stop on an inevitable move to 2D.
 
-This problem is serious for an implementation built directly on current sidecars, but it does not by itself require changing the blob's row-local encoding.
+An implementation built directly on current sidecars has to solve this packaging problem. It does not, however, have to change the blob's row-local encoding.
 
 ### 17.2 Problem B: FullDAS cross-row coding
 
@@ -82,11 +82,11 @@ Blob D      D0 D1 D2 D3 | D4 D5 D6 D7
 
 The lower rows are schematic: the important property is that second-dimensional coded cells can depend on cells from **multiple logical blob rows**.
 
-This creates a deeper coupling than whole-column packaging. If A expires while B, C, and D remain live, deleting A's row does not necessarily free all coded information that mathematically depended on A. Recomputing the vertical parity without A would create a new codeword and can require new commitments, proofs, indexing, custody assignments, or transition rules.
+This coupling is deeper than whole-column packaging. If A expires while B, C, and D remain live, deleting A's row may leave coded information that still depends on A. Recomputing vertical parity without A creates a new codeword and may require new commitments, proofs, indexes, custody assignments, or transition rules.
 
-Cell-level networking alone therefore does not solve this problem.
+Cell-level networking alone cannot solve that problem.
 
-The critical question is:
+The design turns on one question:
 
 > **Must the cross-object coding structure used for fresh availability amplification persist for the whole serving horizon?**
 
@@ -145,7 +145,7 @@ dense availability-establishment representation
    retain independently committed row cells
 ```
 
-The attractive property is what **does not** happen:
+After the transition:
 
 - the surviving logical blob does not change;
 - its original commitment does not change;
@@ -188,7 +188,7 @@ No live blob is re-encoded and no surviving commitment changes.
 
 A client retrieving C later requests enough independently verifiable cells from C's row, reconstructs C, and verifies the result against `C_C`.
 
-This is the intended graceful-expiry property.
+The result is graceful expiry: A can disappear without forcing any live blob to change.
 
 ### 17.4 Cold custody is a formal security problem
 
@@ -208,7 +208,7 @@ The proposal relies on a latency asymmetry:
 
 > **fresh availability must be established in seconds; historical repair for an object with tens to thousands of epochs remaining may tolerate multiple slots or even an epoch.**
 
-This turns retention into a security problem distinct from initial DAS.
+Historical retention then has a different security problem from initial DAS.
 
 ```text
 HOT QUESTION:
@@ -220,13 +220,16 @@ Has this particular still-live object remained reconstructable
 through its protocol-required serving horizon?
 ```
 
-The cold layer therefore needs its own survivability requirement. Let:
+The cold layer needs its own survivability requirement. Let:
 
 - `m` be the number of horizontal cells in the cold row;
 - `k` be the number required for reconstruction;
 - `n` be the eligible custodian population;
 - `c` be the independent replicas assigned per cell;
 - `q` be the per-custodian offline or adversarial probability within one repair interval;
+- `s` be the probability that an assigned custodian strategically skips storage or service;
+- `d` be the probability that such cheating is detected while the obligation is live;
+- `P` be the penalty or forfeited collateral when cheating is detected;
 - `Δ_repair` be the repair cadence in epochs;
 - `T` be the remaining required-serving duration in epochs;
 - `p_max` be the maximum tolerated lease-failure probability.
@@ -255,9 +258,19 @@ P_lease ≈ P_row^N.
 
 In this null model, `n` constrains assignment feasibility only through `c≤n`; independence makes the remaining expression insensitive to the size of the unused population. That simplification is itself a warning. A real design must derive assignment overlap and adversarial concentration from `n` rather than treating replicas as automatically independent.
 
-This is a null model, not a security proof. Real failures are correlated; an adaptive adversary may target custody assignments; repair itself can fail or leak assignments; and “online” is not identical to “will serve.” A deployable model must replace `q` with explicit honest, offline, adversarial, and network-partition processes and must account for handoff overlap.
+This null model is not a security proof. Real failures are correlated. An adaptive adversary may target custody assignments; repair can fail or leak assignments; and an online custodian may still refuse to serve. Most importantly, `q` describes availability failure; it must not silently stand in for rational non-storage. A custodian can remain online while freeloading on peers, storing only after a challenge, or declining costly historical requests.
 
-Candidate mechanisms include replication, multi-custodian assignment, randomized service challenges, health estimation, reconstruct-and-repair, custody reassignment, and overlap during handoff. Level-2 monitoring or level-3 penalties from §2.2 can strengthen compliance but do not replace the reconstruction calculation.
+Strategic behavior needs a separate incentive condition. If cheating saves an expected storage-and-serving cost `S`, deterrence requires at least:
+
+```text
+d · P > S
+```
+
+The cheating rate `s` then belongs in the system-risk model rather than being folded into `q`. A concrete construction must account for challenge timing, the possibility of reacquiring data after assignment, correlated cheating, false positives, and whether a penalty can actually be collected. Historical acquisition proofs are useful prior art, but they do not by themselves prove continued possession or timely service across `T`.
+
+A FullDAS identity also needs economic weight. Deterministic custody assigned to cheap NodeIDs may distribute data, but it does not create an enforceable obligation: identities can be abandoned and recreated. Strong retention guarantees therefore require a bonded or otherwise accountable, Sybil-resistant custody population. That requirement follows duties into fractional operator pools, repair-driven reassignment, and custody handoffs; each transition must preserve both authenticated data and an entity against which non-service has consequences.
+
+Candidate mechanisms include replication, multi-custodian assignment, randomized service challenges, health estimation, reconstruct-and-repair, custody reassignment, and overlap during handoff. Level-2 monitoring can strengthen evidence about service. Level-3 penalties require a concrete proof, accountable identity, detection rule, and collectible consequence; the label alone does not create cryptoeconomically guaranteed retention. Neither level replaces the reconstruction calculation.
 
 [The cold-custody model](../models/cold_custody.py) evaluates this null model and reports whether a parameter set meets `p_max`.
 
@@ -283,13 +296,13 @@ The hot/cold split creates two naturally different workloads.
 - custody handoff;
 - potentially cheaper capacity-oriented storage.
 
-This is why the physical capacity derivation in §6 separates `γ_hot` from `γ_cold`. Even if short-lived traffic creates little long-run resident stock, it can still impose extreme **write churn** and hot-path bandwidth. Variable retention does not make that burden disappear.
+The physical capacity derivation in §6 therefore separates `γ_hot` from `γ_cold`. Short-lived traffic may create little long-run resident stock while still imposing extreme **write churn** and hot-path bandwidth. Variable retention does not reduce that burden.
 
-The same operator population could provide both tiers, or a future protocol could permit a custody handoff between differently provisioned participants. The latter would require additional authorization, incentive, and failure semantics and should not be assumed by the base proposal.
+The same operator population could provide both tiers, or a future protocol could permit a custody handoff between differently provisioned participants. The latter would require additional authorization, incentive, and failure semantics and should not be assumed by the base proposal. [The hardware and operator-market chapter](11-how-do-hardware-and-da-operator-markets-scale.md) develops that conditional branch through fractional pools, duration-aware placement, and posted service procurement.
 
 ### 17.6 Five conditions for the hot/cold design
 
-The paper should treat this design as a falsifiable compatibility hypothesis, not as a solved construction.
+This design is a falsifiable compatibility hypothesis, not a solved construction.
 
 **Condition 1 — row-local reconstructability survives independently.**
 
@@ -336,7 +349,7 @@ frame D -> 4,096 epochs (~18.20 days; full horizon)
 
 This lets an entire physical codeword expire coherently. It also reintroduces discrete classes, packing fragmentation, and lane-allocation problems.
 
-The tradeoff is therefore sharp:
+The tradeoff is direct:
 
 - **Hot/cold lifecycle:** one large heterogeneous hot DAS domain, continuous logical leases, sparse cold expiry, but a new cold repair/security mechanism.
 - **Maturity-aware domains:** simpler physical expiry and preservation of the dense codeword, but discrete classes and fragmented capacity.
@@ -345,17 +358,54 @@ The tradeoff is therefore sharp:
 
 The weak-dominance result in §3 remains necessary but insufficient. Let `G` be the logical byte-time saved by shorter leases and `O` the physical overhead introduced by sparse serving, metadata, proof handling, repair, and transition machinery. Variable retention is operationally beneficial only when realized physical savings exceed `O`.
 
-The revised deployment order is therefore:
+A cautious deployment order is:
 
-1. preserve a general duration-oriented **service abstraction**;
-2. prototype 1D cell-level historical serving against present PeerDAS to isolate the packaging problem;
+1. preserve a general duration-oriented **service abstraction**, initially making only the conservative level-1 claim of protocol-required serving;
+2. prototype 1D cell-level historical serving against present PeerDAS to isolate the packaging problem and measure actual service;
 3. measure row-local cold repair under realistic custody churn;
 4. only if a concrete 2D design is pursued, prototype each `T_hot` transition candidate and the hot-2D/cold-1D transition;
 5. if any representation-specific kill question fails, fall back to maturity-aligned coding domains;
-6. only then decide whether continuous expiry or a small number of physical maturities is justified.
+6. only then decide whether continuous expiry or a small number of physical maturities is justified;
+7. claim level-3 cryptoeconomic retention only after a concrete custody-proof design covers continued possession, service, repair, reassignment, and handoff through expiry.
 
 The implementation dependency is now explicit:
 
 > **Application retention semantics should not be forced to equal the lifetime of the physical representation optimized for fresh DAS—but the protocol must prove that those two lifetimes can actually be separated.**
+
+### 17.9 AOT streaming and distributed FullDAS dissemination
+
+Blob Streaming and FullDAS are often treated as separate improvements: one moves propagation ahead of the slot, while the other distributes coding and custody. They could instead form one publication path:
+
+```text
+AOT owners disperse independently committed rows before the slot
+                         |
+                         v
+builder selects a row manifest and execution payload
+                         |
+                         v
+holders of selected rows release authenticated cells
+                         |
+                         v
+column networks assemble partial columns and add/repair redundancy
+                         |
+                         v
+validators sample the resulting selected frame
+```
+
+Here the builder chooses the manifest without becoming the primary DA uplink. The rows already exist across their AOT holders. Holders of selected rows contribute cells to the appropriate subnets, and the dissemination network assembles the column view and performs the vertical encoding, cross-forwarding, or repair required by the eventual FullDAS design.
+
+The distinction matters at high throughput. If a builder has to download every row, construct the complete coded frame, and upload it within one slot, builder bandwidth becomes an obvious chokepoint. Pre-dispersal and in-network assembly can move that burden away from the winning builder while leaving it responsible for selecting commitments and constructing the execution payload.
+
+Neither EIP-8256 nor current FullDAS research specifies this composition. A complete protocol would still have to define:
+
+- how the manifest authenticates the selected rows and their exact order;
+- when an AOT holder may release cells and what happens if it withholds after selection;
+- how partial columns are assembled without equivocation or duplicate work;
+- who computes and commits to second-dimensional redundancy;
+- how JIT objects enter the same frame;
+- which signal tells validators that distributed construction is complete;
+- whether the row commitment still supports the hot-to-cold transition in §17.3.
+
+The narrower architectural claim is that **block construction, row selection, DA upload, in-network coding, and custody need not belong to one operator**.
 
 ---

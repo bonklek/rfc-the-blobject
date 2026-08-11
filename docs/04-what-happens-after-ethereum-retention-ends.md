@@ -2,13 +2,13 @@
 
 ## 14. Retention-extension markets above Ethereum DA
 
-Variable retention does not imply that Ethereum itself must provide every useful retention horizon. Exposing time as an explicit resource creates a clean boundary around which downstream providers can compete.
+Ethereum does not have to provide every useful retention horizon. Once serving time is explicit, a downstream provider can retrieve an object before Ethereum's obligation ends and promise to serve the same committed bytes for longer.
 
 The base protocol provides the common required-serving window:
 
 > A committed object was reconstructably available under Ethereum’s DA security assumptions, and the relevant protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until expiration.
 
-Any third party can retrieve the object during that window and offer an additional availability promise over the same commitment. Ethereum therefore acts as a **wholesale availability and integrity layer**; downstream systems can sell **retail persistence** with different trust, latency, durability, and jurisdictional properties.
+Any third party can retrieve the object during that window and offer an additional availability promise over the same commitment. In this arrangement, Ethereum supplies common availability and an integrity anchor—the wholesale layer—while downstream systems sell retail persistence with different trust, latency, durability, and jurisdictional properties.
 
 Possible products include:
 
@@ -41,7 +41,7 @@ Ethereum supplies the integrity anchor and initial retrieval opportunity. The pr
 
 A more application-specific consequence is that downstream retention need not terminate at a fixed clock time. A provider could retain ciphertext until a recipient or other condition proves that persistence is no longer needed, subject to a prepaid maximum duration or spend.
 
-This **RetentionNote** construction is useful because it demonstrates the expressiveness of a timed-availability market: the downstream guarantee can be state-contingent rather than merely “1,024 more epochs” (about 4.55 days). It is **not a required component of variable-retention Ethereum DA**, and the messaging-specific acknowledgement and mailbox mechanics are moved to Appendix A so that the base paper does not silently become an application-design proposal.
+The **RetentionNote** construction shows that a downstream guarantee can depend on state rather than being limited to “1,024 more epochs” (about 4.55 days). It is **not part of the base variable-retention mechanism**. Appendix A contains the messaging-specific acknowledgement and mailbox mechanics so that they remain available without becoming protocol requirements.
 
 ### 14.4 Composable chains of guarantees
 
@@ -62,9 +62,9 @@ Filecoin / archive / swarm: long-term persistence
 
 Each stage can inherit the same content commitment while adding a new availability promise. The stages need not share a trust model.
 
-This is particularly useful for censorship-resistant dissemination **after inclusion**. Ethereum need not bear the cost of permanent storage merely to provide a credible replication window from which independent persistence systems can acquire the object.
+For censorship-resistant dissemination **after inclusion**, this handoff matters directly. Ethereum can provide a credible replication window from which independent persistence systems acquire the object without bearing the cost of permanent storage.
 
-These services are architectural consequences and evidence of composability, not prerequisites for the base mechanism.
+None of these services is required by the base mechanism. They show how several guarantees can compose over one commitment.
 
 ---
 
@@ -94,13 +94,13 @@ T_sustainable
 (S) / (R).
 ```
 
-This is not intended as a complete FullDAS capacity model.
+The equation is only a first-order frontier, not a complete FullDAS capacity model.
 
 Coding overhead, replication, repair, validator heterogeneity, custody topology, sampling, networking overhead, and provider churn complicate the mapping from logical retained data to physical node resources.
 
 For purposes of the toy model, we collapse these factors into an effective logical capacity parameter `S`. A deployable implementation would need to derive `S` from the actual DAS architecture.
 
-The purpose of the model is to expose the basic tradeoff.
+The model isolates the basic tradeoff.
 
 At low throughput, nearly all data may afford the 4,096-epoch full horizon—about 18.20 days.
 

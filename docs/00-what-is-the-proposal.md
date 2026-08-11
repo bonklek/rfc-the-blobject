@@ -2,23 +2,21 @@
 
 ## Executive framing
 
-Ethereum’s DA roadmap has principally scaled **how much data can be made available at once**. [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) separated blob data from execution gas; [PeerDAS (EIP-7594)](https://eips.ethereum.org/EIPS/eip-7594) distributes blob custody and sampling; the draft [Blob Streaming proposal (EIP-8256)](https://eips.ethereum.org/EIPS/eip-8256) explores reservable ahead-of-time propagation; and [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) points toward much larger distributed DA capacity. One dimension remains comparatively rigid: **how long every admitted byte must remain protocol-served**.
+Ethereum has spent years increasing **how much data can be made available at once**. [EIP-4844](https://eips.ethereum.org/EIPS/eip-4844) separated blob data from execution gas. [PeerDAS (EIP-7594)](https://eips.ethereum.org/EIPS/eip-7594) distributes blob custody and sampling. The draft [Blob Streaming proposal (EIP-8256)](https://eips.ethereum.org/EIPS/eip-8256) explores reservable ahead-of-time propagation, while [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) points toward much larger distributed DA capacity. One parameter has stayed comparatively rigid: **how long every admitted byte must remain protocol-served**.
 
-This paper asks whether that temporal obligation should itself become a parameter of the DA service. The argument proceeds in three layers.
+This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving horizon even when one application needs only a short replication window and the other needs the full current horizon. Under the proposal, a purchaser chooses a duration `T`, bounded by `T_max`. Setting `T_max` no higher than the current minimum serving horizon preserves today's service as `T=T_max` and can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
 
-**First, a conservative resource-allocation claim.** Today, ingress and retention are bundled: bytes that impose the same immediate propagation burden receive the same serving horizon even when their applications value persistence very differently. Letting a purchaser choose a bounded duration `T`, with `T_max` no longer than the current minimum serving horizon, can only weakly reduce the logical retained-data obligation for a fixed admitted workload. The existing fixed-retention service remains available as the special case `T=T_max`. Here, `T_max` limits only the protocol serving obligation a purchaser may impose; it is not a mandatory deletion time or a prohibition on longer voluntary service. Short-lived traffic can purchase less byte-time without changing its initial DA burden.
+If Ethereum uses the resulting storage savings to admit more data, retained stock becomes scarce in its own right. A lease that starts on admission occupies storage immediately, so a ceiling on active retained stock is enough to bound contracted storage. The harder problems are physical: deriving that ceiling from the custody architecture, reserving headroom for short-duration traffic, charging for required byte-time, and making logical expiry release real resources under DAS coding.
 
-**Second, a scaling claim.** If Ethereum eventually uses those savings to raise ingress throughput, retained stock becomes a distinct scarce resource. The narrow spot-start mechanism does not require a full forward-capacity market: every lease begins occupying storage immediately, so an active-stock ceiling is enough to preserve physical safety. The difficult questions are instead how to derive that ceiling from the custody architecture, how much headroom to reserve for minimum-duration traffic, how to account for protocol-required byte-time, and how to make logical expiry produce real physical savings under DAS coding.
+That last problem depends on the representation. With current 1D PeerDAS, cell-level transport may allow sparse historical custody without preserving complete column sidecars. A future cross-row 2D code may instead need two phases: keep the richer code through the hot availability phase, then move still-live objects to sparse row-local custody. If the second-dimensional codeword must survive for the entire serving horizon, the fallback is to place similar maturities in separate coding domains. A forward retained-capacity curve is needed only if Ethereum also sells DA or retention commitments that begin in the future.
 
-Physical implementation now branches by representation. Under current 1D PeerDAS, cell-level transport may permit sparse row/cell historical custody without preserving complete column sidecars. Under a possible future 2D design, a **two-phase representation lifecycle** becomes one hypothesis: retain the rich cross-row code through the hot phase, then transition still-live objects to sparse row-local custody. If the second-dimensional codeword must persist for the whole serving horizon, maturity-aligned coding domains remain the fallback. A full forward retained-capacity curve becomes necessary only when Ethereum also sells **future-starting** DA or retention commitments.
+The same decomposition has wider uses, but they are not prerequisites for the base mechanism. Applications whose security models permit it gain another way to respond to congestion. Blob Streaming-style ingress rights could be paired with timed retrievability. Objects could pass from a short Ethereum serving window to storage providers, caches, archives, or P2P swarms that provide persistence, routing, privacy, or application-specific behavior.
 
-**Third, an architectural claim.** Variable retention gives applications an additional degradation margin under congestion where their security model permits it. Combined with Blob Streaming-style future ingress rights, the same decomposition yields a market in timed bandwidth and timed retrievability. Short protocol-required serving windows can then hand objects to competing downstream storage providers, caches, archives, or P2P swarms. Ethereum becomes a wholesale availability and integrity substrate while specialized systems provide persistence, routing, privacy, and application semantics.
-
-The narrow proposal does not depend on accepting that broader endpoint. Its central question is simply:
+The central question is:
 
 > **Why should every byte entering Ethereum DA purchase the same amount of future serving?**
 
-The rest of the paper first establishes the conservative mechanism, then attacks its implementation and security assumptions, and only afterward follows the decomposition toward the larger data-plane thesis.
+The following sections define the mechanism, test its implementation and security assumptions, and then examine the larger data-plane consequences.
 
 ---
 
@@ -36,7 +34,7 @@ A 100 MB object that needs one epoch of required serving—about 6.4 minutes at 
 
 Conversely, shortening retention cannot eliminate the initial bandwidth requirement. A one-epoch object must still be propagated and made available.
 
-The natural first-order decomposition is therefore:
+A first-order price decomposition is:
 
 ```text
 DA price
@@ -85,7 +83,7 @@ This does not imply universal deletion. Custody participants, applications, arch
 
 A compact commitment or versioned hash can remain as a durable integrity anchor after the payload itself expires, provided that applications or historical-data infrastructure preserve that anchor. Voluntarily retained copies or previously constructed proofs can then be authenticated against the Ethereum-published object. This should not be confused with a native protocol certificate that the data remained retrievable continuously throughout the entire retention interval; such a certificate would be an additional mechanism.
 
-The stable protocol abstraction should therefore sit above the present blob encoding:
+The protocol abstraction should sit above the present blob encoding:
 
 > **A specified quantity of committed data was reconstructably available under Ethereum’s DA security assumptions, and protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until a specified expiration.**
 
@@ -100,11 +98,13 @@ At publication time, Ethereum must establish that the committed data is availabl
 
 Under the current PeerDAS networking specification, this second property is concretely expressed as a minimum serving window for data-column sidecars. Variable retention would parameterize that post-publication serving obligation. It would not require consensus to re-attest every slot that an old object is still available.
 
-Accordingly, the narrow mechanism makes the following level-1 claim through `T`:
+At enforcement level 1, the mechanism makes the following claim through `T`:
 
 > **the protocol requires the relevant custody participants to retain and serve sufficient data for reconstruction through `T`, under the security assumptions of the custody and sampling design.**
 
 This distinction matters again after expiry. A commitment can authenticate a surviving copy, but a commitment by itself does not prove that the network honored the serving obligation at every moment before expiry. If historical proof of service is desired, it must be designed separately.
+
+Expiry can still leave several durable artifacts: canonical inclusion of the commitment, evidence recorded at publication, openings or copies kept elsewhere, and proofs of computations completed while the bytes were available. The [ephemeral-data proving appendix](../appendices/ephemeral-data-and-proofs.md) distinguishes those claims and works through the pattern `D -> prove f(D)=y -> retain C(D), y, pi`.
 
 The distinction may also permit a **change of physical representation through the object lifecycle**. The representation best suited to proving fresh availability need not be identical to the representation best suited to hundreds or thousands of epochs of historical serving. Section 17 branches between current 1D PeerDAS with cell-level historical custody and a conditional future 2D path that may transition from hot cross-row redundancy to cold row-local custody.
 
@@ -118,9 +118,17 @@ The distinction may also permit a **change of physical representation through th
 2. **Probabilistically monitored serving.** Custodians or peers are challenged or sampled during the serving interval, producing evidence about continued retrievability.
 3. **Cryptoeconomically enforced retention.** A failed custody or service proof can trigger a penalty, loss of collateral, or another consensus-recognized consequence.
 
-Current PeerDAS-style semantics most directly support level 1. EIP-7594 assigns deterministic custody, and the Fulu networking specification requires clients to serve recent data-column sidecars over a minimum range. The narrow proposal changes the duration of that required service; it does not silently add a historical proof-of-custody system.
+Those levels describe the force of enforcement, not what a particular proof establishes. A custody design must also say which claim is being tested:
 
-Levels 2 and 3 are compatible extensions, not prerequisites. If either is adopted, the service claim and fee can explicitly name the stronger enforcement level. Older Ethereum proof-of-custody research is relevant prior art for level 3, but is not current PeerDAS behavior.
+- **acquisition or processing at a moment:** the assigned participant obtained and processed the data when required;
+- **continued possession:** the participant still held the assigned data at one or more later checkpoints;
+- **retrievability or service:** the participant returned authenticated data, or enough participants served data for reconstruction, within the required conditions.
+
+Historical “bomb” proofs primarily make it costly to skip acquisition or processing at the tested moment. They do not automatically show that data was continuously possessed or retrievable throughout a lease of duration `T`. Proof of custody can enforce acquisition or possession, but a retention lease requires the protocol to define what must be proven, by whom, how often, and through which lifecycle transitions until expiry.
+
+Current PeerDAS-style semantics most directly support level 1. EIP-7594 assigns deterministic custody, and the Fulu networking specification requires clients to serve recent data-column sidecars over a minimum range. The proposal changes how long that service is required. It does not add a historical proof-of-custody system.
+
+Levels 2 and 3 are compatible extensions, not prerequisites. If either is adopted, the service claim and fee can explicitly name the stronger enforcement level. Older Ethereum proof-of-custody research is relevant prior art for level 3, but is not current PeerDAS behavior and is not yet a design for continuous retention and service.
 
 ---
 
@@ -139,6 +147,18 @@ where `T_full` is the full-strength serving window and an optional fraction `f_t
 The protocol still need not understand application semantics. It needs only the commitment, size, applicable access class, and lifecycle obligation. Some profiles may be purchaser-selected; protocol-mandated data such as canonical L1 history would inherit a protocol-defined profile.
 
 [The Lean Ethereum compatibility note](10-how-does-lean-ethereum-change-the-proposal.md) develops this extension and its limits.
+
+### 2.4 A weaker availability service is out of scope
+
+Another design could stop at committee custody or recipient-only delivery:
+
+```text
+global publication
+    -> bounded committee custody
+    -> recipient-specific delivery
+```
+
+That service might save more bandwidth, but it would give up the permissionless global-reconstruction semantics of Ethereum DAS. A recipient or favored committee could possess data that an arbitrary sampler or later independent retriever could not obtain. This RFC keeps PeerDAS/FullDAS-style publication semantics and varies only the post-publication serving duration. A weaker packet-delivery primitive may be useful elsewhere, but it is not `DAService(C,B,T)` as defined here.
 
 ## 3. Minimum and maximum protocol-required retention
 

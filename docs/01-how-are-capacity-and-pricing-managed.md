@@ -2,13 +2,13 @@
 
 ## 4. Flow and active retained stock
 
-For the narrow spot-start mechanism, flow and active retained stock are the first-order accounting quantities.
+For a lease that begins on admission, the first-order accounting quantities are flow and active retained stock.
 
 Let `R_t` denote new data entering Ethereum DA around time `t`. This is the **flow** resource: propagation, coding, sampling, and real-time processing.
 
 Let `S_t` denote the total logical data currently under an unexpired protocol serving obligation. This is the **active retained stock**.
 
-If an object of size `B` is admitted at time `t` with duration `T`, it immediately increases active stock by `B` and remains in `S` until `t+T`. The protocol therefore faces two independently scarce resources:
+If an object of size `B` is admitted at time `t` with duration `T`, it immediately increases active stock by `B` and remains in `S` until `t+T`. The protocol has to bound two scarce resources independently:
 
 ```text
 R_t ≤ R_max
@@ -22,7 +22,7 @@ S_t ≤ K_safe,
 
 where scalar `K_safe` is a first-order projection of the custody architecture's physical service envelope. §6 expands it into a resource vector.
 
-This is the first major simplification produced by adversarial review. For leases that begin at admission, a separate forward hard-cap curve is not required for storage safety.
+A lease that begins on admission does not require a separate forward hard-cap curve for storage safety.
 
 To see why, let `S_t(τ)` denote retained obligations that will still be alive at horizon `t+τ`, considering only leases already admitted at `t`. Because those leases can expire but no already-admitted lease begins later,
 
@@ -39,11 +39,11 @@ S_t + B ≤ K_safe,
 
 then the already-contracted retained stock cannot exceed `K_safe` at any later horizon merely because time passes.
 
-Long leases can still crowd out later users, but they do so by occupying capacity **now**, not by secretly reserving a future stock that is invisible to the current cap. That is an allocation and liveness problem, not a hidden physical-safety problem.
+Long leases can still crowd out later users, but the capacity they consume is visible **now**. The active-stock cap already counts it. Crowding is an allocation and liveness problem rather than a hidden physical-safety problem.
 
 ### 4.1 Non-normative protocol-state sketch
 
-The following toy transition makes the accounting mechanically testable. It chooses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. These are candidate choices, not an EIP.
+The following toy transition makes the accounting testable. It uses epoch granularity, per-blob retention, and an execution-layer fee with consensus-layer-visible expiry metadata. Those choices are illustrative rather than an EIP specification.
 
 ```text
 state:
@@ -94,7 +94,7 @@ Custody assignment remains deterministic under the relevant DAS design. A node d
 
 The counters and ring buffer are part of fork state. A reorganization restores the parent state's `retained_bytes`, expiry buckets, and admitted metadata before applying the competing branch, just as any other consensus state transition would. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state.
 
-The unresolved protocol choices are now explicit:
+The sketch leaves several protocol choices open:
 
 - the exact EL/CL container and commitment for `DataObjectMeta`;
 - whether continuous epoch values or a small allowed maturity set are exposed;
@@ -108,7 +108,7 @@ The unresolved protocol choices are now explicit:
 
 ## 5. Pricing protocol-required byte-time
 
-The fee decomposition remains:
+The fee has two parts:
 
 ```text
 F(B,T)
@@ -130,9 +130,9 @@ B · T · p_ret(u_t),
 u_t = S_t / K_target,
 ```
 
-with a marginal byte-time price that rises as active retained stock approaches its sustainable target. This is not a proposed price mechanism. It deliberately ignores the option value of long leases purchased before future scarcity becomes visible.
+Here the marginal byte-time price rises as active retained stock approaches its sustainable target. This is a benchmark, not a proposed price mechanism: it ignores the option value of buying a long lease before future scarcity becomes visible.
 
-A mechanism-design comparison should treat the following as competing hypotheses:
+Candidate pricing mechanisms include:
 
 - plain `B · T · p(S_t)` as the null model;
 - convex duration premiums;
@@ -140,7 +140,7 @@ A mechanism-design comparison should treat the following as competing hypotheses
 - auctioned long-duration capacity;
 - admission charges based on expected future scarcity.
 
-The resource-allocation claim does not depend on which pricing hypothesis survives. [The pricing model](../models/pricing.py) exposes these alternatives behind one interface for adversarial comparison.
+The resource-allocation result does not depend on the choice among them. [The pricing model](../models/pricing.py) exposes the alternatives behind one interface so they can be compared under the same inputs.
 
 A hot/cold physical implementation refines this decomposition without changing the logical API. Every object incurs the common cost of fresh dispersal, coding, sampling, and whatever mandatory hot redundancy the DAS design requires. Only the post-transition obligation scales with the purchaser's longer retention choice. Schematically, for total service horizon `T≥ T_hot`,
 
@@ -162,13 +162,13 @@ B · c_hot
 B · (T - T_hot) · c_cold,
 ```
 
-where the coefficients summarize physically different workloads rather than proposed constants. The paper should not assume that `c_hot` or `c_cold` is literally linear, nor assert a coding-overhead ratio before a concrete FullDAS design is fixed. The important point is that shortening retention cannot remove the initial hot-path cost; it can remove the continuing cold custody obligation.
+The coefficients `c_hot` and `c_cold` summarize two physically different workloads; they are not proposed constants. Neither workload is necessarily linear, and no coding-overhead ratio can be justified before a concrete FullDAS design is fixed. Shorter retention cannot remove the initial hot-path cost. It can remove part of the continuing cold-custody obligation.
 
-This is intentionally less ambitious than pricing every point on a forward curve. The hard cap supplies safety. The fee market supplies economic allocation below that cap.
+The hard cap supplies safety, while the fee market allocates capacity below it. There is no need to price every point on a forward curve for a spot-start lease.
 
 A prepaid fixed-duration lease has one important security property: once accepted, its serving horizon is not contingent on later fee increases. A “rent that must continuously be topped up” is simpler in some respects but changes the service semantics. Under future congestion or censorship, a rollup could lose required retention before its declared security horizon. Continuous rent is therefore better understood as an application-layer or best-effort service unless the entire maximum obligation is admitted up front.
 
-The retention fee should initially be understood as a **scarcity/admission charge on protocol byte-time**, not automatically as compensation to individual custodians. Ethereum can burn the fee while separately enforcing custody duties, just as blob fees need not be direct provider payments. A provider-reward system is a different mechanism.
+The retention fee should initially be understood as a **scarcity/admission charge on protocol byte-time**, not automatically as compensation to individual custodians. Ethereum can burn the fee while separately enforcing custody duties, just as blob fees need not be direct provider payments. A provider-reward system is a different mechanism. [The hardware and operator-market chapter](11-how-do-hardware-and-da-operator-markets-scale.md) develops one possible `scarcity burn + service procurement` extension without making it part of the base proposal.
 
 ### 5.1 What pricing cannot solve
 
@@ -239,7 +239,7 @@ If `M_budget` is the protocol's chosen local storage envelope, then a cold-stock
 K_safe ≲ (M_budget - M_hot - M_repair - M_metadata) / γ_cold.
 ```
 
-This is not yet a parameter proposal. It is a more useful research target than an abstract capacity percentage because every term can eventually be measured against a concrete custody and coding design. It also exposes a hardware asymmetry: the hot tier is dominated by write bandwidth, networking, coding, verification, and rapid repair, while the cold tier is dominated by capacity, historical serving, expiry bookkeeping, and slower reconstruct-and-repair.
+No values are proposed for these parameters yet. The vector is still a better research target than an abstract capacity percentage because every term can be measured against a concrete custody and coding design. It also exposes a hardware asymmetry: the hot tier is dominated by write bandwidth, networking, coding, verification, and rapid repair, while the cold tier is dominated by capacity, historical serving, expiry bookkeeping, and slower reconstruct-and-repair.
 
 A second quantity is then useful if Ethereum wants to prevent long leases from consuming the stock capacity reserved for short-duration traffic.
 
@@ -259,7 +259,7 @@ K_safe - H_min,
 
 while the reserved region remains available to the protocol-defined spot/JIT lane.
 
-This is not offered as a finished parameterization. Bursts, repair slack, node churn, and changing ingress limits require additional margins. More importantly, `H_min` protects only a **short-duration resource lane**. An attacker can submit minimum-duration objects too. The reserve prevents long leases from pre-consuming the short lane; it does not preserve honest-user admission against an attacker flooding that lane. Ingress limits, pricing, and any inclusion mechanism still decide that fight.
+These numbers are not a finished parameterization. Bursts, repair slack, node churn, and changing ingress limits require additional margins. More importantly, `H_min` protects only a **short-duration resource lane**. An attacker can submit minimum-duration objects too. The reserve prevents long leases from pre-consuming the short lane; it does not preserve honest-user admission when an attacker floods that lane. Ingress limits, pricing, and the inclusion mechanism still decide that fight.
 
 There is an adjacent but structurally cleaner Ethereum design pattern. Draft EIP-8256 separates AOT from JIT flow capacity and includes `JIT_RESERVED`, which AOT reservations cannot consume. A retention reserve borrows that lane-separation idea for stock, but should not inherit stronger anti-censorship or honest-user-liveness claims from it.
 
@@ -267,7 +267,7 @@ There is an adjacent but structurally cleaner Ethereum design pattern. Draft EIP
 
 ## 7. Competing physical implementations and deployment fallbacks
 
-Adversarial review still suggests that arbitrary continuous `T` should remain the **service abstraction**, but it no longer implies that maturity quantization is the preferred long-run physical design.
+Arbitrary continuous `T` can remain the **service abstraction** without committing the physical design to continuous maturities.
 
 There are two qualitatively different ways to make heterogeneous expiry tractable.
 
@@ -322,6 +322,6 @@ Arbitrary `T` still maximizes allocative expressiveness and keeps the logical AP
 
 > **Can Ethereum preserve one highly redundant representation only as long as it is needed for fresh availability, then move still-live objects into an independently expirable serving representation without changing their commitments?**
 
-The paper therefore treats **continuous variable retention as the semantic target, 1D cell-level custody as the first prototype path, hot-2D/cold-1D as one future compatibility branch, and maturity-aligned classes as the conservative fallback**.
+The design order is: **continuous variable retention as the semantic target, 1D cell-level custody as the first prototype path, hot-2D/cold-1D as a possible future compatibility branch, and maturity-aligned classes as the conservative fallback**.
 
 ---
