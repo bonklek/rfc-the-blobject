@@ -21,7 +21,7 @@ Once future ingress exists, future retention becomes a genuine reservation probl
 The complete service is therefore:
 
 ```text
-DAService(B,T,R),
+DAService(C,B,T,R),
 ```
 
 meaning:

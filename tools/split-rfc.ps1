@@ -63,11 +63,32 @@ function Write-Utf8 {
 $executive = Slice "### Executive framing" "## 1. Ingress and retention are distinct economic resources"
 $executive = $executive -replace '^### Executive framing', '## Executive framing'
 
+$lifecycleBridge = @'
+### 2.2 Transport neutrality and lifecycle profiles
+
+The single duration `T` is the conservative base mechanism, not necessarily the final shape of the service. The proposal applies to availability obligations over committed Ethereum data regardless of whether a future protocol exposes EIP-4844 blobs, granular Lean Data objects, payload-blobs, FullDAS cells, or another coded transport.
+
+Research on Block-in-Blobs and integrated distributed history suggests a later generalization from one expiry to a lifecycle profile:
+
+```text
+L = (T_full, f_tail, T_tail)
+```
+
+where `T_full` is the full-strength serving window and an optional fraction `f_tail` remains under a reduced obligation for `T_tail`. Ordinary expiry remains the special case `L=(T,0,0)`. A permanent sparse-history tail is another possible profile; it is not equivalent to full retrievability forever.
+
+The protocol still need not understand application semantics. It needs only the commitment, size, applicable access class, and lifecycle obligation. Some profiles may be purchaser-selected; protocol-mandated data such as canonical L1 history would inherit a protocol-defined profile.
+
+[The Lean Ethereum compatibility note](10-how-does-lean-ethereum-change-the-proposal.md) develops this extension and its limits.
+'@
+
 $documents = @(
     @{
         Path = "docs/00-what-is-the-proposal.md"
         Title = "What is the proposal?"
-        Body = $executive + "`n`n" + (Slice "## 1. Ingress and retention are distinct economic resources" "## 4. Flow and active retained stock")
+        Body = $executive + "`n`n" +
+            (Slice "## 1. Ingress and retention are distinct economic resources" "## 3. Minimum and maximum retention") +
+            "`n`n" + $lifecycleBridge.Trim() + "`n`n" +
+            (Slice "## 3. Minimum and maximum retention" "## 4. Flow and active retained stock")
     },
     @{
         Path = "docs/01-how-are-capacity-and-pricing-managed.md"
@@ -124,7 +145,58 @@ $documents = @(
 foreach ($document in $documents) {
     $body = $document.Body
     $body = $body -replace '(?m)^# Appendix A\. Worked downstream construction: RetentionNotes\s*$', ''
+
+    if ($document.Path -eq "docs/00-what-is-the-proposal.md") {
+        $body = $body.Replace('DAService(B,T)', 'DAService(C,B,T)')
+        $body = $body.Replace(
+            'Letting a purchaser choose a bounded duration `T`, with `T_max` no longer than the current serving horizon, can only weakly reduce the logical retained-data obligation for a fixed admitted workload.',
+            'Letting a purchaser choose a bounded duration `T`, with `T_max` no longer than the current minimum serving horizon, can only weakly reduce the logical retained-data obligation for a fixed admitted workload.'
+        )
+        $body = $body.Replace(
+            'The existing fixed-retention service remains available as the special case `T=T_max`. Short-lived traffic can purchase less byte-time without changing its initial DA burden.',
+            'The existing fixed-retention service remains available as the special case `T=T_max`. Here, `T_max` limits only the protocol serving obligation a purchaser may impose; it is not a mandatory deletion time or a prohibition on longer voluntary service. Short-lived traffic can purchase less byte-time without changing its initial DA burden.'
+        )
+        $body = $body.Replace(
+            'This does not imply universal deletion. Applications, archives, storage providers, torrent-like swarms, EthStorage, Filecoin, or any interested third party may retain copies indefinitely. Expiration terminates the protocol requirement that the relevant custody participants continue retaining and serving enough of the data for reconstruction.',
+            'This does not imply universal deletion. Custody participants, applications, archives, storage providers, torrent-like swarms, EthStorage, Filecoin, or any interested third party may retain and serve copies indefinitely. Expiration terminates only this lease''s protocol requirement that the relevant custody participants continue retaining and serving enough of the data for reconstruction. Continued service after expiry is permitted, but applications cannot rely on it without another guarantee.'
+        )
+        $body = $body.Replace(
+            '## 3. Minimum and maximum retention',
+            '## 3. Minimum and maximum guaranteed retention'
+        )
+        $body = $body.Replace(
+            'A maximum horizon is important for a different reason. Every guaranteed lease is a promise about resource consumption through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS serving horizon. It then never asks protocol participants to serve any individual object longer than the existing system already requires.',
+            'A maximum guaranteed horizon is important for a different reason. Every guaranteed lease is a promise about resource consumption through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS minimum serving horizon. It then never lets a purchaser impose a protocol serving obligation for any individual object beyond the duration already required by the existing system. `T_max` is not a pruning deadline: protocol participants may retain and serve the object longer, just as a minimum serving horizon does not require deletion when it ends. Such later service is best-effort unless backed by a separate guarantee.'
+        )
+        $body = $body.Replace(
+            '**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present serving horizon. The mechanism can reduce retained-data usage but cannot increase the logical worst case relative to fixed retention. In this regime the primary benefits are resource savings, price differentiation, and application flexibility.',
+            '**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present minimum serving horizon. The mechanism can reduce the guaranteed retained-data obligation but cannot increase its logical worst case relative to fixed retention. Nodes remain free to retain or serve expired objects voluntarily. In this regime the primary benefits are resource savings, price differentiation, and application flexibility.'
+        )
+        $body = $body.Replace(
+            '> **Holding ingress and the maximum horizon fixed, variable retention weakly dominates fixed retention in logical retained-capacity consumption.**',
+            '> **Holding ingress and the maximum guaranteed horizon fixed, variable retention weakly dominates fixed retention in logical retained-capacity consumption.**'
+        )
+    }
+
+    if ($document.Path -eq "docs/02-is-variable-retention-safe-for-rollups.md") {
+        $body = $body.Replace(
+            'correlated applications may all seek maximum retention during the same crisis',
+            'correlated applications may all seek the maximum guaranteed retention during the same crisis'
+        )
+    }
+
+    if ($document.Path -eq "docs/03-how-do-future-resource-markets-work.md") {
+        $body = $body.Replace('DAService(B,T,R)', 'DAService(C,B,T,R)')
+    }
+
+    if ($document.Path -eq "docs/09-what-is-the-conclusion.md") {
+        $body = $body.Replace(
+            'Under fixed ingress and `T_max` no greater than that horizon, variable retention weakly dominates fixed retention in **logical retained-capacity consumption**: the fixed service remains available as a special case, while shorter-lived objects consume less byte-time.',
+            'Under fixed ingress and `T_max` no greater than that minimum serving horizon, variable retention weakly dominates fixed retention in **logical guaranteed retained-capacity consumption**: the fixed guaranteed service remains available as a special case, while shorter-lived objects consume less guaranteed byte-time. `T_max` limits the obligation a purchaser may impose; it neither requires pruning at expiry nor prevents voluntary service afterward.'
+        )
+    }
+
     Write-Utf8 $document.Path ("# " + $document.Title + "`n`n" + $body.Trim())
 }
 
-Write-Output "Generated $($documents.Count) RFC documents from gist $GistId."
+Write-Output "Generated $($documents.Count) base RFC documents from gist $GistId."

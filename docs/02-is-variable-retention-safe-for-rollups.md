@@ -65,7 +65,7 @@ But this is not an automatic stability theorem.
 Several countervailing behaviors require simulation:
 
 - users may front-load long prepaid leases when prices are temporarily low;
-- correlated applications may all seek maximum retention during the same crisis;
+- correlated applications may all seek the maximum guaranteed retention during the same crisis;
 - a wealthy attacker may intentionally occupy the general-retention pool;
 - quantized classes may fragment otherwise usable capacity;
 - renewal mechanisms may create synchronized expiry cliffs;

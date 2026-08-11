@@ -4,7 +4,7 @@
 
 The adversarial pass leaves the core hypothesis intact but simplifies its mechanism.
 
-Fixed blob retention bundles immediate ingress with one protocol serving horizon. Under fixed ingress and `T_max` no greater than that horizon, variable retention weakly dominates fixed retention in **logical retained-capacity consumption**: the fixed service remains available as a special case, while shorter-lived objects consume less byte-time.
+Fixed blob retention bundles immediate ingress with one protocol serving horizon. Under fixed ingress and `T_max` no greater than that minimum serving horizon, variable retention weakly dominates fixed retention in **logical guaranteed retained-capacity consumption**: the fixed guaranteed service remains available as a special case, while shorter-lived objects consume less guaranteed byte-time. `T_max` limits the obligation a purchaser may impose; it neither requires pruning at expiry nor prevents voluntary service afterward.
 
 The narrow spot-start system does not require a maturity-dependent forward hard-cap curve. Every lease begins consuming retained capacity immediately, so a physically derived active-stock ceiling `K_safe` is sufficient to bound already-contracted storage obligations. A separate reserve `H_min` can preserve a chosen minimum-liveness lane against long-lease crowd-out. Prices then allocate guaranteed byte-time below those safety bounds.
 
