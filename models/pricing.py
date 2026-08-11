@@ -12,6 +12,10 @@ import json
 import math
 
 
+DEFAULT_MATURITIES = (256.0, 512.0, 1_024.0, 2_048.0, 4_096.0)
+DEFAULT_REFERENCE_DURATION = 1_024.0
+
+
 def utilization_price(utilization: float, base_price: float) -> float:
     if not 0 <= utilization < 1:
         raise ValueError("utilization must be in [0, 1)")
@@ -85,13 +89,17 @@ def auction_reserve_proxy(
 
 
 def compare(
-    *, size: float, duration: float, utilization: float, base_price: float
+    *,
+    size: float,
+    duration: float,
+    utilization: float,
+    base_price: float,
+    reference_duration: float = DEFAULT_REFERENCE_DURATION,
+    maturities: tuple[float, ...] = DEFAULT_MATURITIES,
+    expected_utilization_at_expiry: float | None = None,
 ) -> dict[str, float]:
-    reference = max(1.0, duration / 4)
-    expected = min(0.99, utilization + 0.15)
-    longest = max(duration, 16 * reference)
-    maturity_step = longest / 4
-    maturities = tuple(maturity_step * i for i in range(1, 5))
+    if expected_utilization_at_expiry is None:
+        expected_utilization_at_expiry = utilization
     return {
         "null_byte_time": null_byte_time(
             size=size,
@@ -104,7 +112,7 @@ def compare(
             duration=duration,
             utilization=utilization,
             base_price=base_price,
-            reference_duration=reference,
+            reference_duration=reference_duration,
         ),
         "quantized_maturity": quantized_maturity(
             size=size,
@@ -118,7 +126,7 @@ def compare(
             duration=duration,
             utilization=utilization,
             base_price=base_price,
-            expected_utilization_at_expiry=expected,
+            expected_utilization_at_expiry=expected_utilization_at_expiry,
         ),
         "auction_reserve_proxy": auction_reserve_proxy(
             size=size,
@@ -134,10 +142,36 @@ def main() -> None:
     parser.add_argument("--duration-epochs", dest="duration", type=float, required=True)
     parser.add_argument("--utilization", type=float, required=True)
     parser.add_argument("--base-price", type=float, default=1.0)
+    parser.add_argument(
+        "--reference-duration-epochs",
+        dest="reference_duration",
+        type=float,
+        default=DEFAULT_REFERENCE_DURATION,
+    )
+    parser.add_argument(
+        "--maturities-epochs",
+        dest="maturities",
+        type=float,
+        nargs="+",
+        default=DEFAULT_MATURITIES,
+    )
+    parser.add_argument(
+        "--expected-utilization-at-expiry",
+        type=float,
+        default=None,
+    )
     args = parser.parse_args()
-    if not all(math.isfinite(value) for value in vars(args).values()):
+    numeric = [
+        value
+        for value in vars(args).values()
+        if value is not None and not isinstance(value, (list, tuple))
+    ]
+    numeric.extend(args.maturities)
+    if not all(math.isfinite(value) for value in numeric):
         raise ValueError("all inputs must be finite")
-    print(json.dumps(compare(**vars(args)), indent=2, sort_keys=True))
+    arguments = vars(args)
+    arguments["maturities"] = tuple(arguments["maturities"])
+    print(json.dumps(compare(**arguments), indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

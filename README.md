@@ -90,6 +90,7 @@ The numbered sections inside each document retain the original paper's numbering
 
 - [Toy protocol state and capacity model](docs/01-how-are-capacity-and-pricing-managed.md#41-non-normative-protocol-state-sketch)
 - [Executable models](models/README.md)
+- [RFC figure renderer](tools/render-rfc-figures.py)
 - [Pinned references](REFERENCES.md)
 - [Backbone-scale arithmetic](appendices/backbone-scale-limits.md)
 - [Ephemeral proving semantics](appendices/ephemeral-data-and-proofs.md)

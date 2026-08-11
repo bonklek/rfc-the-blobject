@@ -79,6 +79,10 @@ A storage bootstrap object may purchase enough time for a persistent P2P network
 
 A rollup may purchase 256–4,096 epochs—about 1.14–18.20 days—subject to its security minimum.
 
+![Five example data uses crossing mandatory hot DAS and choosing different Ethereum cold-custody horizons, with public artifacts and L2 data optionally continuing into external storage.](assets/figures/figure-05-application-lifecycle.svg)
+
+*Figure 5 — Application examples across the data lifecycle.* Every object crosses the common hot-availability phase. Live media may stop at the minimum; communication and interactive data can select intermediate serving windows; public artifacts can give mirrors time to acquire them; and rollup or L2 data posting can select the full 4,096-epoch horizon. External storage may overlap Ethereum custody and continue afterward. These are examples of resource profiles, not application categories recognized by the protocol.
+
 ### 19.1 Experimental application evidence
 
 Two experiments make the non-rollup demand less hypothetical without claiming production readiness:

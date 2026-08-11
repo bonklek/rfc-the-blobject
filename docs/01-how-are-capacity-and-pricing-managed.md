@@ -238,8 +238,12 @@ M_cold
 If `M_budget` is the protocol's chosen local storage envelope, then a cold-stock limit should be derived only after reserving the hot working set, repair slack, metadata, and churn margin. Schematically:
 
 ```text
-K_safe ≲ (M_budget - M_hot - M_repair - M_metadata) / γ_cold.
+K_storage ≲ (M_budget - M_hot - M_repair - M_metadata) / γ_cold.
 ```
+
+![A local physical storage budget divided into the hot working set, repair slack, metadata, and the remaining space available for cold retention; the storage-derived limit then joins serving, repair, and I/O bounds in admission.](assets/figures/figure-06-storage-admission-model.svg)
+
+*Figure 6 — Storage-side derivation of a proposed retention limit.* `M_budget` is a chosen local physical-storage envelope; `M_hot`, `M_repair`, and `M_metadata` reserve space for the hot working set, repair slack, and protocol metadata; and `γ_cold` maps a logical retained byte to its local physical footprint. The resulting `K_storage` is only the storage component of the resource vector. These are schematic research quantities, not existing Ethereum protocol counters or proposed parameter values.
 
 No values are proposed for these parameters yet. The vector is still a better research target than an abstract capacity percentage because every term can be measured against a concrete custody and coding design. It also exposes a hardware asymmetry: the hot tier is dominated by write bandwidth, networking, coding, verification, and rapid repair, while the cold tier is dominated by capacity, historical serving, expiry bookkeeping, and slower reconstruct-and-repair.
 
