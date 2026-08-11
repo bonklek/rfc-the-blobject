@@ -21,7 +21,7 @@ DA price = ingress price + retention price
 - **Ingress** is the flow cost of propagating, encoding, sampling, and establishing availability.
 - **Retention** is the stock cost of keeping committed data reconstructable through time.
 
-The conservative proposal lets a purchaser choose a bounded duration without exceeding today's maximum serving horizon. The broader thesis combines timed bandwidth, timed retrievability, and downstream persistence into a generalized Ethereum data plane.
+The conservative proposal lets a purchaser choose a bounded guaranteed duration no longer than today's minimum serving horizon. That bound limits the obligation a purchaser can impose; it does not require nodes to delete or stop serving data afterward. The broader thesis combines timed bandwidth, timed retrievability, and downstream persistence into a generalized Ethereum data plane.
 
 ## Read by question
 
@@ -35,6 +35,7 @@ The conservative proposal lets a purchaser choose a bounded duration without exc
 8. [What is the prior art, and what is novel?](docs/07-what-is-the-prior-art-and-novelty.md)
 9. [What remains to be proven?](docs/08-what-remains-to-be-proven.md)
 10. [What is the conclusion?](docs/09-what-is-the-conclusion.md)
+11. [How does Lean Ethereum change the proposal?](docs/10-how-does-lean-ethereum-change-the-proposal.md)
 
 ### Appendix
 
@@ -43,16 +44,17 @@ The conservative proposal lets a purchaser choose a bounded duration without exc
 ## Suggested reading paths
 
 - **Five-minute overview:** this README, then the [conclusion](docs/09-what-is-the-conclusion.md).
-- **Protocol design:** proposal → capacity and pricing → PeerDAS/FullDAS compatibility → open questions.
+- **Protocol design:** proposal → capacity and pricing → PeerDAS/FullDAS compatibility → Lean Ethereum compatibility → open questions.
 - **Applications and markets:** rollup safety → future markets → post-Ethereum retention → generalized data plane.
 
 ## Central claims
 
-1. Under fixed ingress and a maximum horizon no longer than today's, variable retention weakly reduces the logical retained-data obligation.
+1. Under fixed ingress and a maximum guaranteed horizon no longer than today's minimum serving horizon, variable retention weakly reduces the logical retained-data obligation. This maximum limits the obligation a purchaser may impose; it does not require pruning or prevent voluntary service afterward.
 2. Immediate-start leases can be bounded by an active retained-stock ceiling; a forward capacity curve becomes necessary only for future-starting commitments.
 3. Logical expiry creates physical savings only if the DAS representation permits independently expiring custody.
 4. The leading compatibility hypothesis is a hot dense DAS phase followed by cold sparse row-local custody.
 5. Ethereum can provide bounded availability and integrity while competing downstream systems provide longer persistence and application-specific services.
+6. A single duration is the conservative special case of a broader lifecycle profile that may include a reduced sparse-history tail.
 
 ## How to comment
 

@@ -6,7 +6,7 @@ Ethereum’s DA roadmap has principally scaled **how much data can be made avail
 
 This paper asks whether that temporal obligation should itself become a parameter of the DA service. The argument proceeds in three layers.
 
-**First, a conservative resource-allocation claim.** Today, ingress and retention are bundled: bytes that impose the same immediate propagation burden receive the same serving horizon even when their applications value persistence very differently. Letting a purchaser choose a bounded duration `T`, with `T_max` no longer than the current serving horizon, can only weakly reduce the logical retained-data obligation for a fixed admitted workload. The existing fixed-retention service remains available as the special case `T=T_max`. Short-lived traffic can purchase less byte-time without changing its initial DA burden.
+**First, a conservative resource-allocation claim.** Today, ingress and retention are bundled: bytes that impose the same immediate propagation burden receive the same serving horizon even when their applications value persistence very differently. Letting a purchaser choose a bounded duration `T`, with `T_max` no longer than the current minimum serving horizon, can only weakly reduce the logical retained-data obligation for a fixed admitted workload. The existing fixed-retention service remains available as the special case `T=T_max`. Here, `T_max` limits only the protocol serving obligation a purchaser may impose; it is not a mandatory deletion time or a prohibition on longer voluntary service. Short-lived traffic can purchase less byte-time without changing its initial DA burden.
 
 **Second, a scaling claim.** If Ethereum eventually uses those savings to raise ingress throughput, retained stock becomes a distinct scarce resource. The narrow spot-start mechanism does not require a full forward-capacity market: every lease begins occupying storage immediately, so an active-stock ceiling is enough to preserve physical safety. The difficult questions are instead how to derive that ceiling from the custody architecture, how much headroom to reserve for minimum-liveness traffic, how to price guaranteed byte-time, and how to make logical expiry produce real physical savings under DAS coding.
 
@@ -59,7 +59,7 @@ Application semantics, by contrast, should remain outside the DA layer. Ethereum
 Under this model, an application would request something approximately like:
 
 ```text
-DAService(B,T)
+DAService(C,B,T)
 ```
 
 meaning:
@@ -81,7 +81,7 @@ After expiration:
 
 > **Ethereum’s protocol-level retention and serving obligation ends.**
 
-This does not imply universal deletion. Applications, archives, storage providers, torrent-like swarms, EthStorage, Filecoin, or any interested third party may retain copies indefinitely. Expiration terminates the protocol requirement that the relevant custody participants continue retaining and serving enough of the data for reconstruction.
+This does not imply universal deletion. Custody participants, applications, archives, storage providers, torrent-like swarms, EthStorage, Filecoin, or any interested third party may retain and serve copies indefinitely. Expiration terminates only this lease's protocol requirement that the relevant custody participants continue retaining and serving enough of the data for reconstruction. Continued service after expiry is permitted, but applications cannot rely on it without another guarantee.
 
 A compact commitment or versioned hash can remain as a durable integrity anchor after the payload itself expires, provided that applications or historical-data infrastructure preserve that anchor. Voluntarily retained copies or previously constructed proofs can then be authenticated against the Ethereum-published object. This should not be confused with a native protocol certificate that the data remained retrievable continuously throughout the entire retention interval; such a certificate would be an additional mechanism.
 
@@ -110,7 +110,23 @@ The distinction may also permit a **change of physical representation through th
 
 ---
 
-## 3. Minimum and maximum retention
+### 2.2 Transport neutrality and lifecycle profiles
+
+The single duration `T` is the conservative base mechanism, not necessarily the final shape of the service. The proposal applies to availability obligations over committed Ethereum data regardless of whether a future protocol exposes EIP-4844 blobs, granular Lean Data objects, payload-blobs, FullDAS cells, or another coded transport.
+
+Research on Block-in-Blobs and integrated distributed history suggests a later generalization from one expiry to a lifecycle profile:
+
+```text
+L = (T_full, f_tail, T_tail)
+```
+
+where `T_full` is the full-strength serving window and an optional fraction `f_tail` remains under a reduced obligation for `T_tail`. Ordinary expiry remains the special case `L=(T,0,0)`. A permanent sparse-history tail is another possible profile; it is not equivalent to full retrievability forever.
+
+The protocol still need not understand application semantics. It needs only the commitment, size, applicable access class, and lifecycle obligation. Some profiles may be purchaser-selected; protocol-mandated data such as canonical L1 history would inherit a protocol-defined profile.
+
+[The Lean Ethereum compatibility note](10-how-does-lean-ethereum-change-the-proposal.md) develops this extension and its limits.
+
+## 3. Minimum and maximum guaranteed retention
 
 Variable retention should initially be bounded:
 
@@ -128,7 +144,7 @@ rather than instantaneous deletion.
 
 The precise minimum is a security parameter. If Ethereum claims that data was available, independent parties should have a meaningful opportunity to retrieve and replicate the object before protocol custody is permitted to end.
 
-A maximum horizon is important for a different reason. Every guaranteed lease is a promise about resource consumption through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS serving horizon. It then never asks protocol participants to serve any individual object longer than the existing system already requires.
+A maximum guaranteed horizon is important for a different reason. Every guaranteed lease is a promise about resource consumption through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS minimum serving horizon. It then never lets a purchaser impose a protocol serving obligation for any individual object beyond the duration already required by the existing system. `T_max` is not a pruning deadline: protocol participants may retain and serve the object longer, just as a minimum serving horizon does not require deletion when it ends. Such later service is best-effort unless backed by a separate guarantee.
 
 If the physical implementation uses the two-phase lifecycle developed in §17, there is also a concrete lower bound imposed by the DAS machinery itself. Let `T_hot` denote the common interval—or protocol-recognizable phase—during which every newly admitted object must remain in the rich availability-establishment representation. Then an independently expiring lease cannot end before that phase:
 
@@ -142,7 +158,7 @@ The cleanest implementation may define the purchaser-selected duration as the gu
 
 It is useful to distinguish a conservative deployment from a later capacity-unlocking regime.
 
-**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present serving horizon. The mechanism can reduce retained-data usage but cannot increase the logical worst case relative to fixed retention. In this regime the primary benefits are resource savings, price differentiation, and application flexibility.
+**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present minimum serving horizon. The mechanism can reduce the guaranteed retained-data obligation but cannot increase its logical worst case relative to fixed retention. Nodes remain free to retain or serve expired objects voluntarily. In this regime the primary benefits are resource savings, price differentiation, and application flexibility.
 
 **Capacity-unlocking regime.** Ethereum raises ingress throughput because a material share of traffic is expected to choose shorter retention. Active retained stock then becomes an independent safety constraint. Importantly, this still does **not** imply that the spot-start protocol needs a full forward reservation curve. Every accepted lease occupies retained capacity immediately. A hard active-stock ceiling can therefore bound the physical obligation as long as leases begin at admission. Forward capacity accounting becomes necessary when the protocol sells obligations that begin in the future.
 
@@ -176,7 +192,7 @@ Every workload admitted under fixed retention can be reproduced exactly by choos
 
 Thus:
 
-> **Holding ingress and the maximum horizon fixed, variable retention weakly dominates fixed retention in logical retained-capacity consumption.**
+> **Holding ingress and the maximum guaranteed horizon fixed, variable retention weakly dominates fixed retention in logical retained-capacity consumption.**
 
 This is deliberately a **resource-allocation** statement, not a claim of total protocol dominance. Heterogeneous expiry may impose metadata, packing, proof, repair, request, and storage-engine overheads. Those physical implementation costs must be compared against the logical savings before an implementation claim can be made.
 
