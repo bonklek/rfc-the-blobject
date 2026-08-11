@@ -10,7 +10,10 @@ Ethereum specifications and research posts evolve. This file records the version
 | [EIP-8136: Cell-Level Deltas](https://github.com/ethereum/EIPs/blob/49beda901dcf3747ed4b91f853a333595fb2cbc4/EIPS/eip-8136.md) | `49beda9` — 2026-02-28 | Backwards-compatible missing-cell transport |
 | [EIP-8256: Blob Streaming](https://github.com/ethereum/EIPs/blob/bdc1d099649eefb8790b76f912e25487757f5f4e/EIPS/eip-8256.md) | `bdc1d09` — 2026-06-11 | AOT/JIT capacity and `JIT_RESERVED` comparison |
 | [EIP-8142: Block-in-Blobs](https://github.com/ethereum/EIPs/blob/750d967cd231dc69c3ad018886a5b30e834257b2/EIPS/eip-8142.md) | `750d967` — 2026-06-30 | Protocol-mandated payload blobs and fee-accounting questions |
+| [ERC-8179: Blob Space Segments](https://github.com/ethereum/EIPs/blob/169a65510927f58bdafdc67e840d53020e7a91ca/EIPS/eip-8179.md) | `169a655` — 2026-08-11 | Event-only declarations for application subranges inside blobs |
+| [ERC-8180: Blob Authenticated Messaging](https://github.com/ethereum/EIPs/blob/169a65510927f58bdafdc67e840d53020e7a91ca/EIPS/eip-8180.md) | `169a655` — 2026-08-11 | Authenticated non-rollup message batches over blobs |
 | [Fulu P2P interface](https://github.com/ethereum/consensus-specs/blob/5366cb59eb39e4ec1d6c468a79cceb626c14c048/specs/fulu/p2p-interface.md) | `5366cb5` — 2026-08-05 | Minimum data-column serving range and request semantics |
+| [Fulu polynomial commitments](https://github.com/ethereum/consensus-specs/blob/9d377fd53d029536e57cfda1a4d2c700c59f86bf/specs/fulu/polynomial-commitments-sampling.md) | `9d377fd` — 2025-02-12 | Extended-blob cell and proof-count arithmetic |
 | [Mainnet configuration](https://github.com/ethereum/consensus-specs/blob/3cbd26f048237250e3373d4d0a651a647b4c58e1/configs/mainnet.yaml) | `3cbd26f` — 2026-08-03 | `MIN_EPOCHS_FOR_DATA_COLUMN_SIDECARS_REQUESTS = 4096` |
 
 ## Research posts
@@ -19,13 +22,19 @@ These sources do not expose immutable revisions in the same way as Git commits. 
 
 - [Revisiting Secure DAS in One and Two Dimensions](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) — partial reconstruction and 1D/2D tradeoffs.
 - [A 0.001 bit proof of custody](https://ethresear.ch/t/a-0-001-bit-proof-of-custody/7409) — historical custody-proof and slashing design.
+- [Proofs of Custody](https://dankradfeist.de/ethereum/2021/09/30/proofs-of-custody.html) by Dankrad Feist — historical explainer of the “bomb” construction for enforcing acquisition and processing. Its numerical parameters are illustrative, not parameters proposed by this RFC or the current Strawmap.
+- [Ethereum L1 Strawmap](https://strawmap.org/) and its [drawing changelog](https://github.com/ethereum/strawmap/issues/6) — evolving roadmap context for renewed proof-of-custody research; placement on the map does not imply a settled construction.
 - [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) and [FullDASv2](https://ethresear.ch/t/accelerating-blob-scaling-with-fulldasv2-with-getblobs-mempool-encoding-and-possibly-rlc/22477) — candidate 2D architectures, not settled protocol direction.
 - [Cell-level dissemination](https://ethresear.ch/t/gossipsubs-partial-messages-extension-and-cell-level-dissemination/23017) — independently transmissible cells.
 - [Integrated in-protocol distributed history and state storage](https://ethresear.ch/t/integrated-in-protocol-distributed-history-and-state-storage/23522) — permanent sparse-history samples.
 - [Hyper-scaling state by creating new forms of state](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052) — temporary and UTXO-like state classes.
 - [The Extremely Lean Chain](https://ethresear.ch/t/the-extremely-lean-chain/25369/1) — proof-backed responsibility separation in consensus state.
+- [Waku protocols](https://docs.waku.org/learn/concepts/protocols/) and [content-topic privacy guidance](https://docs.waku.org/learn/concepts/content-topics) — RLN anti-spam and the separation of gossip, request, retrieval, and network privacy.
+- [Lightning Network paper](https://lightning.network/lightning-network-paper.pdf) — base-layer settlement with high-frequency activity in a specialized network; used only as an architectural analogy.
+- [BuilderNet](https://buildernet.org/) and [multi-party block construction](https://ethresear.ch/t/building-towards-multi-party-block-construction/24975) — adjacent distributed and multi-contributor block-building architectures.
 
 ## Project provenance
 
 - [Original variable-retention gist](https://gist.github.com/bonklek/2eb406003118bd1e29476e54cc18a0c7).
+- [Radio Free Ethereum](https://github.com/bonklek/eth-radio) and [BlobMail](https://github.com/bonklek/blobmail) — experimental public-media and encrypted-message application evidence.
 - Repository revision history records the subsequent question-oriented decomposition and adversarial edits.

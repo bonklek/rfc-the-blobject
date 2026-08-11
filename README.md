@@ -4,6 +4,8 @@
 
 **Status:** Working draft / request for comment
 
+**Author:** Bonkle K
+
 **Source:** Restructured from the original [research gist](https://gist.github.com/bonklek/2eb406003118bd1e29476e54cc18a0c7)
 
 ## The question
@@ -21,7 +23,7 @@ DA price = ingress price + retention price
 - **Ingress** is the flow cost of propagating, encoding, sampling, and establishing availability.
 - **Retention** is the stock cost of keeping committed data reconstructable through time.
 
-The conservative proposal lets a purchaser choose a bounded protocol-required duration no longer than today's minimum serving horizon. That bound limits the obligation a purchaser can impose; it does not require nodes to delete or stop serving data afterward. The broader thesis combines timed bandwidth, timed retrievability, and downstream persistence into a generalized Ethereum data plane.
+The proposal lets a purchaser choose how long Ethereum must serve an object, up to today's minimum serving horizon. That upper bound limits the obligation a purchaser can impose. It is not a deletion deadline: nodes may keep and serve the data for as long as they choose. From that basic separation, the RFC also examines markets for future bandwidth, timed retrievability, and downstream persistence.
 
 ## Read by question
 
@@ -36,25 +38,32 @@ The conservative proposal lets a purchaser choose a bounded protocol-required du
 9. [What remains to be proven?](docs/08-what-remains-to-be-proven.md)
 10. [What is the conclusion?](docs/09-what-is-the-conclusion.md)
 11. [How does Lean Ethereum change the proposal?](docs/10-how-does-lean-ethereum-change-the-proposal.md)
+12. [How do hardware and DA operator markets scale?](docs/11-how-do-hardware-and-da-operator-markets-scale.md)
 
 ### Appendix
 
 - [How could RetentionNotes work?](appendices/retention-notes.md)
 - [What do illustrative retention frontiers look like?](appendices/illustrative-numerics.md)
+- [What are the backbone-scale limits?](appendices/backbone-scale-limits.md)
+- [What can be proven after ephemeral data expires?](appendices/ephemeral-data-and-proofs.md)
+- [How could private AOT authorization remain cheap to validate?](appendices/private-aot-authorization.md)
 
 ## Suggested reading paths
 
 - **Five-minute overview:** this README, then the [conclusion](docs/09-what-is-the-conclusion.md).
-- **Protocol design:** proposal → capacity and pricing → PeerDAS/FullDAS compatibility → Lean Ethereum compatibility → open questions.
+- **Protocol design:** proposal → capacity and pricing → PeerDAS/FullDAS compatibility → hardware and operator markets → Lean Ethereum compatibility → open questions.
 - **Applications and markets:** rollup safety → future markets → post-Ethereum retention → generalized data plane.
+- **Physical and proving limits:** hardware/operator markets → backbone-scale limits → ephemeral data and proofs → open questions.
 
 ## Central claims
 
-1. Under fixed ingress and a maximum protocol-required horizon no longer than today's minimum serving horizon, variable retention weakly reduces the logical retained-data obligation without requiring pruning afterward.
-2. Current PeerDAS-style semantics are **protocol-required retrievability under custody assumptions**, not a recurring proof that every historical object remained available.
-3. Immediate-start leases can use deterministic active-stock accounting; a forward capacity curve becomes necessary only for future-starting commitments, while physical admission must respect a resource vector.
-4. Physical expiry is representation-dependent: 1D cell-level custody is the first prototype path, while hot-2D/cold-1D is one conditional branch rather than the assumed roadmap.
-5. A single duration is the conservative special case of a broader lifecycle profile, and downstream systems may extend persistence after Ethereum's required-serving window ends.
+1. With ingress held fixed, allowing shorter serving windows can only reduce the logical retained-data obligation. Nothing in the proposal requires nodes to prune afterward.
+2. PeerDAS currently provides **protocol-required retrievability under custody assumptions**. It does not repeatedly prove that every historical object remained available.
+3. A lease that starts immediately can be accounted for as active stock. A forward capacity curve is needed only for commitments that start in the future, and physical admission must account for more than storage alone.
+4. Whether logical expiry saves physical resources depends on the representation. The first prototype path is 1D cell-level custody; hot-2D/cold-1D is a conditional branch, not an assumed roadmap.
+5. One expiry is the simplest lifecycle. Later designs may add reduced-strength tails, and downstream systems may continue persistence after Ethereum's required-serving window ends.
+6. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
+7. Retention does not relax network conservation. Global throughput, coding and replication overhead, operator count, and sustainable per-node bandwidth must fit one consistent architecture.
 
 ## How to comment
 
@@ -79,6 +88,9 @@ The numbered sections inside each document retain the original paper's numbering
 - [Toy protocol state and capacity model](docs/01-how-are-capacity-and-pricing-managed.md#41-non-normative-protocol-state-sketch)
 - [Executable models](models/README.md)
 - [Pinned references](REFERENCES.md)
+- [Backbone-scale arithmetic](appendices/backbone-scale-limits.md)
+- [Ephemeral proving semantics](appendices/ephemeral-data-and-proofs.md)
+- [Private AOT authorization sketch](appendices/private-aot-authorization.md)
 - Kill questions: [2D parity lifetime](https://github.com/bonklek/rfc-the-blobject/issues/2), [row authentication](https://github.com/bonklek/rfc-the-blobject/issues/3), and [cold-custody survivability](https://github.com/bonklek/rfc-the-blobject/issues/4)
 
 Run the repository checks with:

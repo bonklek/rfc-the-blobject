@@ -3,7 +3,7 @@ message: "If you use this RFC or its models, please cite this repository."
 title: "RFC: The Blobject"
 type: software
 authors:
-  - name: bonklek
+  - name: Bonkle K
 repository-code: "https://github.com/bonklek/rfc-the-blobject"
 url: "https://github.com/bonklek/rfc-the-blobject"
 abstract: "A research RFC and executable null models for variable-retention data availability on Ethereum."

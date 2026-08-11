@@ -4,9 +4,9 @@
 
 ## Short answer
 
-Lean Ethereum does not make variable-retention data availability obsolete. It strengthens the case for defining the service above today's EIP-4844 blob while revealing that a single expiry time may eventually be too narrow.
+Lean Ethereum changes the object that receives a retention policy, not the need for the policy. The service should be defined above today's EIP-4844 blob, and some data classes may eventually need more than one expiry time.
 
-The emerging direction is not that blobs disappear or that all state becomes interchangeable. It is that more classes of Ethereum data may share sampled, cryptographically committed transport while retaining different access and persistence requirements:
+Blobs need not disappear, and state does not become interchangeable with ordinary DA. Instead, more classes of Ethereum data may share sampled, cryptographically committed transport while retaining different access and persistence requirements:
 
 ```text
 application semantics
@@ -16,9 +16,11 @@ transport representation
 availability lifecycle
 ```
 
-Lean Data and adjacent proposals increasingly generalize the transport representation. Variable retention parameterizes the lifecycle.
+Lean Data and adjacent proposals generalize the transport representation. Variable retention supplies the lifecycle parameter.
 
-These proposals are at different maturity levels. Lean Ethereum is a long-run personal vision, EIP-8142 is a draft EIP, and the integrated-history and new-state designs are research proposals. They are architectural evidence, not a finalized roadmap bundle.
+There is a direct analogy to [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). That work starts from the observation that not every state object needs one universal persistence and access guarantee. Variable-retention DA applies the same resource-specialization instinct to committed data: preserve the semantics an application needs instead of granting every byte one universal future-serving package. The analogy motivates the decomposition without making execution state and DA interchangeable.
+
+These proposals have different status. Lean Ethereum is a long-run personal vision, EIP-8142 is a draft EIP, and the integrated-history and new-state designs remain research proposals. They provide architectural evidence but do not constitute a finalized roadmap.
 
 ---
 
@@ -26,7 +28,7 @@ These proposals are at different maturity levels. Lean Ethereum is a long-run pe
 
 [Lean Ethereum](https://blog.ethereum.org/2025/07/31/lean-ethereum) explicitly describes Lean Data as “blobs 2.0”: post-quantum blobs with granular sizing and a calldata-like developer experience. It does not abolish the separately scalable data layer.
 
-The useful abstraction is therefore not “an EIP-4844 blob with a timer.” It is:
+The useful abstraction is not “an EIP-4844 blob with a timer.” It is:
 
 > a lifecycle and enforceable serving requirement over a committed Ethereum data object, independent of its current encoding.
 
@@ -38,7 +40,7 @@ That object might be transported as:
 - PeerDAS or FullDAS cells;
 - a future coded frame or streamed object.
 
-This is consistent with the base proposal's existing requirement that applications not depend on KZG, cell, column, or coding layout details.
+The base proposal already requires applications to remain independent of KZG, cell, column, and coding-layout details, so this abstraction does not change that boundary.
 
 ---
 
@@ -55,7 +57,7 @@ This breaks the convenient shorthand “blob data means rollup data.” A common
 - protocol-mandated L1 execution history;
 - block-level access and update information.
 
-Common transport does not imply common economics. Payload-blobs are protocol-mandated and have no natural per-blob user payer. EIP-8142 treats their inclusion as a protocol cost and leaves explicit protocol-level pricing open. A lifecycle-aware market must therefore distinguish who caused bytes from who funds their physical service.
+Common transport does not imply common economics. Payload-blobs are protocol-mandated and have no natural per-blob user payer. EIP-8142 treats their inclusion as a protocol cost and leaves explicit protocol-level pricing open. A lifecycle-aware market must distinguish the source of the bytes from the party or mechanism that funds their physical service.
 
 ---
 
@@ -65,7 +67,7 @@ Common transport does not imply common economics. Payload-blobs are protocol-man
 
 Its illustrative configuration uses 512-byte samples, roughly a `1/512` share per client, and estimates about 80 GB of annual storage growth per client under aggressive throughput assumptions. Those figures are design examples, not protocol parameters.
 
-The important conceptual change is a permanent sparse-history tail after the ordinary high-confidence availability window:
+The important change is the possibility of a permanent sparse-history tail after the ordinary high-confidence availability window:
 
 ```text
 publication
@@ -119,7 +121,7 @@ No. [Hyper-scaling state by creating new forms of state](https://ethresear.ch/t/
 
 Historical data can usually be retrieved asynchronously. Execution-critical active state must support dynamically determined, synchronous reads during block construction. A builder cannot produce a valid block if the necessary current state is unavailable.
 
-The correct implication is:
+The boundary is:
 
 ```text
 same transport substrate
@@ -140,7 +142,7 @@ The proposal should distinguish:
 
 ## 5. What is the stable service abstraction?
 
-The narrow interface remains useful:
+The base interface remains useful:
 
 ```text
 DAService(C, B, T)
@@ -159,7 +161,7 @@ where:
 - `L` is the lifecycle profile;
 - `A` is the protocol-recognized access or data class.
 
-This is a conceptual interface, not a proposed wire format.
+This interface describes the service; it is not a proposed wire format.
 
 Application semantics should remain outside consensus. Ethereum need not know whether an object is a message, rollup batch, media file, proof witness, or game event. It needs only enough information to enforce the resource and access obligation.
 
@@ -185,12 +187,12 @@ F_full(B, T_full)
 F_tail(B * f_tail, T_tail)
 ```
 
-This is bookkeeping, not a finished fee mechanism. In particular:
+This equation is bookkeeping rather than a finished fee mechanism. In particular:
 
 - an unbounded tail cannot be naively sold as one prepaid infinite lease;
 - a universal sparse-history obligation may be protocol-funded rather than purchaser-funded;
 - a recurring service mechanism may fit replacement, migration, repair, and sync serving better than a one-time fee;
-- scarcity fees do not automatically compensate individual custodians.
+- scarcity fees do not automatically compensate individual custodians; if Ethereum chooses to pay specialized hardware providers directly, it needs a separate [operator procurement mechanism](11-how-do-hardware-and-da-operator-markets-scale.md).
 
 If only a fraction enters long-lived history, its first-order growth is:
 
@@ -228,7 +230,7 @@ The base proposal needs five bounded revisions:
 4. **Keep semantic boundaries explicit.** Common DAS transport does not turn active state into ordinary expiring DA.
 5. **Treat sparse history as a different service class.** Reduced permanent sampling has different capacity, repair, incentive, and security assumptions from full retention.
 
-These revisions strengthen the paper without making the narrow spot-start mechanism depend on Lean Ethereum, EIP-8142, or permanent distributed history.
+These revisions keep the spot-start mechanism independent of Lean Ethereum, EIP-8142, and permanent distributed history while allowing the RFC to fit those designs if they advance.
 
 ---
 

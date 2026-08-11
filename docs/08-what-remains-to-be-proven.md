@@ -1,8 +1,16 @@
 # What remains to be proven?
 
-## 22. Open questions and adversarial research agenda
+## 22. Open questions
 
-The next work should be falsification-oriented rather than additive.
+The next round of work should try to disprove the proposal rather than add more features. Five questions take priority:
+
+1. Can logical expiry release physical resources under current 1D PeerDAS?
+2. If Ethereum adopts cross-row 2D coding, can hot redundancy be dropped without weakening fresh DA?
+3. Can cold custody survive realistic correlated failure and repair conditions?
+4. What serving horizons do major rollups actually require for trustless recovery?
+5. Do a few maturity classes capture most of the benefit of continuous durations?
+
+The detailed questions below unpack those blockers and the secondary design choices around them.
 
 ### 22.1 Physical capacity and pricing
 
@@ -12,6 +20,18 @@ The next work should be falsification-oriented rather than additive.
 - Does a simple active-stock base fee plus byte-time charge allocate capacity adequately, or does it systematically underprice long leases purchased during quiet periods?
 - Should long required-serving leases pay a duration risk premium even without future-starting reservations?
 - Can an attacker cheaply cycle short leases to manipulate the retention base fee?
+- What are the measured per-node write fraction, physical expansion, and local write amplification for each candidate custody architecture?
+- At what throughput does SSD endurance or hot-tier bandwidth bind before resident storage?
+- If hardware providers are paid separately, can posted `q_write` and `q_retention` rates recruit qualified supply without oscillation, Sybil pooling, or strategic withholding?
+- What service-price ceiling and concentration threshold should force the safe DA target downward?
+
+### 22.1.1 Fractional operator pools
+
+- What is the smallest independently verifiable cell assignment that a fractional contributor can serve?
+- Can one logical duty be divided among small contributors without making the pool coordinator a trusted custody or repair bottleneck?
+- How much spare capacity and handoff overlap is required for delayed exits?
+- Can ownership, hosting, network, client, and geographic concentration be measured well enough to inform a safety bound?
+- How should rewards fund repair and device replacement without double-paying existing validator duties?
 
 ### 22.2 Simpler-design challenge
 
@@ -68,6 +88,7 @@ Secondary questions include:
 
 - Is level-1 protocol-required serving sufficient for the base experiment, or must continued service be probabilistically monitored?
 - What evidence would justify level-3 cryptoeconomic penalties without creating mass-slashing or false-positive risk?
+- Can a Sybil-resistant, economically accountable custody mechanism demonstrate continued possession and service across heterogeneous lease durations, repair, reassignment, and handoff?
 - Can a client deterministically compute its live duties from canonical `DataObjectMeta` without arbitrary EL-state access?
 - What are the exact reorg semantics for the expiry ring and active resource counters?
 - What minimal integrity anchor should remain after payload expiry?
@@ -79,6 +100,23 @@ Secondary questions include:
 - What standardized commitment/handoff interface would allow EthStorage-like, Filecoin-like, centralized, and P2P providers to compete over the same object?
 - Which downstream guarantees require proof of possession versus proof of retrievability or service?
 
-The paper should not advance to an implementation EIP until these questions are simulated or prototyped against a concrete DAS representation.
+### 22.8 Backbone-scale limits and ephemeral proofs
+
+- For a proposed global rate, do `N · b`, coding expansion, replication, sender uplink, repair, and burst headroom fit one topology-aware network model?
+- At what rate does shrinking the custody fraction stop preserving the intended independent operator population?
+- What frame, manifest, commitment, and proof aggregation should replace the current 128 KiB object control surface at very high throughput?
+- What durable evidence can a late node verify after historical DAS sampling can no longer be repeated?
+- Can an application bind a proof of `f(D)=y` to the exact Ethereum commitment and finish proving before `D` expires?
+- How should clients distinguish inclusion, publication-time availability, interval service, a surviving copy, and a proved computation?
+
+### 22.9 Private AOT activation
+
+- Can shielded capacity ownership activate a public ephemeral key without linking payer and publication through timing or denomination?
+- Can peers reject unknown publication keys before doing expensive zero-knowledge or blob-proof verification?
+- What canonical state and reorg rules track active keys, nullifiers, and remaining byte allowances?
+- How many activations must be pooled or batched to provide a meaningful anonymity set?
+- Does a generic shielded future-capacity market make a separate private-ticket mechanism unnecessary?
+
+An implementation EIP should wait until these questions have been simulated or prototyped against a concrete DAS representation.
 
 ---

@@ -1,6 +1,6 @@
 # Appendix: What do illustrative retention frontiers look like?
 
-This appendix deliberately uses a hypothetical capacity. It demonstrates the geometry of `R≈S/T`; it does not estimate a safe Ethereum parameter.
+The capacity in this appendix is hypothetical. The calculations show the geometry of `R≈S/T`; they do not estimate a safe Ethereum parameter.
 
 For the longest row, it uses the current mainnet Fulu minimum serving range of 4,096 epochs. At 32 slots per epoch and 12 seconds per slot, that is 1,572,864 seconds, or approximately 18.2 days. Current clients are required to serve at least that range and may serve longer. In the conservative variable-retention proposal, this existing fixed requirement becomes the candidate `T_max`; it is not the proposed `T_min` and is not a pruning deadline.
 
@@ -30,7 +30,7 @@ If an operating target were set at two-thirds of that hypothetical envelope, the
 | 2,048 epochs | 9.10 days | 56.9 MiB/s |
 | 4,096 epochs | 18.20 days | 28.4 MiB/s |
 
-The point is only:
+The calculation establishes one relationship:
 
 > **The same retained-stock envelope supports radically different ingress rates depending on how much protocol-required byte-time applications purchase.**
 
