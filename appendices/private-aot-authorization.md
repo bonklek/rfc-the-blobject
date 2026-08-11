@@ -41,6 +41,16 @@ Draft [EIP-8256](https://eips.ethereum.org/EIPS/eip-8256) makes ticket ownership
 
 Privacy must preserve that property.
 
+### Exact baseline mechanics in the present draft
+
+Three details matter when comparing the construction below with EIP-8256 itself:
+
+1. A ticket for target slot `T` is bought specifically in slot `T - TICKET_LOOKAHEAD`. Equivalently, a purchase in slot `s` derives `target_slot = s + TICKET_LOOKAHEAD`; the purchaser does not freely choose an arbitrary target from a forward curve.
+2. Gossip does **not** consume the ticket through an on-chain `spent` bit. The ticket payment and reserved capacity are recorded at purchase, while the later AOT sidecar is a networking object.
+3. Replay or equivocation is bounded on the networking path: AOT gossip accepts only the first valid sidecar for each `(ticket_id, column_index)`, after checking the target window, registered BLS key, proof, and subnet.
+
+The nullifier and canonical activation state proposed later are therefore changes required by shielded ownership, not descriptions of how the present public-ticket draft accounts for gossip use. They should preserve its cheap first-valid-message rule rather than replacing every sidecar with an on-chain consumption transition.
+
 ---
 
 ## D.2 Naive private proof at gossip time
@@ -191,6 +201,24 @@ Mitigations include:
 - long-lived private DA capacity from which users draw standardized units.
 
 The last option creates a stronger anonymity set but also a pool coordinator, inventory, and solvency problem. The pool must not oversell future capacity or learn the complete payer-to-publication mapping.
+
+There is also a liquidity feedback loop. If a privacy-only class attracts a fraction `p` of otherwise comparable DA demand, its candidate anonymity set is bounded above by roughly:
+
+```text
+A_private <= p * A_total
+```
+
+before timing, denomination, capacity, and application fingerprints reduce it further. A privacy surcharge or separate-market friction can lower `p`; the smaller resulting anonymity set makes the privacy product less useful, which can lower participation again. Fixed proof, coordination, and inventory costs may then be spread across fewer users and raise the surcharge further.
+
+```text
+privacy surcharge / fragmented liquidity
+    -> lower participation
+    -> smaller anonymity set
+    -> lower privacy value and higher per-user overhead
+    -> still lower participation
+```
+
+This bootstrap problem is a reason to prefer a large generic capacity market with pooled or shielded ownership over a thin privacy-branded ticket class. The formula is an upper-bound intuition, not an anonymity guarantee: correlated timing can make effective anonymity much smaller than the number of participants.
 
 ---
 

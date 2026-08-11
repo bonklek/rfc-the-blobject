@@ -129,6 +129,8 @@ For example:
 
 This arithmetic intentionally omits replication, coding expansion, and spare capacity, all of which increase the physical requirement. The point is that the duty can be divided. A pool can present one accountable service boundary while routing independently verifiable cells across many smaller contributors.
 
+EthStorage provides concrete, though non-equivalent, implementation precedent for this assignment scale. Its current [storage-contract deployment template](https://github.com/ethstorage/storage-contracts-v1/blob/513ec70e23a15db828dbd99f03714aada3484ce3/.env.template) configures `SHARD_SIZE_BITS=39`, approximately 512 GiB, and its [provider guide](https://github.com/ethstorage/ethstorage-doc/blob/8ba215431220c1bc8518833a91a5f35c334d513e/storage-provider-guide/tutorials.md) calls for at least 550 GB of free storage for one data shard, with 8 GB RAM and an NVMe disk. That does not establish that eight such machines can safely implement a 4 TB Ethereum DA pool: EthStorage has different proofs, reads, networking, replication, repair, and trust boundaries. It does show that a protocol-accounted storage responsibility can be divided into independently operated shards near the illustrative 500 GB contributor size rather than requiring every provider to hold the whole logical dataset.
+
 The closest analogy is a fractional staking pool, but the duty is more operationally demanding. A DA pool must continuously:
 
 - qualify contributor hardware and network service;
