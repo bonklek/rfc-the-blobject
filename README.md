@@ -1,18 +1,16 @@
 # RFC: The Blobject
 
-> Variable-retention data availability for Ethereum: decoupling bandwidth, storage, and time.
+> Selectable-duration data availability for Ethereum: decoupling bandwidth, storage, and time.
 
 **Status:** Working draft / request for comment
 
 **Author:** Bonkle K
 
-**Source:** Restructured from the original [research gist](https://gist.github.com/bonklek/2eb406003118bd1e29476e54cc18a0c7)
-
 ## The question
 
-Why should every byte entering Ethereum data availability purchase the same amount of future serving?
+Why should data needed for roughly an hour receive the same mandatory Ethereum serving time as data needed for weeks?
 
-Ethereum's DA roadmap principally scales how much data can be made available at once. The Blobject asks whether the duration of the protocol's serving obligation should also become a parameter of the service.
+Ethereum's DA roadmap principally scales how much data can be made available at once. The Blobject asks whether the duration of the protocol's serving obligation should also become a parameter of the service. Its primary motivation is shorter native service: many objects may need Ethereum long enough to be retrieved, processed, proved over, or handed off, but not for the full 4,096-epoch period required of every current PeerDAS object.
 
 The proposal separates two resources:
 
@@ -23,7 +21,9 @@ DA price = ingress price + retention price
 - **Ingress** is the flow cost of propagating, encoding, sampling, and establishing availability.
 - **Retention** is the stock cost of keeping committed data reconstructable through time.
 
-The proposal lets a purchaser choose how long Ethereum must serve an object, with today's uniform minimum serving horizon retained as the selectable maximum. That upper bound limits the obligation a purchaser can impose. It is not a deletion deadline: nodes may keep and serve the data for as long as they choose. From that basic separation, the RFC also examines markets for future bandwidth, timed retrievability, and downstream persistence.
+The proposal lets a purchaser choose how long Ethereum must serve an object, with today's uniform minimum serving duration retained as the selectable maximum. That upper bound limits the obligation a purchaser can impose. It is not a deletion deadline: nodes may keep and serve the data for as long as they choose.
+
+External storage is complementary, not a substitute. It can continue serving an object after Ethereum's obligation ends, but it cannot make Ethereum safely release its own custody duty earlier. An application may therefore combine a short Ethereum lease with an archive, cache, or persistence network that keeps the same committed bytes for much longer.
 
 ## Argument-first roadmap
 
@@ -32,7 +32,7 @@ The minimal proposal does not depend on future bandwidth markets, new applicatio
 1. [Define the variable-retention service](docs/00-what-is-the-proposal.md): what changes, what remains fixed, and which guarantees apply through `T`.
 2. [Bound logical obligations and separate safety from pricing](docs/01-how-are-capacity-and-pricing-managed.md): active retained stock handles spot-start leases, while physical admission remains multidimensional.
 3. [Test physical realizability under PeerDAS and FullDAS](docs/05-can-this-work-with-peerdas-and-fulldas.md): expiry releases real resources only under a compatible representation; current 1D PeerDAS is the conservative prototype path.
-4. [Apply application-specific safety constraints](docs/02-is-variable-retention-safe-for-rollups.md): a shorter horizon is suitable only when recovery, proving, and handoff assumptions tolerate it.
+4. [Apply application-specific safety constraints](docs/02-is-variable-retention-safe-for-rollups.md): a shorter duration is suitable only when recovery, proving, and handoff assumptions tolerate it.
 5. [Account for hardware and network constraints](docs/11-how-do-hardware-and-da-operator-markets-scale.md): write churn, placement, and assignment granularity constrain any implementation; fractional pools and separate operator procurement are optional designs.
 6. [Locate the contribution in prior art](docs/07-what-is-the-prior-art-and-novelty.md), then examine the [open questions and kill criteria](docs/08-what-remains-to-be-proven.md) before the [conclusion](docs/09-what-is-the-conclusion.md).
 
@@ -68,6 +68,7 @@ The filenames and internal section numbers preserve the original paper's order f
 - [What are the backbone-scale limits?](appendices/backbone-scale-limits.md)
 - [What can be proven after ephemeral data expires?](appendices/ephemeral-data-and-proofs.md)
 - [How could private AOT authorization remain cheap to validate?](appendices/private-aot-authorization.md)
+- [How could active retention leases be surrendered or novated?](appendices/active-lease-surrender-and-novation.md)
 
 ## Suggested reading paths
 
@@ -87,6 +88,7 @@ The filenames and internal section numbers preserve the original paper's order f
 7. At high throughput, shorter retention reduces resident stock but not the write stream seen by each node. If Ethereum pays specialized hardware providers, scarcity pricing and payment for qualified service should remain separate.
 8. Retention does not relax network conservation. Global throughput, coding and replication overhead, operator count, and sustainable per-node bandwidth must fit one consistent architecture.
 9. The proposal varies the **duration** of Ethereum's global DA service, not its network scope: custody by a designated population and delivery to one recipient are distinct, narrower claims unless they support permissionless reconstruction under the stated DAS assumptions.
+10. External storage can extend service after Ethereum's obligation ends; it cannot shorten Ethereum's native obligation. Short native service and optional long-term persistence are complementary products.
 
 ## How to comment
 
@@ -114,6 +116,7 @@ Open an issue with a concrete objection, missing prior art, counterexample, impl
 - [Ephemeral proving semantics](appendices/ephemeral-data-and-proofs.md)
 - [Private AOT authorization sketch](appendices/private-aot-authorization.md)
 - [Illustrative operator economics and procurement controller](appendices/illustrative-operator-economics.md)
+- [Active-lease surrender and safe reclaim credit](appendices/active-lease-surrender-and-novation.md)
 - [Issue-ready operator-market kill questions](RESEARCH_TRACKING.md)
 - Kill questions: [2D parity lifetime](https://github.com/bonklek/rfc-the-blobject/issues/2), [row authentication](https://github.com/bonklek/rfc-the-blobject/issues/3), and [cold-custody survivability](https://github.com/bonklek/rfc-the-blobject/issues/4)
 

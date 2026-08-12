@@ -106,6 +106,8 @@ That profile defines the bounded service envelope: eligible request interface an
 
 Service ending at `expiry_slot` does not imply that storage, indexes, repair state, or allocator capacity become reusable in the same transition. `reclaim_after_slot` is the earliest point at which admission accounting may credit the capacity back. A real design must derive the grace period and react to reclamation backlog rather than assuming deletion is atomic.
 
+Voluntary early surrender is harder still: a replacement may need hot-path capacity while the old cold obligation remains physically live, and the party who paid for a lease may not control the beneficiaries' right to continued service. The [active-lease surrender appendix](../appendices/active-lease-surrender-and-novation.md) treats time-dependent safe reclaim credit, overlap headroom, and surrender authority as optional research rather than base-protocol assumptions.
+
 The counters and ring buffer are part of fork state. A reorganization restores the parent state's `retained_bytes`, expiry buckets, and admitted metadata before applying the competing branch, just as any other consensus state transition would. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state.
 
 The sketch leaves several protocol choices open:

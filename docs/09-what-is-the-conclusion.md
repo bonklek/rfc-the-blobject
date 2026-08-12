@@ -2,7 +2,7 @@
 
 ## 23. Conclusion
 
-Ethereum currently bundles immediate blob ingress with one protocol serving horizon. This RFC separates them. The conservative deployment sets `T_max` equal to today's minimum serving horizon, so that duration remains selectable while the design preserves the other relevant DA guarantees. With ingress fixed and every selected `T` no greater than that current horizon, variable retention can only reduce **logical protocol-required retained-capacity consumption**; shorter-lived objects consume less required byte-time. `T_max` limits the obligation a purchaser may impose, but it neither requires pruning at expiry nor prevents voluntary service afterward.
+Ethereum currently bundles immediate blob ingress with one protocol serving duration. This RFC separates them. The motivating case is data needed for minutes or hours, not an attempt to make Ethereum an archival network. The conservative deployment sets `T_max` equal to today's minimum serving duration, so that duration remains selectable while the design preserves the other relevant DA guarantees. With ingress fixed and every selected `T` no greater than that current duration, variable retention can only reduce **logical protocol-required retained-capacity consumption**; shorter-lived objects consume less required byte-time. `T_max` limits the obligation a purchaser may impose, but it neither requires pruning at expiry nor prevents voluntary service afterward.
 
 The proposal changes time, not audience. Global availability, designated custody, and recipient delivery are different guarantees. The Blobject would retain Ethereum's permissionless DAS reconstruction semantics, require distributed custody to support them through `T`, and leave recipient acknowledgements or committee-only packet delivery to separate application services.
 
@@ -20,7 +20,9 @@ Network conservation is equally unforgiving. Coding and replication multiply the
 
 Expiry can still leave durable knowledge. Ethereum may retain a commitment while an application retains `y` and a proof that `f(D)=y`, even after the large witness `D` leaves protocol service. The proof establishes a claim about the committed data; it does not establish continuous historical availability, and a late node cannot repeat sampling against bytes that no longer exist.
 
-Rollups can shorten their Ethereum serving horizon only when their proving, recovery, watcher, and archival systems can absorb the change without unacceptable new trust assumptions. The proposal offers graceful degradation; it does not manufacture retention elasticity where none exists.
+This makes blobs useful as temporary authenticated working data: applications can retrieve a large input, compute or prove over it off chain, and settle a compact durable result on Ethereum. The selected duration must cover the application's retrieval, computation, settlement, retry, and safety requirements as well as Ethereum's own protocol minimum. Eight epochs is a useful hour-scale research case, not a confirmed safe parameter.
+
+Rollups can shorten their Ethereum serving duration only when their proving, recovery, watcher, and archival systems can absorb the change without unacceptable new trust assumptions. The proposal offers graceful degradation; it does not manufacture retention elasticity where none exists.
 
 Forward retained-capacity accounting becomes necessary when Ethereum sells ingress or retention obligations that begin in the future. Blob Streaming-style tickets can supply a delivery date, variable retention can supply a maturity, and the protocol must then bound occupancy over intervals that are not yet visible in active stock.
 
@@ -30,7 +32,7 @@ Together, these pieces describe a resource with two dimensions:
 bandwidth × availability through time.
 ```
 
-The base mechanism remains narrow even though the surrounding research agenda is expansive. Short serving windows could hand committed objects to competing persistence networks. Transferable future rights introduce settlement and privacy questions. Specialized systems could provide routing, indexing, privacy, and long-term storage, while Ethereum provides scarce admission, integrity, and bounded protocol-required retrievability under explicit custody assumptions. None of those extensions is required for the spot-start mechanism: choose a serving duration, account for the resulting active stock, and test whether expiry releases real physical resources.
+The base mechanism remains narrow even though the surrounding research agenda is expansive. External storage can extend service after Ethereum's obligation ends, but it cannot shorten Ethereum's native duty; short native service and long-term persistence are complementary. Transferable future rights introduce settlement and privacy questions. Specialized systems could provide routing, indexing, privacy, and long-term storage, while Ethereum provides scarce admission, integrity, and bounded protocol-required retrievability under explicit custody assumptions. None of those extensions is required for the spot-start mechanism: choose a serving duration, account for the resulting active stock, and test whether expiry releases real physical resources.
 
 ---
 

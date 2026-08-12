@@ -7,7 +7,7 @@ The next round of work should try to disprove the proposal rather than add more 
 1. Can logical expiry release physical resources under current 1D PeerDAS?
 2. If Ethereum adopts cross-row 2D coding, can hot redundancy be dropped without weakening fresh DA?
 3. Can cold custody survive realistic correlated failure and repair conditions?
-4. What serving horizons do major rollups actually require for trustless recovery?
+4. What serving durations do rollups, provers, and other applications actually require for trustless recovery or completion?
 5. Do a few maturity classes capture most of the benefit of continuous durations?
 
 The detailed questions below unpack those blockers and the secondary design choices around them.
@@ -64,6 +64,7 @@ For a future 2D design, the hot/cold kill questions are:
 
 - Does a concrete FullDAS design require its second-dimensional coded representation to persist through the entire historical serving window, or only through fresh dispersal/sampling/availability amplification?
 - Can the independently committed horizontal blob row remain a sufficient authenticated reconstruction object after cross-row redundancy is dropped?
+- Before shared parity is discarded, can every still-live object demonstrate independently authenticated custody above its reconstruction threshold plus a justified churn and repair margin?
 - Is row-local cold repair cheap and robust enough under realistic churn to maintain long leases without preserving the rich 2D code?
 
 Secondary questions include:
@@ -71,6 +72,8 @@ Secondary questions include:
 - Which `T_hot` candidate—local acceptance plus delay, a network availability signal, or finality—satisfies the fresh-DA security model?
 - Can the hot representation be dropped before ordinary finality?
 - What minimum common hot interval is needed?
+- Can an illustrative 8-epoch lease satisfy publication-time DAS, L1 restart, sync, backfill, reassignment, and ordinary fork-recovery requirements, or must `T_protocol-min` be longer?
+- If unresolved fork or finality duties extend beyond a purchased duration, how are those bytes bounded, admitted, and paid for without turning a prepaid lease into an unknown-duration obligation?
 - Can current PeerDAS cells be served sparsely after neighboring blob cells expire without reconstructing a dense `DataColumnSidecar`?
 - What cold request/proof interface identifies a surviving cell against the original blob commitment?
 - How are cold cells assigned, replicated, challenged, repaired, and handed off?
@@ -87,6 +90,7 @@ Secondary questions include:
 - For validity rollups, what historical data remains necessary for state reconstruction, escape, and permissionless node bootstrap after proof generation?
 - How much of present blob retention is actually security-critical versus operational convenience?
 - Under realistic minima, how much budget elasticity remains during a DA attack?
+- For temporary computation and proving workloads, what duration covers retrieval, computation or proving, result settlement, retries, and correlated-failure margin?
 
 ### 22.5 Future-starting commitments
 
@@ -130,6 +134,14 @@ Secondary questions include:
 - What canonical state and reorg rules track active keys, nullifiers, and remaining byte allowances?
 - How many activations must be pooled or batched to provide a meaningful anonymity set?
 - Does a generic shielded future-capacity market make a separate private-ticket mechanism unnecessary?
+
+### 22.10 Optional active-lease surrender
+
+- Can time-dependent safe reclaim credit `κ_X(L,τ)` be derived conservatively from consensus-visible representation state rather than client-specific compaction, garbage collection, or repair debt?
+- What overlap reserve lets a replacement clear ingress and hot DAS while the surrendered cold obligation remains physically live?
+- Which leases expose surrender authority, and how are application beneficiaries protected from payer- or sequencer-directed early termination?
+- Does reclaim-and-return capture most of the value without creating transferable residual future-capacity rights?
+- When do coding-cohort complementarities make reclaim credit non-additive or too illiquid to justify protocol integration?
 
 An implementation EIP should wait until these questions have been simulated or prototyped against a concrete DAS representation.
 

@@ -48,6 +48,5 @@ These sources do not expose immutable revisions in the same way as Git commits. 
 
 ## Project provenance
 
-- [Original variable-retention gist](https://gist.github.com/bonklek/2eb406003118bd1e29476e54cc18a0c7).
 - [Radio Free Ethereum](https://github.com/bonklek/eth-radio) and [BlobMail](https://github.com/bonklek/blobmail) — experimental public-media and encrypted-message application evidence.
 - Repository revision history records the subsequent question-oriented decomposition and adversarial edits.

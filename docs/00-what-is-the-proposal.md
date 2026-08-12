@@ -6,17 +6,19 @@ Ethereum has spent years increasing **how much data can be made available at onc
 
 The conceptual ancestor is Vitalik Buterin's [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). Its deeper move is not simply to expire state, but to stop granting every object the same strongest persistence and access semantics. The Blobject applies that resource-specialization move to DA: stop granting every byte the same temporal serving guarantee. State and DA remain different services; the shared principle is to require and price the semantic strength an application actually needs.
 
-This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving horizon even when one application needs only a short replication window and the other needs the full current horizon. Under the proposal, a purchaser chooses a duration `T`, bounded by `T_max`. The conservative deployment sets `T_max` equal to the current minimum serving horizon, keeping that duration selectable while the design preserves the other relevant DA guarantees. With every choice bounded by that current horizon, shorter choices can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
+This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving duration even when one application needs only a short replication window and the other needs the full current duration. Under the proposal, a purchaser chooses `T`, bounded by `T_max`. The conservative deployment sets `T_max` equal to the current minimum serving duration, keeping that duration selectable while the design preserves the other relevant DA guarantees. With every choice bounded by that current duration, shorter choices can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
+
+The motivating case is data with a short useful life, not a request for Ethereum to become an archive. An illustrative 8-epoch lease would last about 51.2 minutes and consume one five-hundred-and-twelfth of the required byte-time of a 4,096-epoch lease. Eight epochs is not a proposed minimum: it is useful only if publication-time DAS, L1 recovery, reassignment, and application processing can all fit within the protocol and application floors.
 
 If Ethereum uses the resulting storage savings to admit more data, retained stock becomes scarce in its own right. A lease that starts on admission occupies storage immediately, so a ceiling on active retained stock is enough to bound contracted storage. The harder problems are physical: deriving that ceiling from the custody architecture, reserving headroom for short-duration traffic, charging for required byte-time, and making logical expiry release real resources under DAS coding.
 
-That last problem depends on the representation. With current 1D PeerDAS, cell-level transport may allow sparse historical custody without preserving complete column sidecars. A future cross-row 2D code may instead need two phases: keep the richer code through the hot availability phase, then move still-live objects to sparse row-local custody. If the second-dimensional codeword must survive for the entire serving horizon, the fallback is to place similar maturities in separate coding domains. A forward retained-capacity curve is needed only if Ethereum also sells DA or retention commitments that begin in the future.
+That last problem depends on the representation. With current 1D PeerDAS, cell-level transport may allow sparse historical custody without preserving complete column sidecars. A future cross-row 2D code may instead need two phases: keep the richer code through the hot availability phase, then move still-live objects to sparse row-local custody. If the second-dimensional codeword must survive for the entire serving duration, the fallback is to place similar maturities in separate coding domains. A forward retained-capacity curve is needed only if Ethereum also sells DA or retention commitments that begin in the future.
 
 The same decomposition has wider uses, but they are not prerequisites for the base mechanism. Applications whose security models permit it gain another way to respond to congestion. Blob Streaming-style ingress rights could be paired with timed retrievability. Objects could pass from a short Ethereum serving window to storage providers, caches, archives, or P2P swarms that provide persistence, routing, privacy, or application-specific behavior.
 
 The central question is:
 
-> **Why should every byte entering Ethereum DA purchase the same amount of future serving?**
+> **Why should data needed for roughly an hour receive the same mandatory Ethereum serving time as data needed for weeks?**
 
 The core argument first defines the mechanism, then tests its implementation and security assumptions. Separate extension chapters examine larger market and data-plane consequences without making them prerequisites for the base design.
 
@@ -32,7 +34,7 @@ Second, once availability has been established, the network must continue to cus
 
 These costs should not necessarily be bundled.
 
-A 100 MB object that needs one epoch of required serving—about 6.4 minutes at current timing—imposes approximately the same initial ingress burden as a 100 MB object that receives the current full 4,096-epoch serving window—about 18.2 days. Their subsequent custody obligations differ by exactly a factor of 4,096.
+If the protocol minimum permits it, a 100 MB object that selects 8 epochs of required serving—about 51.2 minutes at current timing—imposes approximately the same initial ingress burden as a 100 MB object that receives the current full 4,096-epoch serving period—about 18.2 days. Their subsequent custody obligations differ by a factor of 512. The example illustrates the resource distinction; it does not establish that eight epochs is safe.
 
 Conversely, shortening retention cannot eliminate the initial bandwidth requirement. A one-epoch object must still be propagated and made available.
 
@@ -89,6 +91,20 @@ This does not imply universal deletion. Custody participants, applications, arch
 
 A compact commitment or versioned hash can remain as a durable integrity anchor after the payload itself expires, provided that applications or historical-data infrastructure preserve that anchor. Voluntarily retained copies or previously constructed proofs can then be authenticated against the Ethereum-published object. This should not be confused with a native protocol certificate that the data remained retrievable continuously throughout the entire retention interval; such a certificate would be an additional mechanism.
 
+#### Why external storage does not replace variable retention
+
+An external storage network solves the opposite side of the timing problem. It can retrieve an Ethereum-published object and promise service after Ethereum's obligation ends. It cannot cause Ethereum clients to release their native custody duty earlier while preserving the protocol's own DA semantics.
+
+The two services therefore compose cleanly:
+
+```text
+short Ethereum-required service
+    +
+optional external persistence
+```
+
+Applications that need years of historical retrieval should generally use an archive or persistence layer for that extension. The base proposal asks only when Ethereum itself may stop requiring service.
+
 The protocol abstraction should sit above the present blob encoding:
 
 > **A specified quantity of committed data was reconstructably available under Ethereum’s DA security assumptions, and protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until a specified expiration.**
@@ -100,7 +116,7 @@ Applications should not depend on a particular arrangement of EIP-4844 blobs, Pe
 
 The term **data availability** can obscure two distinct claims.
 
-At publication time, Ethereum must establish that the committed data is available under the relevant DAS rules so that the block or payload can be accepted safely. After publication, the network may also impose a **serving horizon** during which nodes remain obligated to retain and serve the recent data needed for reconstruction.
+At publication time, Ethereum must establish that the committed data is available under the relevant DAS rules so that the block or payload can be accepted safely. After publication, the network may also impose a **serving period** during which nodes remain obligated to retain and serve the recent data needed for reconstruction.
 
 Under the current PeerDAS networking specification, this second property is concretely expressed as a minimum serving window for data-column sidecars. Variable retention would parameterize that post-publication serving obligation. It would not require consensus to re-attest every slot that an old object is still available.
 
@@ -220,13 +236,15 @@ Highly ephemeral DA therefore means:
 
 rather than instantaneous deletion.
 
-The proposal therefore distinguishes three lower bounds:
+The proposal therefore distinguishes independent lower bounds:
 
 ```text
-T_hot <= T_protocol-min <= T_application-min <= T_selected
+T_protocol-min >= T_hot
+
+T_selected >= max(T_protocol-min, T_application-min)
 ```
 
-`T_hot` is the common period required by the publication-time representation. `T_protocol-min` is Ethereum's own lower bound for dispersal, retrieval, restart, reconstruction, reassignment, and ordinary transient failure. `T_application-min`, when declared, is the application's recovery or security floor. `T_selected` is the total duration bought for the lease. If no application minimum is declared, the protocol can enforce only its own minimum; choosing a shorter duration than users' security model requires is then an application-level delegated-trust decision.
+`T_hot` is the common period required by the publication-time representation. `T_protocol-min` is Ethereum's own lower bound for dispersal, retrieval, restart, reconstruction, reassignment, and ordinary transient failure. `T_application-min`, when declared, is the application's independent recovery or security floor. `T_selected` is the total duration bought for the lease. If no application minimum is declared, the protocol can enforce only its own minimum; choosing a shorter duration than users' security model requires is then an application-level delegated-trust decision.
 
 A maximum protocol-required horizon is important for a different reason. Every accepted lease creates a specified resource obligation through time. A conservative first implementation can set `T_max` no higher than the current PeerDAS minimum serving horizon. It then never lets a purchaser impose a protocol serving obligation for any individual object beyond the duration already required by the existing system. `T_max` is not a pruning deadline: protocol participants may retain and serve the object longer, just as a minimum serving horizon does not require deletion when it ends. Such later service is best-effort unless backed by a separate enforceable service.
 
@@ -243,6 +261,8 @@ expiry_slot = inclusion_slot + T_selected_epochs · SLOTS_PER_EPOCH.
 ```
 
 An implementation may bucket nearby expirations for bookkeeping, but it must not end service before `expiry_slot`. The paper does not assume that `T_hot` must extend to ordinary Ethereum finality; §17 compares concrete transition candidates.
+
+Very short durations make finality, fork recovery, sync, and backfill constraints harder to ignore. The RFC does not extend every lease automatically until finality: a finality stall would turn a bounded prepaid obligation into an unknown-duration commitment. Instead, a concrete design must determine which of those duties belong inside `T_protocol-min`, whether unresolved fork data needs a separately accounted reserve, and whether any finality-dependent extension can remain safely bounded and priced.
 
 ### 3.1 Two deployment regimes
 

@@ -4,6 +4,19 @@
 
 Ethereum does not have to provide every useful retention horizon. Once serving time is explicit, a downstream provider can retrieve an object before Ethereum's obligation ends and promise to serve the same committed bytes for longer.
 
+### Why an external storage network is not a substitute
+
+External storage extends service beyond Ethereum's native obligation. The Blobject primarily asks whether Ethereum can end that native obligation earlier for data with a short useful life. An external provider cannot change when Ethereum clients may safely prune or stop serving data under consensus-defined custody rules.
+
+These are complementary operations:
+
+```text
+Ethereum-required service:  |--------|
+external persistence:            |---------------------------->
+```
+
+The overlap gives an archive time to ingest and authenticate the object. After Ethereum's obligation ends, the application's continuing guarantee comes from the external provider rather than from Ethereum. This RFC does not argue that Ethereum should replace archival networks; it relies on them when an application needs longer persistence.
+
 The base protocol provides the common required-serving window:
 
 > A committed object was reconstructably available under Ethereum’s DA security assumptions, and the relevant protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until expiration.

@@ -88,7 +88,7 @@ Cell-level networking alone cannot solve that problem.
 
 The design turns on one question:
 
-> **Must the cross-object coding structure used for fresh availability amplification persist for the whole serving horizon?**
+> **Must the cross-object coding structure used for fresh availability amplification persist for the whole serving duration?**
 
 If yes, fine-grained physical expiry becomes difficult. If no, there is a cleaner design family.
 
@@ -144,6 +144,17 @@ dense availability-establishment representation
                     v
    retain independently committed row cells
 ```
+
+#### The DAS-to-retention handoff invariant
+
+The transition is safe only if every object that remains live can still be reconstructed and authenticated without the shared redundancy being discarded. Conceptually, immediately before the handoff:
+
+```text
+for every live object b:
+    independent_custody(b) >= K_b + Δ_b
+```
+
+`K_b` is the material needed to reconstruct object `b`; `Δ_b` is the additional margin required for churn, correlated failure, and repair latency. This is a research invariant, not a proposed threshold calculation. A concrete FullDAS design must define the units, custody independence assumptions, proof of the handoff state, and behavior when the condition is not met. Failure to demonstrate this invariant blocks the hot-to-cold branch.
 
 After the transition:
 

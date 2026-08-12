@@ -44,6 +44,31 @@ That is a bandwidth claim, not an inclusion-censorship claim. Distributed upload
 
 A generalized Ethereum availability market could serve applications whose timing requirements differ sharply.
 
+The most direct non-rollup pattern is **ephemeral working data**: information that must be publicly retrievable long enough to drive a computation or state transition, but need not remain in Ethereum's native service afterward.
+
+```text
+temporary authenticated data
+        |
+        v
+Ethereum DA
+        |
+        v
+off-chain computation or proving
+        |
+        v
+succinct result or proof
+        |
+        v
+durable Ethereum state transition
+        |
+        v
+raw working data may leave protocol service
+```
+
+Durable state still belongs in the consensus state when later execution must read it synchronously: balances, ownership, commitments, state roots, nullifiers, and settlement outputs are typical examples. Blobs can instead carry temporary orders, bids, game actions, message batches, computation inputs, witnesses, coordination data, or intermediate application state. They do not replace permanent Ethereum state; they can let an application keep only the compact result of work performed over larger temporary inputs.
+
+The selected duration is therefore a deadline for every actor that still needs the raw bytes. An application-specific minimum may need to cover retrieval, computation or proving, result publication or settlement, retries, and a safety margin. The [ephemeral proving appendix](../appendices/ephemeral-data-and-proofs.md#c4-proving-window-requirements) gives the corresponding timing condition. This application requirement is independent of Ethereum's own `T_protocol-min`, and the selected duration must satisfy both.
+
 Examples include:
 
 - rollup DA;
@@ -63,15 +88,13 @@ Examples include:
 
 The protocol should not encode these as application categories.
 
-Their differences emerge from choices over:
+Their differences emerge from the protocol-accounted quantity, selected serving duration, and any access, routing, privacy, or enforcement profiles:
 
 ```text
-B, T, R
+B, T, service/access profile
 ```
 
-and any privacy or routing layers above Ethereum.
-
-A live-media segment may purchase 1–8 epochs—about 6.4–51.2 minutes.
+A live-media segment might select 8 epochs—about 51.2 minutes—if the eventual protocol minimum and its own delivery requirements permit it. Eight epochs is an illustrative stress case, not a proposed parameter.
 
 A message may purchase enough time for recipient relays to observe it.
 

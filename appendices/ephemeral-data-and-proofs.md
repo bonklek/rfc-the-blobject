@@ -117,7 +117,7 @@ Let:
 - `T_service` be Ethereum's required-serving window;
 - `T_fetch` be worst-case acquisition time;
 - `T_prove` be proof-generation time;
-- `T_publish` be time to publish or replicate the proof;
+- `T_settle` be time to publish the proof or satisfy whatever settlement condition the application requires;
 - `H` be reorg, retry, and failure headroom.
 
 A minimum operational condition is:
@@ -125,10 +125,10 @@ A minimum operational condition is:
 ```text
 T_service
 >
-T_fetch + T_prove + T_publish + H.
+T_fetch + T_prove + T_settle + H.
 ```
 
-Parallel provers can reduce correlated failure but increase retrieval traffic. A downstream retention provider can extend the proving window, but then the application relies on that provider's service rather than Ethereum's expired obligation.
+`T_settle` may be only proof publication for one application and confirmation or finality for another. It is an application requirement, not a reason to make every Ethereum lease finality-dependent. Parallel provers can reduce correlated failure but increase retrieval traffic. A downstream retention provider can extend the proving window, but then the application relies on that provider's service rather than Ethereum's expired obligation.
 
 The proof should be published before the last trusted copy disappears. Otherwise a proof-generation failure is unrecoverable even though `C(D)` remains permanently visible.
 
