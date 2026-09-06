@@ -6,27 +6,27 @@ A future DA reservation is a right to use network bandwidth at a specified time.
 
 Its basic promise is:
 
-> The holder may inject an allowed protocol-accounted quantity `B` into Ethereum DA around future time `T`.
+> The holder may inject an allowed protocol-accounted quantity `B` into Ethereum DA around future time `s`.
 
 This is not a cash-settled bet on future blob prices. It is a claim on **physical delivery of the network resource itself**.
 
 `B` is constrained by the transport that issues the right. For an EIP-4844-compatible market it is an integer number of whole blob slots, not an arbitrary useful-payload length. Blob Streaming provides a concrete adjacent design. The current draft EIP-8256 uses non-refundable tickets tied to future target slots to authorize bounded AOT propagation, while reserving separate JIT capacity. Transferable claims, variable lookahead, arbitrary-sized objects, and a general secondary market remain extensions beyond that draft.
 
-Once future ingress exists, future retention becomes a genuine reservation problem too. A claim sold today for publication at `T` and retention `R` creates no active retained stock today, but it does create an obligation over the future interval:
+Once future ingress exists, future retention becomes a genuine reservation problem too. A claim sold today for publication at `s ≥ t` and duration `T` creates no active retained stock today, but it does create an obligation over the future interval:
 
 ```text
-[T,T+R].
+[s,s+T).
 ```
 
 Combining publication and retention gives:
 
 ```text
-DAService(C,B,T,R),
+DAService(C,B,s,T),
 ```
 
 meaning:
 
-> Make `B` bytes reconstructably available around time `T`, then require sufficient custody data to be retained and served through `T+R`.
+> Make `B` bytes reconstructably available at start `s`, then require sufficient custody data to be retained and served until expiry `e=s+T`, under the selected service profile. Here `T` is elapsed duration, consistent with the base service.
 
 ### 10.1 The forward retained-stock curve belongs here
 
@@ -63,14 +63,16 @@ S_t(τ) ≤ C_t(τ)
      ∀ τ.
 ```
 
-This defines the earlier abstract `C(τ)`. Nothing physically requires the allocable envelope to decline at distant maturities. It declines only if the protocol deliberately increases uncertainty or headroom reserves with lookahead.
+The scalar envelope is a logical-stock projection; future service also needs the physical resource-vector constraints, reclamation margin, and supply commitments through the accepted term. Reducing new admission after supply loss does not cancel sold obligations. Replacement and repair reserves and emergency shortfall handling are unresolved branch requirements.
+
+This defines the abstract `C(τ)`. Nothing physically requires the allocable envelope to decline at distant maturities. It declines only if the protocol deliberately increases uncertainty or headroom reserves with lookahead.
 
 A future retention fee can then depend on the scarcity created along the purchased interval:
 
 ```text
-F_ret^(forward)(B,T,R)
+F_ret^(forward)(B,s,T;t)
 =
-B · ∫_T^(T+R)
+B · ∫_(s-t)^(s+T-t)
  p((S_t(τ)) / (C_t(τ))) dτ.
 ```
 
@@ -90,9 +92,9 @@ Possible defenses include non-refundable reservations, bounded lookahead, increa
 
 The market prices two future resources:
 
-**Future ingress:** how scarce will admission bandwidth be around `T`?
+**Future ingress:** how scarce will admission bandwidth be around `s`?
 
-**Future retention:** how scarce will custody be over `[T,T+R]`?
+**Future retention:** how scarce will custody be over `[s,s+T)`?
 
 Blob Streaming supplies a potential **delivery date**. Variable retention supplies a **maturity**.
 
@@ -291,3 +293,5 @@ Variable retention changes the duration of the third guarantee. It does not solv
 The generalized data plane is therefore a censorship-resistant publishing substrate only to the extent that its admission and canonical-inclusion path is itself robust against concentrated builders and proposers. Inclusion lists and related PBS reforms are complementary dependencies, not features supplied by variable retention.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md)

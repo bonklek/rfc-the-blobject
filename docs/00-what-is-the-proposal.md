@@ -6,7 +6,7 @@ Ethereum has spent years increasing **how much data can be made available at onc
 
 The conceptual ancestor is Vitalik Buterin's [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). Its deeper move is not simply to expire state, but to stop granting every object the same strongest persistence and access semantics. The Blobject applies that resource-specialization move to DA: stop granting every byte the same temporal serving guarantee. State and DA remain different services; the shared principle is to require and price the semantic strength an application actually needs.
 
-This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving duration even when one application needs only a short replication window and the other needs the full current duration. Under the proposal, a purchaser chooses `T`, bounded by `T_max`. The conservative deployment sets `T_max` equal to the current minimum serving duration, keeping that duration selectable while the design preserves the other relevant DA guarantees. With every choice bounded by that current duration, shorter choices can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
+This RFC proposes making that serving obligation selectable. Today, ingress and retention are bundled. Two objects that create the same propagation burden receive the same serving duration even when one application needs only a short replication window and the other needs the full current duration. Under the proposal, a purchaser chooses `T`, bounded by `T_max`. A conservative deployment must retain a full-service option mapped to the current serving rule, while allowing shorter elapsed durations. The nominal maximum used in the accounting examples is 4,096 epochs; the exact compatibility mapping is a deployment gate in §3. With every choice bounded by that current duration, shorter choices can only reduce the logical retained-data obligation for a fixed admitted workload. `T_max` limits what a purchaser may require from the protocol; it neither orders nodes to delete data nor prevents them from serving it longer.
 
 The motivating case is data with a short useful life, not a request for Ethereum to become an archive. An illustrative 8-epoch lease would last about 51.2 minutes and consume one five-hundred-and-twelfth of the required byte-time of a 4,096-epoch lease. Eight epochs is not a proposed minimum: it is useful only if publication-time DAS, L1 recovery, reassignment, and application processing can all fit within the protocol and application floors.
 
@@ -68,7 +68,7 @@ DAService(C,B,T)
 
 meaning:
 
-> Make the protocol-accounted quantity `B` corresponding to commitment `C` available under Ethereum's publication-time DAS rules, and require the assigned custody population to retain and serve enough authenticated data for reconstruction through expiration `T`, under the specified custody assumptions.
+> Make the protocol-accounted quantity `B` corresponding to commitment `C` available under Ethereum's publication-time DAS rules, and require the assigned custody population to retain and serve enough authenticated data for reconstruction until expiry `e = s + T`, where `s` is inclusion time and `T` is elapsed duration in the same time units, under the specified custody assumptions.
 
 For a current blob, `B=B_blob` is derived from the blob type and need not be supplied by the application. A transaction with `n` blobs creates `n` publication-level obligations, each with fixed quantity `B_blob`; it does not purchase one arbitrary-sized object of quantity `n·B_blob` or pay only for useful bytes. The commitment authenticates the content, while a deterministic identifier derived from canonical inclusion identifies the individual lease. A submission would minimally specify:
 
@@ -109,7 +109,7 @@ The protocol abstraction should sit above the present blob encoding:
 
 > **A specified quantity of committed data was reconstructably available under Ethereum’s DA security assumptions, and protocol participants remain obligated to retain and serve sufficient custody data for reconstruction until a specified expiration.**
 
-Applications should not depend on a particular arrangement of EIP-4844 blobs, PeerDAS columns, cells, KZG proofs, two-dimensional erasure coding, or future coding schemes. PeerDAS today, FullDAS later, and potentially a future continuous Danksharding-derived data fabric should all be capable of implementing the same semantic service.
+Applications should not depend on a particular arrangement of EIP-4844 blobs, PeerDAS columns, cells, KZG proofs, two-dimensional erasure coding, or future coding schemes. This interface supplies one semantic target against which current PeerDAS and possible future representations can be tested. A transport-neutral definition does not establish that every representation can implement it safely or economically.
 
 
 ### 2.1 Availability establishment versus retained retrievability
@@ -120,9 +120,9 @@ At publication time, Ethereum must establish that the committed data is availabl
 
 Under the current PeerDAS networking specification, this second property is concretely expressed as a minimum serving window for data-column sidecars. Variable retention would parameterize that post-publication serving obligation. It would not require consensus to re-attest every slot that an old object is still available.
 
-At enforcement level 1, the mechanism makes the following claim through `T`:
+At enforcement level 1, the mechanism makes the following claim until expiry `e`:
 
-> **the protocol requires the relevant custody participants to retain and serve sufficient data for reconstruction through `T`, under the security assumptions of the custody and sampling design.**
+> **the protocol requires the relevant custody participants to retain and serve sufficient data for reconstruction until expiry `e`, under the security assumptions of the custody and sampling design.**
 
 This distinction matters again after expiry. A commitment can authenticate a surviving copy, but a commitment by itself does not prove that the network honored the serving obligation at every moment before expiry. If historical proof of service is desired, it must be designed separately.
 
@@ -153,7 +153,7 @@ The distinction may also permit a **change of physical representation through th
 
 ### 2.2 Three enforcement levels
 
-“Available through `T`” can refer to three materially different services:
+“Available until expiry `e`” can refer to three materially different services:
 
 1. **Protocol-required serving.** Honest clients are specified to retain and serve their assigned authenticated data. Failure may affect peer scoring or compliance, but there is no recurring per-object consensus certificate proving that every old object remained reconstructable.
 2. **Probabilistically monitored serving.** Custodians or peers are challenged or sampled during the serving interval, producing evidence about continued retrievability.
@@ -213,6 +213,10 @@ Variable retention should initially be bounded:
 T_protocol-min ≤ T_selected ≤ T_max.
 ```
 
+The notation uses `s` for absolute inclusion time, `T` for total elapsed duration, and `e = s + T` for absolute expiry, with times expressed in consistent units. Remaining duration at time `t` is `max(0, e - t)`. Service is owed before `e` and ends at `e`. Slot-based pseudocode converts purchased epochs to slots explicitly.
+
+**Legacy boundary compatibility.** The 4,096-epoch constant is a nominal accounting baseline. The [pinned Fulu range-request rule](https://github.com/ethereum/consensus-specs/blob/5366cb59eb39e4ec1d6c468a79cceb626c14c048/specs/fulu/p2p-interface.md#datacolumnsidecarsbyrange-v1) includes both endpoint epochs. An elapsed lease ending exactly 4,096 epochs after its inclusion slot does not reproduce that boundary. This RFC has not specified the mapping for the full-service option; preserving the existing maximum service is a deployment requirement. The equations and toy model compare elapsed durations, not exact legacy request-window equivalence.
+
 This RFC expresses protocol retention in epochs. At the current 32 slots per epoch and 12 seconds per slot, one epoch is 384 seconds. Power-of-two maturities give implementations and users a compact common vocabulary:
 
 | Epochs | Approximate wall-clock time |
@@ -268,9 +272,9 @@ Very short durations make finality, fork recovery, sync, and backfill constraint
 
 It is useful to distinguish a conservative deployment from a later capacity-unlocking regime.
 
-**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present minimum serving horizon. The mechanism can reduce the protocol-required retained-data obligation but cannot increase its logical worst case relative to fixed retention. Nodes remain free to retain or serve expired objects voluntarily. In this regime the primary benefits are resource savings, price differentiation, and application flexibility.
+**Conservative regime.** Ethereum leaves ingress limits unchanged and sets `T_max` no higher than the present minimum serving horizon. The mechanism can reduce the protocol-required retained-data obligation but cannot increase its logical worst case relative to fixed retention. Nodes remain free to retain or serve expired objects voluntarily. In this regime the candidate benefits are physical resource savings, price differentiation, and application flexibility; only the reduction in logical required stock follows from the accounting alone.
 
-**Capacity-unlocking regime.** Ethereum raises ingress throughput because a material share of traffic is expected to choose shorter retention. Active retained stock then becomes an independent safety constraint. Importantly, this still does **not** imply that the spot-start protocol needs a full forward reservation curve. Every accepted lease occupies retained capacity immediately. A hard active-stock ceiling can therefore bound the physical obligation as long as leases begin at admission. Forward capacity accounting becomes necessary when the protocol sells obligations that begin in the future.
+**Capacity-unlocking regime.** Ethereum raises ingress throughput because a material share of traffic is expected to choose shorter retention. Active retained stock then becomes an independent safety constraint. Importantly, this still does **not** imply that the spot-start protocol needs a full forward reservation curve. Every accepted lease occupies retained capacity immediately. A hard active-stock ceiling can therefore bound contracted logical stock as long as leases begin at admission; physical admission must also satisfy storage, serving, repair, and I/O bounds. Forward capacity accounting becomes necessary when the protocol sells obligations that begin in the future.
 
 ### 3.2 Resource-allocation dominance under fixed ingress
 
@@ -300,7 +304,7 @@ S_var(t) ≤ S_fixed(t).
 
 This inequality does not require continuous sizing. In the EIP-4844-compatible case, every `B_i` is the same fixed `B_blob`; the sum simply counts live blob commitments in byte-equivalent accounting units. The more general notation allows a future transport to define additional discrete object classes without assuming that such a transport already exists.
 
-Every workload admitted under fixed retention can be reproduced exactly by choosing `T_i=H` for every object. Any workload in which at least some objects choose shorter horizons can consume strictly less logical retained capacity during their fixed-only tail intervals.
+In this equal-duration mathematical comparison, every fixed-retention workload can be reproduced by choosing `T_i=H` for every object. This does not establish exact equivalence to the epoch-inclusive legacy request rule. For a baseline with publication-specific expiry `e_i`, the same argument holds whenever each chosen expiry is no later than `e_i`. Shorter choices consume less logical retained capacity during their fixed-only tail intervals.
 
 Thus:
 
@@ -313,3 +317,5 @@ Thus:
 This is deliberately a **resource-allocation** statement, not a claim of total protocol dominance. Heterogeneous expiry may impose metadata, packing, proof, repair, request, and storage-engine overheads. Those physical implementation costs must be compared against the logical savings before an implementation claim can be made.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Next in core argument](01-how-are-capacity-and-pricing-managed.md)

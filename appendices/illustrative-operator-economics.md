@@ -57,3 +57,5 @@ The model is in [`models/procurement.py`](../models/procurement.py), with focuse
 Sealed bids hide individual offers before a round closes; they do not make a repeated market manipulation-proof. Posted prices likewise remove one auction-game surface without removing supplier market power. Simulations should compare the mechanisms under common ownership, Sybil identities, correlated failures, capacity withholding, demand shocks, and costly service qualification.
 
 No mechanism should pay through a physical safety limit. If qualified supply remains below the required reserve at the service-price ceiling, the DA target must fall.
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

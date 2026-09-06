@@ -16,7 +16,7 @@ Earlier [Ethereum state-rent and state-expiry research](https://ethereum.org/roa
 
 ### 21.3 Timed storage markets: Filecoin
 
-[Filecoin storage deals](https://docs.filecoin.io/storage-providers/filecoin-economics/storage-proving) make duration an explicit contract term and price storage over time. Filecoin therefore provides direct precedent for treating **spacetime** as an economic resource. Its architecture is different: Filecoin sells provider-backed persistence, whereas this proposal attaches a bounded serving duration to an initial availability event in Ethereum's consensus DA/custody network.
+[Filecoin storage deals](https://spec.filecoin.io/systems/filecoin_markets/storage_market/) make duration an explicit contract term and price storage over time. Filecoin therefore provides direct precedent for treating **spacetime** as an economic resource. Its architecture is different: Filecoin sells provider-backed persistence, whereas this proposal attaches a bounded serving duration to an initial availability event in Ethereum's consensus DA/custody network.
 
 ### 21.4 Downstream retention: EthStorage
 
@@ -43,6 +43,8 @@ cash-settled price exposure
 These categories should not be collapsed. A cash-settled derivative hedges price but cannot force publication. A proposer-backed promise adds counterparty and proposer-performance risk. A protocol-native right could reserve ingress capacity, but still requires explicit settlement, expiry, reassignment, and inclusion semantics. The future-resource construction in this RFC combines reserved ingress with a retention maturity; it does not claim invention of blockspace futures.
 
 ### 21.6 FullDAS, two-dimensional coding, and cell-level transport
+
+The September follow-up also checked [Draft RowDAS, EIP-8371](https://eips.ethereum.org/EIPS/eip-8371). It develops row reconstruction while leaving historical requests and row-serving obligations to an extension. This is relevant 1D prior art, not an implementation of selectable retention.
 
 [FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) and [FullDASv2](https://ethresear.ch/t/accelerating-blob-scaling-with-fulldasv2-with-getblobs-mempool-encoding-and-possibly-rlc/22477) research is directly relevant to the compatibility problem. Current proposals describe a **two-dimensional erasure-code** DAS construct with cell-level messaging, blobs as rows, cross-cutting columns, and in-network row/column repair or availability amplification. Separate [cell-level dissemination work](https://ethresear.ch/t/gossipsubs-partial-messages-extension-and-cell-level-dissemination/23017) likewise explores making independently verifiable cells the propagation unit rather than whole `DataColumnSidecar`s.
 
@@ -74,9 +76,13 @@ The [private AOT authorization note](../appendices/private-aot-authorization.md)
 
 ### 21.9 Proofs of custody and retention enforcement
 
+The [2018 custody proposal](https://ethresear.ch/t/extending-skin-in-the-game-of-notarization-with-proofs-of-custody/1639/1) and [Justin Drake's retained-history extension](https://ethresear.ch/t/extending-skin-in-the-game-of-notarization-with-proofs-of-custody/1639/4) considered repeated claims over a notary's retained data. Historical custody research therefore reaches beyond acquisition at publication. It does not supply this RFC's heterogeneous expiry, repair, reassignment, or permissionless service mechanism.
+
+The [mass-slashable unavailability proposal](https://ethresear.ch/t/mass-slashable-unavailability-faults/8129/1) and [Dankrad Feist's modification](https://ethresear.ch/t/mass-slashable-unavailability-faults/8129/4) also have different claims: deterrence of lazy sampling does not itself guarantee mass slashing after an availability fault. Neither establishes continuous historical serving.
+
 Current PeerDAS assigns deterministic custody and specifies a minimum historical serving range, but it does not create a recurring consensus proof that each old object remained retrievable throughout that range.
 
-Earlier Ethereum research on [one-bit and 0.001-bit proofs of custody](https://ethresear.ch/t/a-0-001-bit-proof-of-custody/7409) explored a stronger model: validators commit to data-dependent custody computations and can become slashable when a later reveal shows that they attested without holding the data. Those designs targeted earlier sharding architectures and are not directly portable to PeerDAS. They remain important prior art for distinguishing:
+Earlier Ethereum research on [one-bit and 0.001-bit proofs of custody](https://ethresear.ch/t/a-0-001-bit-proof-of-custody/7409) explored a stronger model: validators commit to data-dependent custody computations and can become slashable when a later secret reveal exposes a slashable data-dependent attestation, making skipped acquisition or computation risky. Those designs targeted earlier sharding architectures and are not directly portable to PeerDAS. They remain important prior art for distinguishing:
 
 - protocol-required serving;
 - probabilistically monitored serving;
@@ -90,8 +96,12 @@ The novelty claim is not that nobody has priced storage duration or separated av
 
 The contribution claimed here is their composition:
 
-> **treat Ethereum DA as a service with separately accounted ingress and bounded purchaser-selected protocol serving duration; make that duration a deterministic state transition over active retained stock; and extend the same resource decomposition to representation-aware custody and future resource markets.**
+> **Treat Ethereum DA as a service with separately accounted ingress and bounded purchaser-selected serving duration, represented by deterministic state transitions over active retained stock.**
+
+Physical feasibility and pricing remain questions to test. Representation-aware custody investigations and future resource markets extend the proposed service; they are not demonstrated components of the core contribution.
 
 That claim should be updated if closer prior art emerges.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](11-how-do-hardware-and-da-operator-markets-scale.md) · [Next in core argument](08-what-remains-to-be-proven.md)

@@ -2,10 +2,22 @@
 
 Ethereum specifications and research posts evolve. This file records the versions used for the August 11, 2026 RFC revision. The prose links to canonical pages for readability; protocol claims should be checked against these pins.
 
+## September 6, 2026 verification notes
+
+The August pins below remain the research baseline. The [source-audit ledger](audits/facts-review.md) records a later targeted primary-source check, its coverage, and unresolved verification limits. It is not an exhaustive source or novelty certification.
+
+- The 4,096-epoch constant is supported, but the [pinned Fulu request range](https://github.com/ethereum/consensus-specs/blob/5366cb59eb39e4ec1d6c468a79cceb626c14c048/specs/fulu/p2p-interface.md#datacolumnsidecarsbyrange-v1) is epoch-inclusive. Exact equivalence to elapsed-duration expiry remains a deployment gate.
+- [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is now **Review**, versus Draft at the February pin. It still does not specify heterogeneous historical expiry. The checked EIP-8256 and EIP-8142 descriptions remain proposal evidence, not deployed-feature claims.
+- [OP fault proofs](https://docs.optimism.io/op-stack/fault-proofs/explainer) and the [BoLD technical description](https://docs.arbitrum.io/how-arbitrum-works/bold/bold-technical-deep-dive) support the quoted challenge-period examples. [BoLD's overview](https://docs.arbitrum.io/how-arbitrum-works/bold/gentle-introduction) distinguishes worst-case resolution. These durations alone do not establish a safe native retention window.
+- The [Filecoin storage-market specification](https://spec.filecoin.io/systems/filecoin_markets/storage_market/) supplies direct start/end-duration evidence; the older storage-proving URL was unavailable to the source reviewer.
+- Prototype descriptions now refer to [poc-blobcast at `8d4924e`](https://github.com/bonklek/poc-blobcast/blob/8d4924edaf7ecad2ddaccb2bd52df08ff24284e3/README.md) and [poc-blobmail at `939b1d8`](https://github.com/bonklek/poc-blobmail/blob/939b1d8a5dc2f9ca230a2a7e9d301923033d877b/README.md). BlobMail's documented Sepolia MVP supersedes the August local-only description. Repository inspection does not verify live acceptance, demand, or production security.
+- The pinned EthStorage guide recommends NVMe rather than requiring it. Historical custody-bomb research proves slashable signature conditions rather than a participant's past non-possession. Waku/Swarm privacy and retention comparisons were checked within the narrow scope stated in the source ledger.
+
 ## Specifications
 
 | Source | Version used | Relevance |
 |---|---|---|
+| [EIP-8371: RowDAS](https://github.com/ethereum/EIPs/blob/169a65510927f58bdafdc67e840d53020e7a91ca/EIPS/eip-8371.md) | `169a655` — added to this RFC's sources on 2026-09-06 | Row reconstruction; explicit separation from future historical retrieval and row custody |
 | [EIP-7594: PeerDAS](https://github.com/ethereum/EIPs/blob/eda011bdbfa08f9002df103c8143937a643c677a/EIPS/eip-7594.md) | `eda011b` — 2026-02-03 | Deterministic custody, 1D cells, publication-time sampling |
 | [EIP-8136: Cell-Level Deltas](https://github.com/ethereum/EIPs/blob/49beda901dcf3747ed4b91f853a333595fb2cbc4/EIPS/eip-8136.md) | `49beda9` — 2026-02-28 | Backwards-compatible missing-cell transport |
 | [EIP-8256: Blob Streaming](https://github.com/ethereum/EIPs/blob/bdc1d099649eefb8790b76f912e25487757f5f4e/EIPS/eip-8256.md) | `bdc1d09` — 2026-06-11 | AOT/JIT capacity and `JIT_RESERVED` comparison |
@@ -45,6 +57,12 @@ These sources do not expose immutable revisions in the same way as Git commits. 
 - [BuilderNet](https://buildernet.org/) and [multi-party block construction](https://ethresear.ch/t/building-towards-multi-party-block-construction/24975) — adjacent distributed and multi-contributor block-building architectures.
 - Ethereum Foundation, [Building the decentralized Web 3.0](https://blog.ethereum.org/2014/08/18/building-decentralized-web) and [Swarm alpha public pilot](https://blog.ethereum.org/2016/12/15/swarm-alpha-public-pilot-basics-swarm) — historical Ethereum/Whisper/Swarm composition and the separate `eth`, `shh`, and `bzz` protocol vision.
 - [Ethereum networking layer: Whisper](https://ethereum.org/developers/docs/networking-layer/#whisper) and [decentralized storage: Swarm](https://ethereum.org/developers/docs/storage/#swarm) — current documentation of Whisper's deprecation and Swarm as a separate storage system.
+
+## Additional discovery through Wikipethia
+
+The September audit used [Wikipethia](https://github.com/JossDuff/wikipethia) for ten focused hosted-corpus searches and contextual follow-through, then checked consequential original sources. The [query/disposition record](audits/wikipethia-review.md) documents the depth and limits. Discovery through the corpus is not a substitute for specification authority, and a negative search is not a novelty proof.
+
+This pass added RowDAS above, the [2018 custody thread](https://ethresear.ch/t/extending-skin-in-the-game-of-notarization-with-proofs-of-custody/1639/1) and [retained-history reply](https://ethresear.ch/t/extending-skin-in-the-game-of-notarization-with-proofs-of-custody/1639/4), and the [2020 mass-slashing discussion](https://ethresear.ch/t/mass-slashable-unavailability-faults/8129/1). [Variants of Mempool Tickets](https://ethresear.ch/t/variants-of-mempool-tickets/23338/1) is a further terminology comparison: its leases concern propagation permissions, not historical serving of included data.
 
 ## Project provenance
 

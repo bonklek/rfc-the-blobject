@@ -239,3 +239,5 @@ The decisive question is not “can a datacenter ingest this rate?” It is:
 > **Can the chosen population establish and maintain the claimed availability semantics without concentrating the mandatory full data path?**
 
 Until that question is answered, gigabyte- and terabyte-scale examples should remain stress tests rather than roadmap targets.
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

@@ -65,9 +65,24 @@ if ($LASTEXITCODE -gt 1) {
 
 Push-Location $repoRoot
 try {
+    python tools/check-docs.py
+    if ($LASTEXITCODE -ne 0) {
+        throw "Markdown path, heading, or inventory checks failed."
+    }
+
     python -m unittest discover -s models -p "test_*.py"
     if ($LASTEXITCODE -ne 0) {
         throw "Model tests failed."
+    }
+
+    python tools/check-generated.py
+    if ($LASTEXITCODE -ne 0) {
+        throw "Generated artifact comparison failed."
+    }
+
+    python -m unittest discover -s tools -p "test_*.py"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Documentation-tool regression tests failed."
     }
 
     git diff --check
@@ -79,4 +94,4 @@ finally {
     Pop-Location
 }
 
-Write-Output "RFC structure, links, claims, and models validated."
+Write-Output "Mechanical checks passed: base numbering, chapter inventory, local paths and headings, fences, two phrase guards, model tests, generated artifacts, and diff whitespace. External sources, semantics, and visual layout require separate review."

@@ -55,9 +55,11 @@ column j:
 
 The present whole-column serving abstraction is awkward for this sparse state. Retaining the original complete sidecar until the longest constituent expiry gives short-lived objects the physical lifetime of their longest-lived neighbor. Sparse or cell-level historical serving can plausibly remove this **packaging** coupling.
 
-Draft [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is important evidence for this branch. It lets PeerDAS peers exchange missing cells rather than retransmitting complete columns and is designed as a backwards-compatible networking optimization. It does **not** specify sparse historical storage or heterogeneous expiry, but it establishes that independently transmissible cells are already an active protocol direction.
+The pinned [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is important evidence for this branch. It lets PeerDAS peers exchange missing cells rather than retransmitting complete columns and is designed as a backwards-compatible networking optimization. It does **not** specify sparse historical storage or heterogeneous expiry, but it establishes that independently transmissible cells are already an active protocol direction.
 
 The current [1D-versus-2D DAS analysis](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762) also shows that 1D PeerDAS can support partial row reconstruction when paired with cell-level messaging and row-oriented reconstruction flows. That design has practical and security tradeoffs, but it keeps 1D with smaller cells as a viable path rather than a temporary stop on an inevitable move to 2D.
+
+Draft [EIP-8371: RowDAS](https://eips.ethereum.org/EIPS/eip-8371) is a closer reconstruction proposal found in the September research pass. It distributes row reconstruction without adding column-wise encoding. Row-subnet membership creates no custody obligation. Its individual-blob retrieval extension is explicitly future work requiring cell-granular request/response and a defined row-serving window. It therefore strengthens the case for testing a 1D path while confirming that discovery and fresh reconstruction do not themselves supply retained service. A prototype must account for bounded reconstruction work and keep publication-time sampling decisions independent of the optional row path.
 
 An implementation built directly on current sidecars has to solve this packaging problem. It does not, however, have to change the blob's row-local encoding.
 
@@ -242,13 +244,13 @@ The cold layer needs its own survivability requirement. Let:
 - `d` be the probability that such cheating is detected while the obligation is live;
 - `P` be the penalty or forfeited collateral when cheating is detected;
 - `Δ_repair` be the repair cadence in epochs;
-- `T` be the remaining required-serving duration in epochs;
+- `T_remaining` be the remaining required-serving duration in epochs;
 - `p_max` be the maximum tolerated lease-failure probability.
 
 The protocol target is:
 
 ```text
-P[row remains reconstructable at every checkpoint through T]
+P[row remains reconstructable at every checkpoint through T_remaining]
 >=
 1 - p_max.
 ```
@@ -261,7 +263,7 @@ P_row
 Σ[j=k..m] choose(m,j) · (1-q^c)^j · (q^c)^(m-j).
 ```
 
-With repair restoring the target multiplicity every `Δ_repair`, a conservative checkpoint approximation over `N=ceil(T/Δ_repair)` intervals is:
+Assuming independent cell-loss events, independent intervals, and successful repair restoring the target multiplicity every `Δ_repair`, a checkpoint approximation over `N=ceil(T_remaining/Δ_repair)` intervals is:
 
 ```text
 P_lease ≈ P_row^N.
@@ -269,7 +271,7 @@ P_lease ≈ P_row^N.
 
 In this null model, `n` constrains assignment feasibility only through `c≤n`; independence makes the remaining expression insensitive to the size of the unused population. That simplification is itself a warning. A real design must derive assignment overlap and adversarial concentration from `n` rather than treating replicas as automatically independent.
 
-This null model is not a security proof. Real failures are correlated. An adaptive adversary may target custody assignments; repair can fail or leak assignments; and an online custodian may still refuse to serve. Most importantly, `q` describes availability failure; it must not silently stand in for rational non-storage. A custodian can remain online while freeloading on peers, storing only after a challenge, or declining costly historical requests.
+This approximation is not a conservative security bound. For two cells with a reconstruction threshold of one, both assigned to a sole custodian that fails with probability 0.1, true survival is 0.9; the independent-cell formula gives 0.99. Checking reconstruction at interval boundaries also does not prove timely service throughout the interval. Real failures are correlated. An adaptive adversary may target custody assignments; repair can fail or leak assignments; and an online custodian may still refuse to serve. Most importantly, `q` describes availability failure; it must not silently stand in for rational non-storage. A custodian can remain online while freeloading on peers, storing only after a challenge, or declining costly historical requests.
 
 Strategic behavior needs a separate incentive condition. If cheating saves an expected storage-and-serving cost `S`, deterrence requires at least:
 
@@ -427,3 +429,5 @@ Neither EIP-8256 nor current FullDAS research specifies this composition. A comp
 The narrower architectural claim is that **block construction, row selection, DA upload, in-network coding, and custody need not belong to one operator**.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](01-how-are-capacity-and-pricing-managed.md) · [Next in core argument](02-is-variable-retention-safe-for-rollups.md)

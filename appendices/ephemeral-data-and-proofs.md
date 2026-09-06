@@ -120,7 +120,7 @@ Let:
 - `T_settle` be time to publish the proof or satisfy whatever settlement condition the application requires;
 - `H` be reorg, retry, and failure headroom.
 
-A minimum operational condition is:
+A sufficient budget for a workflow that requires completion inside Ethereum's serving window is:
 
 ```text
 T_service
@@ -128,7 +128,9 @@ T_service
 T_fetch + T_prove + T_settle + H.
 ```
 
-`T_settle` may be only proof publication for one application and confirmation or finality for another. It is an application requirement, not a reason to make every Ethereum lease finality-dependent. Parallel provers can reduce correlated failure but increase retrieval traffic. A downstream retention provider can extend the proving window, but then the application relies on that provider's service rather than Ethereum's expired obligation.
+A workflow may instead acquire and durably retain a witness before native expiry, then prove and settle afterward. In that case native service must cover acquisition and its retries, while local or external copies must remain recoverable through completion. That changes the recovery and redundancy assumptions; the inequality above is not a necessary native-retention floor for every workflow.
+
+`T_settle` may be only proof publication for one application and confirmation or finality for another. It is an application requirement, not a reason to make every Ethereum lease finality-dependent. Parallel provers can reduce correlated failure only if their failure domains are sufficiently independent, and they increase retrieval traffic. A downstream retention provider can extend the proving window, but then the application relies on that provider's service rather than Ethereum's expired obligation.
 
 The proof should be published before the last trusted copy disappears. Otherwise a proof-generation failure is unrecoverable even though `C(D)` remains permanently visible.
 
@@ -199,8 +201,10 @@ Proof outputs themselves can leak information. The choice of `y`, circuit, provi
 - What serving horizon makes independent proof generation realistic under worst-case congestion?
 - Can proof markets recruit multiple independent provers without revealing sensitive access patterns?
 - Which interval-service challenge schemes provide useful evidence without targeted-custodian leakage or mass-slashing risk?
-- How should clients display the difference between “commitment included,” “available when published,” “served through `T`,” and “computation proved”?
+- How should clients display the difference between “commitment included,” “available when published,” “served until expiry `e`,” and “computation proved”?
 
 The durable opportunity is real, but narrow:
 
 > **Ethereum can preserve small, verifiable knowledge derived from large temporary information; it cannot retrospectively recreate the information or rerun the network interaction that made it available.**
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

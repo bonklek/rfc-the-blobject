@@ -1,6 +1,13 @@
 import unittest
 
-from cold_custody import lease_survival_probability, minimum_replicas
+from cold_custody import interval_failure_probability, lease_failure_probability, lease_survival_probability, minimum_replicas
+from decimal import Decimal, localcontext
+import math
+import contextlib
+import io
+import json
+from unittest.mock import patch
+from cold_custody import main as custody_main
 from pricing import compare, convex_duration, null_byte_time
 from spot_simulation import Arrival, Mechanism, run_all, simulate
 from stock import ProtocolState, frontier
@@ -125,6 +132,17 @@ class PricingModelTests(unittest.TestCase):
 
 
 class SpotSimulationTests(unittest.TestCase):
+    def test_partial_horizon_cannot_claim_future_admissions_or_full_coverage(self) -> None:
+        for arrivals, horizon in (([Arrival(5, 1, 1)], 0), ([Arrival(0, 1, 10)], 2)):
+            with self.subTest(horizon=horizon), self.assertRaises(ValueError):
+                simulate("truncated", arrivals, Mechanism("shared", "byte_time"), horizon=horizon)
+
+    def test_default_horizon_covers_long_shared_lease(self) -> None:
+        result, series = simulate("long", [Arrival(0, 1, 5000)], Mechanism("shared", "byte_time"))
+        self.assertEqual(series[-1]["occupancy"], 0)
+        self.assertGreaterEqual(series[-1]["epoch"], 5000)
+        self.assertAlmostEqual(result.realized_scarcity, 5000 / .999)
+
     def test_expiry_releases_capacity_for_later_arrival(self) -> None:
         result, _ = simulate(
             "expiry",
@@ -156,6 +174,54 @@ class SpotSimulationTests(unittest.TestCase):
 
 
 class ColdCustodyModelTests(unittest.TestCase):
+    def test_cli_uses_same_target_precision_as_replica_selection(self) -> None:
+        args = ["cold_custody.py", "--cells", "1", "--threshold", "1", "--custodians", "10",
+                "--replicas", "1", "--failure-probability", ".02", "--duration-epochs", "27",
+                "--repair-interval-epochs", "1", "--p-max", ".4204324735203474"]
+        output = io.StringIO()
+        with patch("sys.argv", args), contextlib.redirect_stdout(output):
+            custody_main()
+        self.assertFalse(json.loads(output.getvalue())["meets_target_under_null_model"])
+        self.assertEqual(minimum_replicas(cells=1, reconstruction_threshold=1,
+                         custodian_population=10, failure_probability=.02,
+                         duration=27, repair_interval=1, p_max=.4204324735203474), 2)
+
+    def test_exact_target_boundary_is_accepted(self) -> None:
+        self.assertEqual(minimum_replicas(cells=1, reconstruction_threshold=1,
+                         custodian_population=10, failure_probability=.1,
+                         duration=1, repair_interval=1, p_max=.1), 1)
+
+    def test_interval_underflow_does_not_hide_accumulated_risk(self) -> None:
+        kwargs = dict(cells=1, reconstruction_threshold=1, custodian_population=10,
+                      failure_probability=1e-200, duration=1e300, repair_interval=1)
+        self.assertAlmostEqual(lease_failure_probability(**kwargs, replicas=2) / 1e-100, 1)
+        self.assertEqual(minimum_replicas(**kwargs, p_max=1e-150), 3)
+
+    def test_tiny_risk_target_uses_failure_not_rounded_survival(self) -> None:
+        self.assertEqual(minimum_replicas(cells=1, reconstruction_threshold=1,
+                         custodian_population=10, failure_probability=1e-10,
+                         duration=1, repair_interval=1, p_max=1e-25), 3)
+
+    def test_failure_tail_matches_high_precision_reference(self) -> None:
+        with localcontext() as ctx:
+            ctx.prec = 110
+            q = Decimal("0.01")
+            interval = sum(Decimal(math.comb(128, j)) * (1-q)**j * q**(128-j)
+                           for j in range(64))
+            expected = float(1 - (1 - interval)**512)
+        actual = lease_failure_probability(cells=128, reconstruction_threshold=64,
+                     custodian_population=10000, replicas=2, failure_probability=.1,
+                     duration=4096, repair_interval=8)
+        self.assertAlmostEqual(actual / expected, 1, places=10)
+
+    def test_failure_endpoints_and_shared_custodian_counterexample(self) -> None:
+        kwargs = dict(cells=2, reconstruction_threshold=1, custodian_population=1, replicas=1)
+        self.assertEqual(interval_failure_probability(**kwargs, failure_probability=0), 0)
+        self.assertEqual(interval_failure_probability(**kwargs, failure_probability=1), 1)
+        independent = interval_failure_probability(**kwargs, failure_probability=.1)
+        self.assertAlmostEqual(independent, .01)
+        self.assertLess(independent, .1)  # Sole holder failure loses both cells together.
+
     def test_more_replicas_improve_survival(self) -> None:
         one = lease_survival_probability(
             cells=8,

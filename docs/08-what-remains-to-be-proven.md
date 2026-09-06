@@ -2,7 +2,7 @@
 
 ## 22. Open questions
 
-The next round of work should try to disprove the proposal rather than add more features. The tests below have three scopes: a **proposal kill** rejects continuous variable retention as the base design, a **branch kill** rejects one physical architecture while leaving fallbacks available, and a **deployment gate** must be satisfied before an implementation can safely ship.
+The next round of work should test whether selectable native retention is worth implementing. The tests below have three scopes: a **proposal kill** rejects purchaser-selected serving duration, a **branch kill** rejects one representation or duration granularity while leaving alternatives available, and a **deployment gate** must be satisfied before an implementation can safely ship.
 
 1. Can logical expiry release physical resources under current 1D PeerDAS?
 2. If Ethereum adopts cross-row 2D coding, can hot redundancy be dropped without weakening fresh DA?
@@ -12,13 +12,31 @@ The next round of work should try to disprove the proposal rather than add more 
 
 The detailed questions below unpack those blockers and the secondary design choices around them.
 
+### Workload evidence plan
+
+No row below has a validated safe short native duration or a measured cost advantage in this repository. The examples define evidence to collect, not parameters to deploy.
+
+The first application experiments are scoped to [Blobcast and BlobMail](../audits/application-use-case-review.md): stream acquisition and archive handoff for the first, offline delivery and expiry recovery for the second. Their inspected implementations support experiment design; workload measurements remain outstanding. The broader workload table below records future research questions, not additional case studies selected for this round.
+
+| Workload and affected actor | Recovery timeline to measure | Comparison and likely constraints |
+|---|---|---|
+| Optimistic rollup: sequencer pays; challengers and users rely on data | Blob inclusion, assertion time, late challenger acquisition, replay/proving, dispute deadlines; identify who retains copies and when | Full current service versus shorter native service with an explicit archive/watcher assumption; serving and recovery may bind |
+| Validity rollup: provers, users, and new nodes | Input acquisition, state reconstruction, proof completion, escape and new-node sync | Short proving latency alone is insufficient; compare durable state distribution and archive alternatives |
+| Proof over temporary input: prover and result consumer | Acquire a recoverable witness before expiry; retain it through proof, retries, and required settlement | Local witness retention or external storage can separate native acquisition time from completion; ingress, computation, and recovery may bind |
+| Media or interactive stream: publisher and listeners | Initial delivery, late joins, retransmission, rebuffering, and replication deadlines | Compare existing P2P/CDN delivery; network and writes may dominate retention |
+| Encrypted asynchronous message: sender, recipient, and provider | Offline-recipient delay, mailbox discovery, retrieval, cancellation authority, and lost-key recovery | Compare application storage; recipient timing and privacy may dominate nominal short message lifetime |
+| Persistent-object bootstrap: publisher and mirrors | Verified acquisition by independent mirrors before native expiry; recovery if handoff fails | Compare direct archive publication; handoff traffic and persistence qualification may erase savings |
+
+For each candidate, measure byte volume, duration distribution, willingness to pay, failure/retry behavior, and the resource that actually binds. Compare unchanged service, a small duration menu, and arbitrary epoch choices using the same trace and safety requirements. Record net reclaimed storage, request/repair bandwidth, metadata, writes, and time to reusable capacity. Set the minimum useful improvement and tolerated failure criteria before evaluating a result; do not select them after seeing the winner.
+
 ### 22.0 Proposal-level kill criteria
 
-Continuous variable retention should be abandoned or narrowed if any of these conditions holds:
+Selectable retention should be abandoned or narrowed if either of these conditions holds:
 
 1. **1D physical-value kill.** Under representative expiry, request, churn, and repair workloads, sparse historical serving on current or near-current PeerDAS does not release enough physical resources to justify its metadata, request, repair, and reclamation costs.
 2. **Demand kill.** Realistic applications cannot safely use materially shorter horizons than the current fixed window, so variable duration creates no meaningful allocation advantage beyond its logical accounting result.
-3. **Simpler-design dominance.** Two or three fixed maturity classes capture nearly all measured value at substantially lower implementation and security complexity.
+
+**Granularity branch kill:** if two or three fixed maturity classes capture nearly all measured value at substantially lower implementation and security complexity, prefer that menu to arbitrary epoch choices. This outcome supports a simpler form of variable retention; it does not refute purchaser-selected duration.
 
 The FullDAS parity-lifetime and cold-row survivability questions in §22.3 are branch kills: failure rejects the hot-2D/cold-1D design, not the entire proposal. Upgrade, repair, handoff, observability, and recovery requirements are deployment gates unless the proposal relies on one of them for a claimed security property.
 
@@ -143,6 +161,8 @@ Secondary questions include:
 - Does reclaim-and-return capture most of the value without creating transferable residual future-capacity rights?
 - When do coding-cohort complementarities make reclaim credit non-additive or too illiquid to justify protocol integration?
 
-An implementation EIP should wait until these questions have been simulated or prototyped against a concrete DAS representation.
+A base implementation EIP needs evidence for the selected representation, exact serving boundaries, protocol and application floors, physical admission, and recovery behavior. Futures, private activation, specialized procurement, and early surrender need their own evidence only if those extensions are proposed. They are not prerequisites for the immediate-start experiment.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](07-what-is-the-prior-art-and-novelty.md) · [Next in core argument](09-what-is-the-conclusion.md)

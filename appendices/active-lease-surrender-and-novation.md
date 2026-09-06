@@ -249,7 +249,7 @@ Suppose a FullDAS representation retains parity derived across several logical r
 κ_A(L, τ) << obligation_size(A)
 ```
 
-The object may be logically expired while its marginal physical burden remains close to zero.
+Ending the logical obligation may release almost no physical capacity while the shared codeword remains necessary.
 
 ### Cohort release
 
@@ -293,7 +293,7 @@ At minimum, a surrender transition must satisfy:
 new_duration >= max(T_protocol-min, declared_application_min)
 ```
 
-for every continuing or replacement obligation to which those floors apply. If beneficiaries cannot express or enforce their minimum, payer-directed early termination introduces delegated trust rather than preserving the original application guarantee.
+for every continuing or replacement obligation to which those floors apply. Independently, each terminated old lease must reach its immutable earliest authorized end, retain every protected old-data recovery requirement, and satisfy its own surrender authority. A replacement's duration cannot protect access to the old bytes. If beneficiaries cannot express or enforce their minimum, payer-directed early termination introduces delegated trust rather than preserving the original application guarantee.
 
 Authorization must also survive key rotation, contract upgrades, reorgs, and changes in the party operating the application. Exact authority mechanics belong in an implementation proposal, but the base invariant is simple: no actor may sell service on which another protected actor is still entitled to rely.
 
@@ -387,7 +387,7 @@ Protocol-level active surrender or novation should be rejected or kept off proto
 6. **Turnover cannot be accounted.** Incremental reclamation, repair, and handoff work cannot be separated conservatively from ordinary ingress and background operations.
 7. **A simpler design dominates.** Natural expiry, non-transferable leases, reclaim-and-return, or an off-protocol buyout captures nearly all value with materially less consensus complexity.
 
-Failure of this appendix does not invalidate variable retention. It means that early termination should remain unavailable, application-specific, or off protocol.
+Failure of this appendix does not invalidate variable retention. If safe native surrender cannot be established, the native lease continues to natural expiry. Off-protocol matching can transfer economic claims or downstream obligations; it cannot authorize premature native pruning or unsafe admission credit.
 
 ## E.11 Relationship to futures, providers, and PBS
 
@@ -412,7 +412,7 @@ Those concerns justify later simulation. They do not justify making PBS or a pro
 
 ## E.12 Conclusion
 
-Active leases may acquire secondary economic value, but usable reclaim credit is representation-dependent, delayed, potentially non-additive, and possibly unobservable to consensus. If those properties cannot be bounded conservatively, active novation should remain off protocol.
+Active leases may acquire secondary economic value, but usable reclaim credit is representation-dependent, delayed, potentially non-additive, and possibly unobservable to consensus. If those properties cannot be bounded conservatively, native early termination should remain unavailable. Off-protocol economic matching must leave the original native obligation intact.
 
 The appendix extends the main RFC's physical question by one step:
 
@@ -423,3 +423,5 @@ logical expiry
 ```
 
 The first arrow is required by variable retention's physical implementation. The second is optional. Ethereum should attempt it only if `κ_X(L, τ)` can be conservative, deterministic, stable after issue, and compatible with beneficiary rights and transition overlap.
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

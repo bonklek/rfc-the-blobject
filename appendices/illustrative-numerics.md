@@ -32,7 +32,7 @@ If an operating target were set at two-thirds of that hypothetical envelope, the
 
 The calculation establishes one relationship:
 
-> **The same retained-stock envelope supports radically different ingress rates depending on how much protocol-required byte-time applications purchase.**
+> **Under this storage-only steady-state model, the same logical-stock envelope permits different stock-limited ingress rates depending on how much protocol-required byte-time applications purchase.**
 
 `H_min` would reduce the general-purpose pool by an explicitly chosen amount. As §6 explains, that protects a short-duration resource lane against pre-consumption by long leases; it does not prevent an attacker from flooding the short lane itself. Future-starting reservations would additionally be bounded by the forward envelope introduced in §10.
 
@@ -41,3 +41,5 @@ Run the stock model for equivalent calculations:
 ```powershell
 python models/stock.py frontier --capacity-tib 64 --durations-epochs 256 512 1024 2048 4096
 ```
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

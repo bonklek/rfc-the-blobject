@@ -129,18 +129,20 @@ It need not reveal the original payer or the path by which the private credit ch
 Consensus clients derive a canonical map such as:
 
 ```text
-active_aot[K] = (slot, remaining_bytes, ticket_class)
+active_aot[activation_id] = (domain, K, slot, max_bytes, object_index_range, ticket_class)
 ```
 
 On receiving candidate AOT traffic, a peer performs:
 
-1. an O(1) lookup for `K`;
+1. a lookup for the activation and its authorized key `K`;
 2. an immediate drop if `K` is absent, early, late, or out of allowance;
 3. a normal signature check for known `K`;
 4. byte/cell/proof validation only after authorization succeeds;
-5. deterministic allowance accounting for accepted objects.
+5. bounded peer-local quota and first-valid-message accounting for accepted objects.
 
-Unknown identities therefore fail before a zero-knowledge proof or blob proof is verified. The expensive private proof is paid for once through canonical activation rather than repeated across the gossip graph.
+Canonical state fixes the maximum authorization; it does not record every peer's accepted gossip. Peers need local caches keyed by activation, object index, and column (or another precisely specified resource unit), with signed binding to the object and target. Two peers may see different valid messages first. Equivocation, concurrent objects, cache retention, and total resource bounds remain design questions; canonical activation alone does not solve them.
+
+Unknown identities therefore fail before a zero-knowledge proof or blob proof is verified. The private proof is attached to one canonical activation transaction; chain validators still perform the required verification. Ordinary gossip authorization need not repeat that privacy proof per sidecar.
 
 ### Reorg behavior
 
@@ -148,7 +150,7 @@ Because the allowlist is derived from canonical chain state, reorgs have defined
 
 - an activation removed by a reorg removes `K` from the active map;
 - a restored private credit or nullifier follows the shielded system's reorg rules;
-- peers roll back derived allowances with the same state transition;
+- peers refresh canonical authorization and reconcile local quotas and replay caches under an explicit reorg policy; consumed bandwidth cannot be rolled back;
 - objects propagated under the orphaned activation may remain in local caches but lose canonical eligibility.
 
 Reorgs can still waste bandwidth, but peers no longer invent incompatible gossip-local ownership histories.
@@ -249,7 +251,7 @@ The construction must address at least:
 - **invalid gossip:** unknown keys must fail before expensive payload validation;
 - **key theft:** possession of `K` may permit spending the activated bandwidth capability;
 - **front-running:** the activation proof must bind `K`, slot, chain, and capacity so it cannot be redirected;
-- **nullifier replay:** activation must be unique across forks under canonical rules;
+- **nullifier replay:** activation must be unique within each canonical history, with explicit orphan/reactivation and local replay-cache rules;
 - **unused capacity:** non-refundable activation prevents a private free option but wastes reserved bandwidth;
 - **traffic analysis:** timing, size, peer origin, and application inclusion can undo cryptographic unlinkability;
 - **pool insolvency:** pooled private capacity must not issue more activation rights than it owns;
@@ -275,3 +277,5 @@ Network privacy remains separate. An activated pseudonym sent directly from the 
 The result is not a finalized anonymous ticket. It is a validation boundary:
 
 > **perform expensive private authorization once in canonical state, then give the P2P network a bounded public capability it can reject cheaply.**
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

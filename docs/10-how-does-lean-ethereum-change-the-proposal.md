@@ -4,7 +4,7 @@
 
 ## Short answer
 
-Lean Ethereum changes the object that receives a retention policy, not the need for the policy. The service should be defined above today's EIP-4844 blob, and some data classes may eventually need more than one expiry time.
+If these research directions advance, more data classes could receive distinct retention policies. The service should be defined above today's EIP-4844 blob, and some data classes may eventually need more than one expiry time.
 
 Blobs need not disappear, and state does not become interchangeable with ordinary DA. Instead, more classes of Ethereum data may share sampled, cryptographically committed transport while retaining different access and persistence requirements:
 
@@ -16,7 +16,7 @@ transport representation
 availability lifecycle
 ```
 
-Lean Data and adjacent proposals generalize the transport representation. Variable retention supplies the lifecycle parameter.
+Lean Data and adjacent proposals explore more general transport representations. Variable retention supplies the lifecycle parameter.
 
 There is a direct analogy to [“new forms of state”](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052). That work starts from the observation that not every state object needs one universal persistence and access guarantee. Variable-retention DA applies the same resource-specialization instinct to committed data: preserve the semantics an application needs instead of granting every byte one universal future-serving package. The analogy motivates the decomposition without making execution state and DA interchangeable.
 
@@ -78,7 +78,7 @@ full-strength availability window
     +-------------------------+
     |                         |
     v                         v
-expire entirely       reduced sparse-history tail
+native duty ends      reduced sparse-history tail
     |                         |
     v                         v
 external retention    history reconstruction services
@@ -90,8 +90,8 @@ The general lifecycle can be written as:
 L = (T_full, f_tail, T_tail)
 ```
 
-- `T_full` is the full-strength protocol serving window.
-- `f_tail` is the fraction or reduced custody obligation retained afterward.
+- `T_full` is the ordinary required-serving window under the selected custody assumptions; it is not a certificate of continuous service.
+- `f_tail` is a shorthand for a specified reduced-custody profile; a fraction alone does not define its population, coding, reconstruction, repair, or service guarantees.
 - `T_tail` is that tail's duration, potentially unbounded for canonical history.
 
 The original lease remains the simplest profile:
@@ -157,7 +157,7 @@ DataService(C, B, L, A)
 where:
 
 - `C` is the commitment;
-- `B` is the logical size;
+- `B` is the protocol-accounted quantity (fixed whole-blob accounting in the current-compatible path), not necessarily useful payload size;
 - `L` is the lifecycle profile;
 - `A` is the protocol-recognized access or data class.
 
@@ -184,7 +184,7 @@ F_ingress(B)
 +
 F_full(B, T_full)
 +
-F_tail(B * f_tail, T_tail)
+F_tail(B, tail_profile, T_tail)
 ```
 
 This equation is bookkeeping rather than a finished fee mechanism. In particular:
@@ -194,15 +194,15 @@ This equation is bookkeeping rather than a finished fee mechanism. In particular
 - a recurring service mechanism may fit replacement, migration, repair, and sync serving better than a one-time fee;
 - scarcity fees do not automatically compensate individual custodians; if Ethereum chooses to pay specialized hardware providers directly, it needs a separate [operator procurement mechanism](11-how-do-hardware-and-da-operator-markets-scale.md).
 
-If only a fraction enters long-lived history, its first-order growth is:
+Let `f_tail,node` be the fraction of each logical object assigned to one node, including its local encoding expansion. That node's first-order permanent-history growth, before additional metadata and storage overhead, is:
 
 ```text
-G_history ~= f_tail * R
+G_history,node ~= f_tail,node * R
 ```
 
 where `R` is the admitted data rate. This can separate near-term DA throughput from per-node permanent-history growth, but only if the custodian population and reconstruction assumptions remain credible.
 
-Block-in-Blobs adds a payer question. User DA has an obvious transaction payer; protocol-mandated payload data may need an execution-fee allocation or another protocol accounting channel. The mechanism must avoid double charging and cross-resource subsidies.
+Block-in-Blobs adds a payer question. User DA has a transaction payer; protocol-mandated payload and recurring history service may need an execution-fee allocation, protocol budget, or another explicit funding channel. The mechanism must expose cross-subsidies and avoid double charging rather than redirect user blob payments by assumption.
 
 If Ethereum procures the physical service directly, the corresponding operator rates can remain explicit without pretending to prepay infinity:
 
@@ -214,12 +214,13 @@ bounded full-retention market
     q_retention * B * T_full
 
 sparse-history market, settled each service interval Δt
-    q_history * (f_tail * B) * Δt
+    q_history,node * (f_tail,node * B) * Δt
 ```
 
-`q_history` is a distinct service class because long-run sampling, repair, replacement, discovery, and retrieval differ from both hot writes and a bounded full-strength lease. A permanent tail is therefore a recurring archive obligation subject to continuing qualification and renewal, not an infinite byte-time asset sold up front.
+The last expression pays one qualifying node for its local duty; aggregate service requires summing qualified duties and accounting for overlapping assignments. The aggregate fee `F_tail` above therefore takes a custody profile, not a single node's fraction.
 
-Canonical L1 history also exposes a payer problem. Protocol-generated payload data has no natural blob purchaser, so its recurring history service may require an execution-fee allocation, protocol budget, or another explicit funding rule. Redirecting a user blob payment by assumption would hide the cross-subsidy rather than solve it.
+`q_history,node` is a distinct service rate because long-run sampling, repair, replacement, discovery, and retrieval differ from both hot writes and a bounded full-strength lease. A permanent tail is therefore a recurring archive obligation subject to continuing qualification and renewal, not an infinite byte-time asset sold up front.
+
 
 ---
 
@@ -239,15 +240,15 @@ Canonical L1 history also exposes a payer problem. Protocol-generated payload da
 
 ## 8. What changes in the base proposal?
 
-The base proposal needs five bounded revisions:
+The compatibility boundaries are:
 
-1. **Broaden the object, not the title.** Keep “Variable-Retention Data Availability for Ethereum,” but define it over committed Ethereum data rather than today's user-facing blob format.
-2. **Preserve the simple mechanism.** `T` remains the conservative first deployment and the `L=(T,0,0)` special case.
-3. **Acknowledge inherited lifecycles.** Not every duration is purchaser-selected; canonical L1 data may have protocol-defined near-term and history obligations.
-4. **Keep semantic boundaries explicit.** Common DAS transport does not turn active state into ordinary expiring DA.
-5. **Treat sparse history as a different service class.** Reduced permanent sampling has different capacity, repair, incentive, and security assumptions from full retention.
+1. **Transport:** the abstract service concerns committed data; the conservative implementation remains whole-blob granular.
+2. **Base mechanism:** a single duration remains the `L=(T,0,0)` special case.
+3. **Policy:** canonical L1 data may inherit protocol-defined near-term and history obligations rather than purchaser choice.
+4. **State:** common DAS transport does not turn active execution state into ordinary expiring data.
+5. **Sparse history:** reduced permanent sampling has different capacity, repair, incentive, and security assumptions from ordinary retained service.
 
-These revisions keep the spot-start mechanism independent of Lean Ethereum, EIP-8142, and permanent distributed history while allowing the RFC to fit those designs if they advance.
+These boundaries keep the spot-start mechanism independent of Lean Ethereum, EIP-8142, and permanent distributed history while allowing compatibility research if those designs advance.
 
 ---
 
@@ -291,3 +292,5 @@ These revisions keep the spot-start mechanism independent of Lean Ethereum, EIP-
 - Wei Han Ng, Carlos Pérez, and the Stateless Consensus team, [The Future of Ethereum's State](https://blog.ethereum.org/2025/12/16/future-of-state), December 16, 2025.
 - [EIP-7928: Block-Level Access Lists](https://eips.ethereum.org/EIPS/eip-7928).
 - Ali Atiia and Keewoo Lee, [Sharded PIR Design for the Ethereum State](https://ethresear.ch/t/sharded-pir-design-for-the-ethereum-state/24552), March 30, 2026.
+
+[Project overview](../README.md) · [Document map](document-map.md)

@@ -4,7 +4,7 @@ This appendix preserves the detailed application-level construction because it d
 
 ## A.1 Receipt-terminated retention note
 
-A downstream storage obligation can terminate when the intended recipient proves that the object has been retrieved.
+A downstream storage obligation can terminate when its stated cancellation or acknowledgement condition is satisfied. The condition must say who can authorize termination; a secret revelation alone is not proof that the intended recipient retrieved the object.
 
 A publisher creates a `RetentionNote` containing at least:
 
@@ -54,6 +54,8 @@ and marks the note spent.
 
 The public system learns only that someone possessing the acknowledgement secret terminated the retention obligation. It need not learn the recipient’s long-term wallet, messaging identity, or account.
 
+**Sender cancellation is possible.** The sender chose `r` and can reveal it before recipient retrieval. This construction is a bearer-secret cancellation capability, not recipient-controlled termination or proof of delivery. If only the recipient should authorize termination, a separate construction must bind recipient-controlled authorization to the note, object, and chain domain. Even a signature would establish an acknowledgement, not prove that the recipient read every byte.
+
 The construction cannot force an honest acknowledgement. A recipient may retrieve the data and refuse to reveal `r`, so the sender still needs a maximum duration or spend. Incentives for timely acknowledgement would require a separate mechanism.
 
 ## A.3 Spam and mailbox admission
@@ -72,3 +74,5 @@ A messaging system above the retention market can use separate mailbox-admission
 The storage provider need not understand the recipient’s social identity. It only needs to enforce the retention contract for an authorized committed object.
 
 This keeps economic anti-spam, recipient privacy, and storage economics separable.
+
+[Project overview](../README.md) · [Document map](../docs/document-map.md)

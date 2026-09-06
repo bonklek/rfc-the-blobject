@@ -14,7 +14,7 @@ text{font-family:Inter,system-ui,sans-serif;fill:#172033}
 <rect x="300" y="130" width="120.7" height="415" fill="#dbeafe"/>
 <rect x="420.7" y="130" width="568.9" height="415" fill="#ffedd5"/>
 <rect x="791.3" y="130" width="370.7" height="415" fill="#ede9fe" fill-opacity="0.65"/>
-<rect class="frame" x="300" y="130" width="862" height="415" fill="none"/>
+<rect class="frame" x="300" y="130" width="862" height="415" style="fill:none"/>
 <text class="label" x="360.3" y="105" text-anchor="middle" font-weight="600">hot DAS</text>
 <text class="label" x="705.1" y="105" text-anchor="middle" font-weight="600">Ethereum cold custody</text>
 <text class="label" x="976.7" y="84" text-anchor="middle" font-weight="600">external services may overlap</text>

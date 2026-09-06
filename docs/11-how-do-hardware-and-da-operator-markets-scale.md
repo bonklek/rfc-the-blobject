@@ -11,7 +11,7 @@ This chapter examines four parts of that supply side:
 3. decompose large logical custody duties across fractional operators;
 4. separate the scarcity burn from posted service payments for qualified capacity.
 
-The first three points are architectural constraints: any high-throughput design has to explain its writes, placement, and assignment granularity. The fourth is optional mechanism design. The base variable-retention experiment does not require a separate operator market, but one becomes relevant if Ethereum deliberately pushes DA throughput beyond the hardware envelope that ordinary validator duties can support.
+Every implementation must account for writes, placement, and assignment granularity. Fractional pools and separate service payments are optional responses to those constraints; a base experiment can retain the existing custody population. These extensions become relevant only if a proposed throughput target exceeds the hardware envelope of ordinary validator duties.
 
 ---
 
@@ -129,7 +129,7 @@ For example:
 
 This arithmetic intentionally omits replication, coding expansion, and spare capacity, all of which increase the physical requirement. The point is that the duty can be divided. A pool can present one accountable service boundary while routing independently verifiable cells across many smaller contributors.
 
-EthStorage provides concrete, though non-equivalent, implementation precedent for this assignment scale. Its current [storage-contract deployment template](https://github.com/ethstorage/storage-contracts-v1/blob/513ec70e23a15db828dbd99f03714aada3484ce3/.env.template) configures `SHARD_SIZE_BITS=39`, approximately 512 GiB, and its [provider guide](https://github.com/ethstorage/ethstorage-doc/blob/8ba215431220c1bc8518833a91a5f35c334d513e/storage-provider-guide/tutorials.md) calls for at least 550 GB of free storage for one data shard, with 8 GB RAM and an NVMe disk. That does not establish that eight such machines can safely implement a 4 TB Ethereum DA pool: EthStorage has different proofs, reads, networking, replication, repair, and trust boundaries. It does show that a protocol-accounted storage responsibility can be divided into independently operated shards near the illustrative 500 GB contributor size rather than requiring every provider to hold the whole logical dataset.
+EthStorage provides concrete, though non-equivalent, implementation precedent for this assignment scale. Its pinned [storage-contract deployment template](https://github.com/ethstorage/storage-contracts-v1/blob/513ec70e23a15db828dbd99f03714aada3484ce3/.env.template) configures `SHARD_SIZE_BITS=39`, approximately 512 GiB, and its [provider guide](https://github.com/ethstorage/ethstorage-doc/blob/8ba215431220c1bc8518833a91a5f35c334d513e/storage-provider-guide/tutorials.md) calls for at least 550 GB of free storage for one data shard, with 8 GB RAM; NVMe is recommended for full sampling speed. That does not establish that eight such machines can safely implement a 4 TB Ethereum DA pool: EthStorage has different proofs, reads, networking, replication, repair, and trust boundaries. It does show that a protocol-accounted storage responsibility can be divided into independently operated shards near the illustrative 500 GB contributor size rather than requiring every provider to hold the whole logical dataset.
 
 The closest analogy is a fractional staking pool, but the duty is more operationally demanding. A DA pool must continuously:
 
@@ -325,7 +325,7 @@ This connects the logical retained-stock market to actual devices. It also shows
 - it cannot manufacture independent operators merely by paying more;
 - it cannot safely exceed the measured hardware envelope.
 
-The third rate applies only when a lifecycle includes a sparse history tail. Rather than charging `q_retention * B * infinity`, the protocol can settle `q_history * f_tail * B * Δt` for each recurring archive-service interval. Long-run custodians then remain replaceable and subject to continuing qualification, repair, and handoff. For protocol-generated L1 history, the protocol must identify a funding channel because there may be no user blob payer. The [Lean lifecycle chapter](10-how-does-lean-ethereum-change-the-proposal.md#6-how-does-lifecycle-pricing-change) develops this distinction.
+The third rate applies only when a lifecycle includes a sparse history tail. Rather than charging `q_retention * B * infinity`, the protocol can settle `q_history,node * f_tail,node * B * Δt` for one qualifying node's local duty in each service interval. Aggregate payment and security depend on the full custody profile and overlapping assignments; a local sampling fraction is not the system's retained fraction. Long-run custodians remain subject to continuing qualification, repair, and handoff. Protocol-generated L1 history needs an explicit funding channel because there may be no user blob payer. The [Lean lifecycle chapter](10-how-does-lean-ethereum-change-the-proposal.md#6-how-does-lifecycle-pricing-change) develops this distinction.
 
 ### 6.1 Illustrative operator-market scenarios
 
@@ -333,7 +333,7 @@ The following scenarios show scaling relationships rather than forecast costs.
 
 The [illustrative operator-economics appendix](../appendices/illustrative-operator-economics.md) also applies deliberately arbitrary dollar rates to a dated 14-blob target, 32 MiB/slot, and 1 GiB/s. It is a dimensional sanity check, not a price recommendation or forecast.
 
-**Fractional capacity.** Suppose 10,000 contributors each commit 256 GB. Gross pledged capacity is 2.56 PB. If the duty requires `rho=2` physical bytes per logical byte and the pool reserves 20% physical spare capacity, the maximum first-order logical obligation is:
+**Fractional capacity.** Suppose 10,000 contributors each commit 256 GB. Gross pledged capacity is 2.56 PB. If the duty requires `rho=2` physical bytes per logical byte and the pool reserves spare capacity equal to 20% of its assigned physical capacity, the maximum first-order logical obligation is:
 
 ```text
 2.56 PB / (2 · 1.20) ≈ 1.07 PB.
@@ -363,7 +363,7 @@ If, purely for comparison, `T_star=256 epochs`—about 1.14 days—the normalize
 
 All three objects pay the same write component per byte. The retention component changes with duration. Changing `T_star` changes the numbers and reveals whether the procured market is dominated by hot-path work or retained capacity.
 
-**Supply shortage.** Suppose the protocol target requires 1 PB of qualified cold duty plus a 20% reserve, but only 800 TB remains qualified at the maximum posted service price. The safe response is not to record 1.2 PB of capacity or raise the price without bound. Admission must fall to the capacity supportable by the 800 TB supply after repair and reserve margins. This is the operational meaning of reducing the DA target rather than paying monopoly rents.
+**Supply shortage.** Suppose the protocol target requires 1 PB of qualified cold duty plus a 20% reserve, but only 800 TB remains qualified at the maximum posted service price. The safe response is not to record 1.2 PB of capacity or raise the price without bound. Admission must fall to the capacity supportable by the 800 TB supply after repair and reserve margins. This reduces new commitments only. Outstanding leases still require their admitted service: funded replacement capacity, repair reserves, enforceable exit notice, and an emergency shortfall policy must cover them. If those mechanisms cannot preserve the service, it is a service failure, not a safe retroactive reduction of the promised obligation.
 
 ---
 
@@ -413,3 +413,5 @@ The operator market should be judged against two baselines: ordinary validator c
 - Should rewards settle continuously, after the service window, or through a repair reserve?
 
 Until these questions have measured answers, the equations in this chapter are a procurement research program rather than a protocol parameter proposal.
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](02-is-variable-retention-safe-for-rollups.md) · [Next in core argument](07-what-is-the-prior-art-and-novelty.md)

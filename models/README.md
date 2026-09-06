@@ -4,7 +4,7 @@ These dependency-free Python programs turn the RFC's null models into reproducib
 
 ## Active stock and expiry
 
-`stock.py` implements the non-normative epoch ring from §4.1, including capacity rejection, expiry, snapshots, and reorg restoration.
+`stock.py` is an abstract companion to §4.1. It scans a dictionary of leases to model capacity rejection, elapsed slot-based expiry, delayed reclamation, and snapshot restoration. Its `retained_bytes` counter corresponds to `obligated_bytes` in the sketch. Synthetic caller-supplied sizes and local ordinal identities support experiments; they do not implement fixed-blob admission or canonical fork identity. Snapshot restoration tests accounting, not recovery of pruned data. No ring-buffer or storage-engine performance claim is made.
 
 ```powershell
 python models/stock.py frontier --capacity-tib 64 --durations-epochs 256 512 1024 2048 4096
@@ -74,6 +74,19 @@ python models/cold_custody.py `
 ```
 
 Correlated failures, adaptive adversaries, network partitions, non-serving online nodes, and repair failure are deliberately outside this null model. A result that passes here is not sufficient evidence for protocol safety.
+
+The output names the independent-cell-loss, independent-interval, and full-repair assumptions. `meets_target_under_null_model` compares the directly computed failure tail with the target; rounded survival near one must not be used for that decision. The former `meets_target` output name has been replaced to make this scope explicit. The calculation retains interval risks in an 80-digit Decimal context through checkpoint composition, then converts public probability outputs to floats. Final probabilities below float range may display as zero; replica selection compares the Decimal risk directly. Finite numerical precision and the statistical assumptions still limit this research calculator.
+
+For example, two cells held by one custodian fail together when that custodian fails. At failure probability 0.1 and reconstruction threshold one, their actual survival is 0.9; independent-cell arithmetic gives 0.99. The population argument only checks replica feasibility and does not simulate assignment overlap.
+
+The scenario API rejects observation horizons that end before an arrival's full billed lease expiry, so its admission totals and ex-post charge coverage cannot silently include unobserved service.
+
+## Published outputs
+
+- [Rejection rates](output/rejection-rate.svg), [charge coverage](output/charge-coverage.svg), and [occupancy paths](output/stress-occupancy.svg).
+- [Scenario summary](output/spot-summary.csv) and [time series](output/spot-timeseries.csv).
+
+See the [artifact map](../docs/document-map.md) and [regeneration guide](../CONTRIBUTING.md#generated-artifacts-and-checks). These charts use fixed synthetic arrivals, equal non-borrowing maturity lanes, and a diagnostic utilization-price benchmark; they are not measured cost or demand evidence.
 
 ## Tests
 

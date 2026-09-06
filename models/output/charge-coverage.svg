@@ -68,4 +68,6 @@
 <text class="small" text-anchor="middle" x="974.0" y="390">Expiry cliff</text>
 <line class="axis" x1="72" y1="370" x2="1056" y2="370"/>
 <text class="label" text-anchor="middle" transform="translate(18 221.0) rotate(-90)">Charge / ex-post scarcity benchmark</text>
+<text class="small" x="72" y="438">Fixed synthetic arrivals; maturity lanes have equal fixed capacity and cannot borrow.</text>
+<text class="small" x="72" y="457">Charge coverage uses an ex-post utilization diagnostic, not measured operator or social cost.</text>
 </svg>

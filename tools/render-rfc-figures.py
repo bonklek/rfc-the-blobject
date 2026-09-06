@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import html
 import math
 import sys
@@ -57,11 +58,9 @@ def polyline(points: list[tuple[float, float]]) -> str:
     return " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
 
 
-def subscripted(symbol: str, *, sub_size: int = 10) -> str:
-    if "_" not in symbol:
-        return html.escape(symbol)
-    base, suffix = symbol.split("_", 1)
-    return f'{html.escape(base)}<tspan baseline-shift="sub" font-size="{sub_size}">{html.escape(suffix)}</tspan>'
+def subscripted(label: str, sub_size: int = 10) -> str:
+    """Keep underscore notation portable across SVG renderers."""
+    return html.escape(label)
 
 
 def render_frontier() -> None:
@@ -86,8 +85,8 @@ def render_frontier() -> None:
 
     duration_max = 4096 * 32 * 12 / 86400
     capacity_mib = 64 * 1024 * 1024
-    panels = ((44, "A. Logarithmic y-axis", True), (620, "B. Linear y-axis", False))
-    plot_top, plot_w, plot_h = 130, 520, 300
+    panels = ((70, "A. Logarithmic y-axis", True), (646, "B. Linear y-axis", False))
+    plot_top, plot_w, plot_h = 130, 490, 300
     for left, panel_title, logarithmic in panels:
         parts.append(f'<text class="label" x="{left}" y="112" font-weight="600">{panel_title}</text>')
         note = "Preserves relative separation across the range." if logarithmic else "Makes the two-thirds ratio visually literal."
@@ -141,7 +140,7 @@ def render_frontier() -> None:
         parts.append(f'<line x1="{edge_x:.1f}" y1="{plot_top}" x2="{edge_x:.1f}" y2="{plot_top + plot_h}" stroke="{PURPLE}" stroke-width="2"/>')
         parts.append(f'<text class="tiny" x="{edge_x - 7:.1f}" y="{plot_top + 17}" text-anchor="end">4096 epochs</text>')
         parts.append(f'<text class="small" x="{left + plot_w / 2}" y="{plot_top + plot_h + 43}" text-anchor="middle">Required-serving duration (days)</text>')
-        parts.append(f'<text class="small" transform="translate({left - 35} {plot_top + plot_h / 2}) rotate(-90)" text-anchor="middle">Sustainable ingress (MiB/s)</text>')
+        parts.append(f'<text class="small" transform="translate({left - 48} {plot_top + plot_h / 2}) rotate(-90)" text-anchor="middle">Storage-only ingress bound (MiB/s)</text>')
 
     parts.append(f'<text class="small muted" x="32" y="500">The one-hour frontier is 18.2 GiB/s and is intentionally outside both panels.</text>')
     finish_svg(parts, OUTPUT / "figure-01-throughput-retention-frontier.svg")
@@ -151,7 +150,7 @@ def render_term_structure() -> None:
     width, height = 1200, 520
     parts = start_svg(
         "Figure 2 — Term structure of the total one-time fee",
-        "One protocol-sized blob: total upfront fee versus selected retention T, on the null and convex-duration benchmarks.",
+        "One protocol-sized blob: total upfront fee versus selected retention T, using an illustrative convex-duration benchmark.",
         width,
         height,
     )
@@ -197,9 +196,9 @@ def render_term_structure() -> None:
     band_x = x_pos(conservative_floor)
     parts.append(f'<rect x="{left}" y="{top}" width="{band_x - left:.1f}" height="{plot_h}" fill="{PALE_ORANGE}" fill-opacity="0.55"/>')
     parts.append(f'<line x1="{band_x:.1f}" y1="{top}" x2="{band_x:.1f}" y2="{bottom}" stroke="{ORANGE}" stroke-width="2" stroke-dasharray="7 5"/>')
-    parts.append(f'<text class="tiny" x="{band_x + 8:.1f}" y="{top + 16}">shortest maturity exposed without a T_hot condition (§7.1)</text>')
-    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 34}">below here: not independently selectable</text>')
-    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 50}">(the byte-time integral still accrues)</text>')
+    parts.append(f'<text class="tiny" x="{band_x + 8:.1f}" y="{top + 29}">256 epochs: illustrative class boundary</text>')
+    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 34}">Shorter classes depend on protocol and application floors.</text>')
+    parts.append(f'<text class="tiny muted" x="{left + 6}" y="{top + 50}">No safe minimum duration is established here.</text>')
 
     for tick in y_ticks:
         y = y_pos(tick)
@@ -295,7 +294,7 @@ def render_application_lifecycle() -> None:
     parts.append(f'<rect x="{left}" y="{top}" width="{hot * plot_w:.1f}" height="{plot_h}" fill="{PALE_BLUE}"/>')
     parts.append(f'<rect x="{x_pos(hot):.1f}" y="{top}" width="{(ethereum_end - hot) * plot_w:.1f}" height="{plot_h}" fill="{PALE_ORANGE}"/>')
     parts.append(f'<rect x="{x_pos(external_start):.1f}" y="{top}" width="{(1 - external_start) * plot_w:.1f}" height="{plot_h}" fill="{PALE_PURPLE}" fill-opacity="0.65"/>')
-    parts.append(f'<rect class="frame" x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="none"/>')
+    parts.append(f'<rect class="frame" x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" style="fill:none"/>')
     parts.append(f'<text class="label" x="{x_pos(hot / 2):.1f}" y="105" text-anchor="middle" font-weight="600">hot DAS</text>')
     parts.append(f'<text class="label" x="{x_pos((hot + ethereum_end) / 2):.1f}" y="105" text-anchor="middle" font-weight="600">Ethereum cold custody</text>')
     parts.append(f'<text class="label" x="{x_pos((external_start + 1) / 2):.1f}" y="84" text-anchor="middle" font-weight="600">external services may overlap</text>')
@@ -333,7 +332,7 @@ def render_storage_model() -> None:
     width, height = 1200, 590
     parts = start_svg(
         "Figure 6 — Storage-side derivation of a proposed retention limit",
-        "RFC research model; schematic and not to scale; these are not existing Ethereum protocol counters.",
+        "Approximate research bounds; schematic and not to scale; these are not existing Ethereum protocol counters.",
         width,
         height,
     )
@@ -356,7 +355,7 @@ def render_storage_model() -> None:
             parts.append(f'<text class="tiny muted" x="{x + segment_w / 2:.1f}" y="{bar_y + 73}" text-anchor="middle">{detail}</text>')
 
     formula_y = 316
-    parts.append(f'<text x="52" y="{formula_y}" font-size="21" font-weight="600">{subscripted("K_storage", sub_size=13)} ≲</text>')
+    parts.append(f'<text x="52" y="{formula_y}" font-size="21" font-weight="600">{subscripted("K_storage", sub_size=13)} ≤</text>')
     numerator = f'{subscripted("M_budget")} − {subscripted("M_hot")} − {subscripted("M_repair")} − {subscripted("M_metadata")}'
     parts.append(f'<text class="label" x="360" y="{formula_y - 13}" text-anchor="middle">{numerator}</text>')
     parts.append(f'<line x1="190" y1="{formula_y - 4}" x2="530" y2="{formula_y - 4}" stroke="{INK}"/>')
@@ -386,6 +385,10 @@ def render_storage_model() -> None:
 
 
 def main() -> None:
+    global OUTPUT
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT)
+    OUTPUT = parser.parse_args().output_dir.resolve()
     OUTPUT.mkdir(parents=True, exist_ok=True)
     render_frontier()
     render_term_structure()
@@ -393,7 +396,7 @@ def main() -> None:
     render_application_lifecycle()
     render_storage_model()
     for path in sorted(OUTPUT.glob("figure-*.svg")):
-        print(path.relative_to(ROOT))
+        print(path)
 
 
 if __name__ == "__main__":

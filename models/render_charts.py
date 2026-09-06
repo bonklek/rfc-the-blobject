@@ -102,6 +102,8 @@ def render_grouped_bars(
 
     parts.append(f'<line class="axis" x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}"/>')
     parts.append(f'<text class="label" text-anchor="middle" transform="translate(18 {top + plot_h / 2}) rotate(-90)">{html.escape(y_label)}</text>')
+    parts.append('<text class="small" x="72" y="438">Fixed synthetic arrivals; maturity lanes have equal fixed capacity and cannot borrow.</text>')
+    parts.append('<text class="small" x="72" y="457">Charge coverage uses an ex-post utilization diagnostic, not measured operator or social cost.</text>')
     parts.append("</svg>")
     output.write_text("\n".join(parts), encoding="utf-8")
 

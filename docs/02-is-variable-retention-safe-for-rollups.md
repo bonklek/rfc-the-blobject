@@ -18,7 +18,7 @@ That option exists only if the application's security model actually permits it.
 
 The payer and the users exposed to failure need not be the same actor. A sequencer may buy the lease while challengers, bridge users, or future node operators bear the cost of an undersized window. If an application publishes a machine-readable minimum, admission can require `T_selected >= T_application-min`. Without such a declaration, a sequencer choosing less retention than the application's user-facing security model needs is exercising delegated trust, not obtaining a protocol endorsement that the shorter horizon is safe.
 
-For optimistic rollups, challenge windows are currently on the order of a week: OP Mainnet documents a seven-day challenge window (about 1,575 Ethereum epochs at current timing), while Arbitrum BoLD uses a default 6.4-day challenge period (about 1,440 Ethereum epochs). Retaining L2 input data on Ethereum for less than the challenge window does not automatically make the rollup insecure, but it changes what an honest challenger can assume. A party that comes online late may no longer be able to recover all relevant input data from Ethereum alone. Safety then depends on at least one honest watcher, archive, state-distribution system, or equivalent handoff having acquired the data during the shorter window. If a power-of-two maturity must cover either window without another assumption, the next class is 2,048 epochs—about 9.10 days.
+For optimistic rollups, challenge windows are currently on the order of a week: OP Mainnet documents a seven-day challenge window (about 1,575 Ethereum epochs at current timing), while Arbitrum BoLD uses a default 6.4-day challenge period (about 1,440 Ethereum epochs). Retaining L2 input data on Ethereum for less than the challenge window does not automatically make the rollup insecure, but it changes what an honest challenger can assume. A party that comes online late may no longer be able to recover all relevant input data from Ethereum alone. Safety then depends on at least one honest watcher, archive, state-distribution system, or equivalent handoff having acquired the data during the shorter window. The next power-of-two class above either quoted period is 2,048 epochs—about 9.10 days. That is a duration comparison, not a verified safe retention choice: blob inclusion and assertion clocks can start at different times, and a disputed path can last longer than one challenge period. The [BoLD technical description](https://docs.arbitrum.io/how-arbitrum-works/bold/bold-technical-deep-dive) and [overview](https://docs.arbitrum.io/how-arbitrum-works/bold/gentle-introduction) distinguish the default period from worst-case resolution. A safe choice needs a timeline from publication through assertion, challenger acquisition, proof production, and dispute participation. Native acquisition deadlines also need not equal total withdrawal delay.
 
 `T_application-min` is not automatically equal to the challenge period. Still, shortening below that period can add a new assumption: some honest retriever or archive must acquire the data before Ethereum stops serving it.
 
@@ -75,9 +75,11 @@ Several countervailing behaviors require simulation:
 
 The mechanisms have different jobs:
 
-- **hard active-stock bounds** protect physical safety;
+- **hard active-stock bounds** limit logical contracted stock; physical safety also requires the storage, serving, repair, and I/O admission bounds;
 - **reserved headroom** prevents long leases from pre-consuming a short-duration lane, but does not prevent that lane itself from being flooded;
 - **fees** allocate the remaining byte-time economically;
 - **application security minima** determine how much demand can actually respond to price.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](05-can-this-work-with-peerdas-and-fulldas.md) · [Next in core argument](11-how-do-hardware-and-da-operator-markets-scale.md)

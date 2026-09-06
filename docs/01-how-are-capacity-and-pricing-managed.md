@@ -31,7 +31,7 @@ S_t(τ) ≤ S_t(0) = S_t
      ∀ τ ≥ 0.
 ```
 
-A new immediate lease of size `B` adds `B` for horizons `0≤τ≤ T`. Therefore, if
+A new immediate lease of size `B` adds `B` for horizons `0≤τ<T`. Therefore, if
 
 ```text
 S_t + B ≤ K_safe,
@@ -43,7 +43,7 @@ Long leases can still crowd out later users, but the capacity they consume is vi
 
 ### 4.1 Non-normative protocol-state sketch
 
-The following toy transition makes the accounting testable. Purchasers select an integer number of epochs, but expiry is computed from the canonical inclusion slot so the lease receives the full elapsed duration. The sketch also separates the end of service from conservative capacity reclamation. It deliberately derives the accounting quantity from the fixed blob type rather than accepting a caller-supplied size. These choices are illustrative rather than an EIP specification.
+The following toy transition makes the accounting testable. Purchasers select an integer number of epochs, but expiry is computed from the canonical inclusion slot so the lease receives the full elapsed duration. The sketch also separates the end of service from conservative capacity reclamation. It deliberately derives the accounting quantity from the fixed blob type rather than accepting a caller-supplied size. These choices are illustrative rather than an EIP specification. In particular, the elapsed-duration toy does not implement the legacy full-window boundary mapping described in §3.
 
 ```text
 state:
@@ -108,7 +108,7 @@ Service ending at `expiry_slot` does not imply that storage, indexes, repair sta
 
 Voluntary early surrender is harder still: a replacement may need hot-path capacity while the old cold obligation remains physically live, and the party who paid for a lease may not control the beneficiaries' right to continued service. The [active-lease surrender appendix](../appendices/active-lease-surrender-and-novation.md) treats time-dependent safe reclaim credit, overlap headroom, and surrender authority as optional research rather than base-protocol assumptions.
 
-The counters and ring buffer are part of fork state. A reorganization restores the parent state's `retained_bytes`, expiry buckets, and admitted metadata before applying the competing branch, just as any other consensus state transition would. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state.
+The counters, pending expiry and reclamation entries, and admitted metadata are part of fork state. A reorganization restores both `obligated_bytes` and `accounted_bytes` and their pending entries from the parent before applying the competing branch. Implementations may maintain derived indexes for serving, but consensus validity depends only on the committed state. Restoring counters does not restore physically pruned bytes: the recovery floor and reclamation policy must keep recoverable data for the supported reorg envelope.
 
 The sketch leaves several protocol choices open:
 
@@ -121,7 +121,7 @@ The sketch leaves several protocol choices open:
 - how cold custody assignments and repair handoffs are represented;
 - how reclamation grace and backlog affect physical admission.
 
-[The executable stock model](../models/stock.py) implements the slot-derived lease identity and expiry semantics, conservative reclamation grace, and reorg snapshots.
+[The executable stock model](../models/stock.py) tests elapsed slot-based expiry, separate reclamation accounting, and state snapshots. It uses a dictionary scan, calls the live counter `retained_bytes`, accepts synthetic sizes, and constructs local simulation identities. It does not implement the fixed-blob interface, canonical fork identity, physical recovery, or a client storage engine.
 
 ---
 
@@ -185,27 +185,27 @@ B · (T - T_hot) · c_cold,
 
 The coefficients `c_hot` and `c_cold` summarize two physically different workloads; they are not proposed constants. Neither workload is necessarily linear, and no coding-overhead ratio can be justified before a concrete FullDAS design is fixed. Shorter retention cannot remove the initial hot-path cost. It can remove part of the continuing cold-custody obligation.
 
-The hard cap supplies safety, while the fee market allocates capacity below it. There is no need to price every point on a forward curve for a spot-start lease.
+The logical cap bounds contracted stock, while the full physical envelope constrains safe admission. The fee market allocates capacity within those bounds. There is no need to price every point on a forward curve for a spot-start lease.
 
 A prepaid fixed-duration lease has one important security property: once accepted, its serving horizon is not contingent on later fee increases. A “rent that must continuously be topped up” is simpler in some respects but changes the service semantics. Under future congestion or censorship, a rollup could lose required retention before its declared security horizon. Continuous rent is therefore better understood as an application-layer or best-effort service unless the entire maximum obligation is admitted up front.
 
 The retention fee should initially be understood as a **scarcity/admission charge on protocol byte-time**, not automatically as compensation to individual custodians. Ethereum can burn the fee while separately enforcing custody duties, just as blob fees need not be direct provider payments. A provider-reward system is a different mechanism. [The hardware and operator-market chapter](11-how-do-hardware-and-da-operator-markets-scale.md) develops one possible `scarcity burn + service procurement` extension without making it part of the base proposal.
 
-![A line chart of the total one-time fee for one protocol-sized blob against selected retention T, with a vertical ingress jump at T=0 and a smooth convex-duration curve, shading the region below the shortest maturity exposed without a T_hot condition.](assets/figures/figure-02-term-structure.svg)
+![An illustrative convex-duration total fee for one blob on a log-duration axis, with a separate admission-charge marker at the left edge and shorter durations marked conditional on protocol and application floors.](assets/figures/figure-02-term-structure.svg)
 
-*Figure 2 — Term structure of the total one-time fee.* `F_total(T) = F_ingress + F_ret(T)` for one blob, plotted against `T` on a log2 axis over the §3 duration vocabulary. `F_ingress` is a one-time admission charge with no proposed functional form in this repo; it is shown as a step, not a point on the curve. `F_ret(T)` uses `convex_duration()` from [models/pricing.py](../models/pricing.py), a benchmark rather than a proposed price. The shaded region below 256 epochs is not unpaid — the byte-time integral still accrues through it — it is the shortest maturity class §7.1 exposes without a `T_hot` condition; the RFC does not settle `T_min` at any specific value.
+*Figure 2 — Term structure of the total one-time fee.* `F_total(T) = F_ingress + F_ret(T)` for one blob, plotted against `T` on a log2 axis over the §3 duration vocabulary. `F_ingress` is a one-time admission charge with no proposed functional form in this repo; it is shown as a step, not a point on the curve. `F_ret(T)` uses `convex_duration()` from [models/pricing.py](../models/pricing.py), a benchmark rather than a proposed price. The shaded region below the illustrative 256-epoch class marks shorter choices requiring protocol and application safety evidence. All classes require that evidence; the boundary is not a settled `T_min`. The marker at the left edge denotes an admission charge, not a literal `T=0` point on the logarithmic axis.
 
 ### 5.1 What pricing cannot solve
 
 No fee curve guarantees access against a sufficiently wealthy adversary willing to purchase the scarce resource. A high price makes hoarding expensive; it does not create capacity.
 
-This distinction matters because the old forward-curve presentation implicitly asked pricing to do three jobs at once:
+Three different mechanisms are needed to:
 
 1. reflect byte-time scarcity;
-2. enforce a physical safety bound;
+2. enforce logical stock and physical resource bounds;
 3. preserve near-term capacity against strategic long leases.
 
-The active-stock cap solves the second. A separately derived reserve can address the third. Pricing can then focus on allocation.
+The active-stock cap and physical admission envelope address the second. A separately derived short-duration reserve can limit long-lease crowding in the third. Pricing can then focus on allocation; none of these mechanisms guarantees honest-user access against an attacker able to buy all available capacity.
 
 ---
 
@@ -302,7 +302,7 @@ There are two qualitatively different ways to make heterogeneous expiry tractabl
 
 ### 7.1 Maturity-aligned physical classes
 
-The conservative implementation is to round requested durations into power-of-two epoch maturities—for example, `256, 512, 1,024, 2,048, 4,096` epochs (approximately 1.14, 2.28, 4.55, 9.10, and 18.20 days)—and pack only similar maturities into the same persistent coding domain. Shorter classes such as 1, 8, or 64 epochs can be exposed only if `T_hot` permits them.
+The conservative implementation is to round requested durations into power-of-two epoch maturities—for example, `256, 512, 1,024, 2,048, 4,096` epochs (approximately 1.14, 2.28, 4.55, 9.10, and 18.20 days)—and pack only similar maturities into the same persistent coding domain. Shorter classes such as 1, 8, or 64 epochs can be exposed only if the full protocol recovery floor and application requirements permit them.
 
 For the current EIP-4844 path, one blob is the minimum lifecycle unit. All logical application payloads multiplexed into that blob inherit one retention maturity. Applications that need different maturities must pack those payloads into different blobs; segment metadata does not create independent physical expiry inside a blob.
 
@@ -353,6 +353,8 @@ Arbitrary `T` still maximizes allocative expressiveness and keeps the logical AP
 
 > **Can Ethereum preserve one highly redundant representation only as long as it is needed for fresh availability, then move still-live objects into an independently expirable serving representation without changing their commitments?**
 
-The design order is: **continuous variable retention as the semantic target, 1D cell-level custody as the first prototype path, hot-2D/cold-1D as a possible future compatibility branch, and maturity-aligned classes as the conservative fallback**.
+The first prototype should compare a small duration menu with arbitrary epoch choices under 1D cell-level custody. Selectable duration is the semantic target; granularity is an experimental choice. Hot-2D/cold-1D remains a possible future compatibility branch, and maturity-aligned coding domains are an alternative where shared coding prevents sparse expiry.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md) · [Previous in core argument](00-what-is-the-proposal.md) · [Next in core argument](05-can-this-work-with-peerdas-and-fulldas.md)

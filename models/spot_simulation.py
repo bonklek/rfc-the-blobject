@@ -103,13 +103,21 @@ def simulate(
 ) -> tuple[SimulationResult, list[dict[str, float | int | str]]]:
     events: dict[int, list[Arrival]] = {}
     requested_bytes = 0.0
+    last_expiry = 0
     for arrival in arrivals:
+        if arrival.epoch < 0 or arrival.duration <= 0 or arrival.size <= 0:
+            raise ValueError("arrivals require nonnegative epochs and positive size/duration")
         events.setdefault(arrival.epoch, []).append(arrival)
         requested_bytes += arrival.size
+        billed = (_maturity(arrival.duration, mechanism.maturities)
+                  if mechanism.kind == "maturity_lanes" else arrival.duration)
+        last_expiry = max(last_expiry, arrival.epoch + billed)
 
     max_arrival = max(events, default=0)
     if horizon is None:
-        horizon = max_arrival + max(mechanism.maturities) + 1
+        horizon = max(last_expiry, max_arrival + max(mechanism.maturities) + 1)
+    elif horizon < last_expiry:
+        raise ValueError("horizon must cover every arrival and full billed lease expiry")
 
     active: list[Lease] = []
     completed: list[Lease] = []

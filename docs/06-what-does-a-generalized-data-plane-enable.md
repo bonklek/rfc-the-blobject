@@ -34,7 +34,7 @@ The AOT-plus-FullDAS path in §17.9 draws the boundary differently. The builder 
 
 This does not solve builder centralization. [BuilderNet](https://buildernet.org/) explores collaborative multi-node block building, and [multi-party block construction](https://ethresear.ch/t/building-towards-multi-party-block-construction/24975) explores blocks assembled from several builders' contributions. Both show that “one block” need not mean one indivisible construction process, but both introduce their own trust, coordination, latency, and MEV questions.
 
-The limited conclusion is that variable retention and high-throughput DAS do not **inherently** require centralized block production. The publication protocol must simply avoid making the winning builder the only viable DA uplink.
+The limited conclusion is that variable retention does not itself require one centralized publication path. A high-throughput design still needs a concrete distributed acquisition, propagation, reconstruction, and failure-handling protocol; removing the builder as the sole uplink is a requirement, not a demonstrated solution.
 
 That is a bandwidth claim, not an inclusion-censorship claim. Distributed upload does not force a concentrated PBS builder to select a transaction or blob commitment. The [admission/inclusion analysis in §13.1](03-how-do-future-resource-markets-work.md#131-inclusion-censorship-is-upstream-of-das) separates inclusion censorship, publication-time withholding, and post-inclusion service refusal; a generalized data plane inherits the first problem unless inclusion lists or another robust admission path address it.
 
@@ -108,12 +108,23 @@ A rollup may purchase 256–4,096 epochs—about 1.14–18.20 days—subject to 
 
 ### 19.1 Experimental application evidence
 
-Two experiments make the non-rollup demand less hypothetical without claiming production readiness:
+The application case studies selected for this round are **Blobcast (Radio Free Ethereum)** and **BlobMail**. Their implementations provide concrete non-rollup workflows to study. They do not yet demonstrate demand for selectable retention:
 
-- [Radio Free Ethereum](https://github.com/bonklek/eth-radio) is an Ethereum blob-radio prototype with a station contract, publishing tools, and a browser tuner that verifies and plays media segments.
-- [BlobMail](https://github.com/bonklek/blobmail) is an RFC-stage encrypted-messaging workspace. Its runnable proof is deliberately local-only: it packs, reconstructs, verifies, and decrypts Ethereum-blob-shaped fixtures, but it does not yet broadcast, submit blob transactions, prove KZG, or claim chain inclusion.
+- [Radio Free Ethereum](https://github.com/bonklek/poc-blobcast/blob/8d4924edaf7ecad2ddaccb2bd52df08ff24284e3/README.md) is an Ethereum blob-radio prototype with a station contract, publishing tools, and a browser tuner that verifies and plays media segments.
+- [BlobMail](https://github.com/bonklek/poc-blobmail/blob/939b1d8a5dc2f9ca230a2a7e9d301923033d877b/README.md) now documents an experimental Sepolia messaging MVP with batch publication and KZG verification. The September source review supersedes the August local-fixture description; it inspected repository evidence, not an independently rerun live acceptance test.
 
-The projects sit at opposite ends of the application surface—public streaming and recipient-private messaging. Both benefit from a strong publication window without necessarily needing every payload to receive the rollup-oriented maximum serving horizon. They show design pressure, not that the proposed protocol or privacy stack is complete.
+The projects sit at opposite ends of the application surface—public streaming and recipient-private messaging. They illustrate workflows that might use a bounded publication window; neither establishes safe shorter horizons, demand, or cost advantage for this proposal. Their reported functionality does not establish that the proposed protocol or privacy stack is complete.
+
+Their value is that each supplies a different retention experiment:
+
+| Selected case study | Concrete requirement | First experiment |
+|---|---|---|
+| Radio Free Ethereum / Blobcast | Listeners need segments for initial playback, late joins, and retries; replay and archives may require copies much later | Replay the same publication and listener trace under different simulated serving windows. Measure verified acquisition, interrupted playback, archive dependence, and total storage and traffic |
+| BlobMail | A recipient must discover and acquire a batch before its last usable copy disappears; publication does not establish receipt | Sweep recipient offline time and provider outages. Include an unavailable old batch followed by fresh mail, and measure both delivery and cursor recovery |
+
+Blobcast's [availability model](https://github.com/bonklek/poc-blobcast/blob/8d4924edaf7ecad2ddaccb2bd52df08ff24284e3/packages/protocol/availability.mjs) already compares an asset's serving deadline with a required season-end deadline plus margin. Its current profile is not an implementation of purchaser-selected Ethereum retention. BlobMail's [receiver](https://github.com/bonklek/poc-blobmail/blob/939b1d8a5dc2f9ca230a2a7e9d301923033d877b/src/mailbox/receiver.js) fails a refresh without advancing its cursor when a discovered segment cannot be verified. That deliberate verification boundary makes expiry recovery a specific behavior to test: shorter retention must not silently lose mail or prevent progress through later batches.
+
+These projects share an author with this proposal. They can supply implementation fixtures and workload traces, but should not be counted as independent adoption evidence. The [application review and experiment design](../audits/application-use-case-review.md) distinguish inspected source, recorded live results, and measurements still needed.
 
 All of these applications use the same primitive:
 
@@ -188,6 +199,8 @@ This is a research heuristic, not a claim that the rows are interchangeable. Act
 
 Variable retention matters because it removes a temporal assumption inherited from the rollup use case.
 
-Once every object no longer has to purchase the same 4,096-epoch retention package, the range of economically sensible applications expands substantially, especially for data with a short useful life.
+Shorter native service could make additional applications economical if the savings exceed ingress, custody, and overlay costs. The scale of that demand is unmeasured; neither the application examples nor the fixed-arrival pricing model establish it.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md)

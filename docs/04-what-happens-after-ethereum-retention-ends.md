@@ -54,7 +54,7 @@ Ethereum supplies the integrity anchor and initial retrieval opportunity. The pr
 
 ### 14.3 Worked construction, not base protocol: receipt-terminated retention
 
-A more application-specific consequence is that downstream retention need not terminate at a fixed clock time. A provider could retain ciphertext until a recipient or other condition proves that persistence is no longer needed, subject to a prepaid maximum duration or spend.
+A more application-specific consequence is that downstream retention need not terminate at a fixed clock time. A provider could retain ciphertext until an authorized acknowledgement or cancellation condition is satisfied, subject to a prepaid maximum duration or spend. The example's sender-known secret permits sender cancellation; it does not prove recipient retrieval or that persistence is no longer needed.
 
 The **RetentionNote** construction shows that a downstream guarantee can depend on state rather than being limited to “1,024 more epochs” (about 4.55 days). It is **not part of the base variable-retention mechanism**. Appendix A contains the messaging-specific acknowledgement and mailbox mechanics so that they remain available without becoming protocol requirements.
 
@@ -135,6 +135,8 @@ It may be the expected market allocation.
 
 The argumentative core uses only the relationship `R≈S/T`. It does not assume a numerical value for `S`, which must ultimately be derived from a concrete custody topology and the resource-vector treatment in §6.
 
-The former 64 TiB example is retained in [Illustrative numerics](../appendices/illustrative-numerics.md) as a reproducible geometry check, not as evidence for an Ethereum parameter.
+The 64 TiB example in [Illustrative numerics](../appendices/illustrative-numerics.md) is a reproducible geometry check, not evidence for an Ethereum parameter.
 
 ---
+
+[Project overview](../README.md) · [Document map](document-map.md)
