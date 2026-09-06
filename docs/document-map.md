@@ -9,7 +9,7 @@ The [README](../README.md) is the complete project overview. Chapters retain the
 | 3 | [05 — PeerDAS and FullDAS](05-can-this-work-with-peerdas-and-fulldas.md) | First prototype and conditional coding branch |
 | 4 | [02 — Rollups](02-is-variable-retention-safe-for-rollups.md) | Application recovery and conditional elasticity |
 | 5 | [11 — Hardware and operators](11-how-do-hardware-and-da-operator-markets-scale.md) | Physical constraints first; optional pools/payments afterward |
-| 6 | [07 — Prior art](07-what-is-the-prior-art-and-novelty.md) | Contribution boundaries and related mechanisms |
+| 6 | [07 — Prior art](07-what-is-the-prior-art-and-novelty.md) | Source-to-design map of EIPs and forum discussions, contribution boundaries, and related mechanisms |
 | 7 | [08 — Open questions](08-what-remains-to-be-proven.md) | Evidence plan, proposal/branch tests, deployment gates |
 | 8 | [09 — Conclusion](09-what-is-the-conclusion.md) | What follows and the decisive next experiment |
 

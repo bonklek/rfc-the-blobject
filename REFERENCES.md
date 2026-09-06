@@ -2,12 +2,14 @@
 
 Ethereum specifications and research posts evolve. This file records the versions used for the August 11, 2026 RFC revision. The prose links to canonical pages for readability; protocol claims should be checked against these pins.
 
+For the relationship between sources, read the [source-to-design map](docs/07-what-is-the-prior-art-and-novelty.md#210-source-to-design-map). It identifies the EIPs, ethresear.ch discussions, and Ethereum Magicians venues behind each combination, separates base mechanisms from extensions, and records which findings came through Wikipethia. The [README summary](README.md#which-existing-ideas-this-brings-together) provides a shorter entry point.
+
 ## September 6, 2026 verification notes
 
 The August pins below remain the research baseline. The [source-audit ledger](audits/facts-review.md) records a later targeted primary-source check, its coverage, and unresolved verification limits. It is not an exhaustive source or novelty certification.
 
 - The 4,096-epoch constant is supported, but the [pinned Fulu request range](https://github.com/ethereum/consensus-specs/blob/5366cb59eb39e4ec1d6c468a79cceb626c14c048/specs/fulu/p2p-interface.md#datacolumnsidecarsbyrange-v1) is epoch-inclusive. Exact equivalence to elapsed-duration expiry remains a deployment gate.
-- [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is now **Review**, versus Draft at the February pin. It still does not specify heterogeneous historical expiry. The checked EIP-8256 and EIP-8142 descriptions remain proposal evidence, not deployed-feature claims.
+- [EIP-8136](https://eips.ethereum.org/EIPS/eip-8136) is now **Review**, versus Draft at the February pin. It still does not specify heterogeneous historical expiry. The source-map follow-up also checked **Review** status for [EIP-8070](https://eips.ethereum.org/EIPS/eip-8070) and the EIPs'/ERCs' declared Magicians discussion links. The checked EIP-8256 and EIP-8142 descriptions remain proposal evidence, not deployed-feature claims.
 - [OP fault proofs](https://docs.optimism.io/op-stack/fault-proofs/explainer) and the [BoLD technical description](https://docs.arbitrum.io/how-arbitrum-works/bold/bold-technical-deep-dive) support the quoted challenge-period examples. [BoLD's overview](https://docs.arbitrum.io/how-arbitrum-works/bold/gentle-introduction) distinguishes worst-case resolution. These durations alone do not establish a safe native retention window.
 - The [Filecoin storage-market specification](https://spec.filecoin.io/systems/filecoin_markets/storage_market/) supplies direct start/end-duration evidence; the older storage-proving URL was unavailable to the source reviewer.
 - Prototype descriptions now refer to [poc-blobcast at `8d4924e`](https://github.com/bonklek/poc-blobcast/blob/8d4924edaf7ecad2ddaccb2bd52df08ff24284e3/README.md) and [poc-blobmail at `939b1d8`](https://github.com/bonklek/poc-blobmail/blob/939b1d8a5dc2f9ca230a2a7e9d301923033d877b/README.md). BlobMail's documented Sepolia MVP supersedes the August local-only description. Repository inspection does not verify live acceptance, demand, or production security.

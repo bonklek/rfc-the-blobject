@@ -6,6 +6,8 @@ The author approved the [initial audit plan](2026-09-06-initial-audit-and-plan.m
 
 ## Checkpoint log
 
+Subsequent reader-facing revisions add [Blobcast and BlobMail case studies](application-use-case-review.md), an explanation-led [project overview](../README.md), and a [source-to-design map](../docs/07-what-is-the-prior-art-and-novelty.md#210-source-to-design-map). The map makes the EIP/forum combinations and Wikipethia's specific discovery contributions explicit; the specialist reports below preserve their original review snapshots.
+
 | Pass | Scope | Defect and revision | Verification / remaining risk |
 |---|---|---|---|
 | 1 | Initial assessment | Established thesis, nine findings, approved plan | Original 21 tests passed; deeper review needed |

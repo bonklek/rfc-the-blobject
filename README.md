@@ -143,6 +143,24 @@ Selectable duration is the base mechanism. The RFC also develops extensions that
 
 Together, these directions describe a network in which Ethereum supplies publication, authenticated data, bounded serving duties, and settlement, while applications and specialized networks provide routing, privacy, playback, computation, and persistence. [Generalized data-plane architecture](docs/06-what-does-a-generalized-data-plane-enable.md#20-why-the-scope-matters) · [Prior art and lineage](docs/07-what-is-the-prior-art-and-novelty.md).
 
+## Which existing ideas this brings together
+
+The proposal draws together several recognizable strands of Ethereum work. This map shows what each contributes and how it is used here; the [detailed source-to-design review](docs/07-what-is-the-prior-art-and-novelty.md#210-source-to-design-map) links the forum discussions and separates the base mechanism from optional extensions.
+
+| Existing work | What the Blobject combines with it |
+|---|---|
+| **[New forms of state](https://ethresear.ch/t/hyper-scaling-state-by-creating-new-forms-of-state/24052)** | The principle of choosing persistence and access guarantees for the use case becomes a choice of required serving duration for published data |
+| **[EIP-4844 blobs](https://eips.ethereum.org/EIPS/eip-4844) and [EIP-7594 PeerDAS](https://eips.ethereum.org/EIPS/eip-7594)** | Committed blob publication and distributed custody form the base; this RFC adds a purchaser-selected expiry and accounting for the resulting obligation |
+| **[EIP-8136 cell deltas](https://eips.ethereum.org/EIPS/eip-8136), [EIP-8371 RowDAS](https://eips.ethereum.org/EIPS/eip-8371), and [1D/2D DAS research](https://ethresear.ch/t/revisiting-secure-das-in-one-and-two-dimensions/22762)** | Cell transport and row reconstruction inform selective historical serving. The proposed addition is tracking, serving, and reclaiming cells with different expiry times |
+| **[FullDAS](https://ethresear.ch/t/fulldas-towards-massive-scalability-with-32mb-blocks-and-beyond/19529) and [FullDASv2](https://ethresear.ch/t/accelerating-blob-scaling-with-fulldasv2-with-getblobs-mempool-encoding-and-possibly-rlc/22477)** | Their richer coding structures motivate an optional transition from initial shared redundancy to retained rows with individual lifetimes |
+| **[EIP-8256 Blob Streaming](https://eips.ethereum.org/EIPS/eip-8256) and [in-protocol gas futures](https://ethresear.ch/t/on-in-protocol-gas-futures/23698)** | Ahead-of-time propagation and future resource rights are paired with a serving duration and accounting for overlapping future leases |
+| **[ERC-8179 Blob Space Segments](https://eips.ethereum.org/EIPS/eip-8179) and [ERC-8180 Blob Authenticated Messaging](https://eips.ethereum.org/EIPS/eip-8180)** | Application multiplexing and messaging make the general-purpose blob interpretation concrete; Blobcast and BlobMail supply the selected experimental workflows |
+| **[EIP-8142 Block-in-Blobs](https://eips.ethereum.org/EIPS/eip-8142) and [distributed history/state research](https://ethresear.ch/t/integrated-in-protocol-distributed-history-and-state-storage/23522)** | The optional Lean/history analysis examines how protocol payloads, temporary availability, and permanent sparse records would be accounted for alongside application publications |
+
+The wider review also connects [distributed publication and EIP-8070 Sparse Blobpool](docs/07-what-is-the-prior-art-and-novelty.md#216-fulldas-two-dimensional-coding-and-cell-level-transport), [storage markets and handoffs](docs/07-what-is-the-prior-art-and-novelty.md#214-downstream-retention-ethstorage), and [historical custody proposals](docs/07-what-is-the-prior-art-and-novelty.md#219-proofs-of-custody-and-retention-enforcement) to their respective design branches.
+
+[Wikipethia](https://github.com/JossDuff/wikipethia), the Ethereum research corpus shared during the review, helped locate RowDAS, a retained-history custody discussion, and distinctions between propagation tickets and retention leases. The review cites the original EIPs and forum posts for those ideas. [Discovery record and specific additions](audits/wikipethia-review.md) · [Versioned references](REFERENCES.md).
+
 ## Research status
 
 The Blobject is a proposal, not an implemented Ethereum feature. The models establish logical accounting results and explore illustrative allocation, custody, and pricing scenarios. Safe minimum durations, physical resource savings, application demand, and the economics of deployment remain to be measured. Blobcast and BlobMail supply concrete experimental workflows, not evidence that selectable retention is already deployed.
